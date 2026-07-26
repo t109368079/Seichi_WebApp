@@ -1,8 +1,0 @@
-node_modules
-.next
-coverage
-playwright-report
-test-results
-package-lock.json
-docs/PROJECT_REQUIREMENTS_AND_PLAN.md
-seichi_pilgrimage_harness_engineering_plan.md

@@ -128,4 +128,5 @@ Known Limitations:
 Commit:
 
 - Message format: `[Phase 0] complete foundation`
+- Follow-up layout cleanup commit: `[Phase 0] Organize repository layout`
 - Hash: recorded in the final Phase 0 completion report.

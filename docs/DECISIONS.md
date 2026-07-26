@@ -41,3 +41,9 @@ The primary branch is `main`.
 Status: Accepted
 
 Phase completion commits must use `[Phase <n>] <feature>`, for example `[Phase 0] complete foundation`.
+
+## D-0008: Organized Repository Layout
+
+Status: Accepted
+
+Root should keep only required project entrypoints and tool-discovery files. Config files live in `config/`, local infrastructure in `infra/`, maintenance scripts in `scripts/`, application code in `src/`, tests in `tests/`, and canonical requirements in `docs/`.

@@ -580,8 +580,19 @@ seichi-pilgrimage-app/
 ├── AGENTS.md
 ├── README.md
 ├── package.json
+├── package-lock.json
+├── tsconfig.json
+├── next.config.ts
 ├── .env.example
 ├── .gitignore
+│
+├── config/
+│   ├── eslint.config.mjs
+│   ├── prettier.config.json
+│   ├── prettierignore
+│   ├── playwright.config.ts
+│   ├── vitest.unit.config.ts
+│   └── vitest.integration.config.ts
 │
 ├── docs/
 │   ├── PROJECT_REQUIREMENTS_AND_PLAN.md
@@ -601,6 +612,15 @@ seichi-pilgrimage-app/
 │       ├── PHASE_7_REVIEW.md
 │       └── PHASE_8_GOOGLE_INTEGRATION.md
 │
+├── infra/
+│   └── docker/
+│       └── compose.yaml
+│
+├── prisma/
+│   ├── schema.prisma
+│   ├── seed.ts
+│   └── migrations/
+│
 ├── src/
 │   ├── app/
 │   ├── components/
@@ -616,9 +636,10 @@ seichi-pilgrimage-app/
 │   └── e2e/
 │
 └── scripts/
-    ├── verify.*
-    ├── seed-demo-data.*
-    └── reset-dev-db.*
+    └── db/
+        ├── database.ts
+        ├── migrate-database.ts
+        └── reset-database.ts
 ```
 
 ---

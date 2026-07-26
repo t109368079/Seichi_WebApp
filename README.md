@@ -14,7 +14,7 @@ Phase 0 is an engineering harness only. It intentionally does not implement Scen
 
 ```bash
 npm ci
-docker compose up -d
+npm run infra:up
 npm run db:reset
 npm run prepare:e2e
 npm run verify
@@ -46,6 +46,11 @@ It runs format check, lint, typecheck, unit tests, test database reset, integrat
 
 Local PostgreSQL runs through Docker Compose.
 
+```bash
+npm run infra:up
+npm run infra:down
+```
+
 Default development URL:
 
 ```text
@@ -63,3 +68,12 @@ Copy `.env.example` to `.env` only if you need to override the defaults. Never c
 ## Phase Workflow
 
 Each phase is planned, implemented, verified, and committed as one focused phase commit. Blocks are still used for planning and acceptance, but Phase 0 adopts the project rule that commits happen after the full phase passes verification.
+
+## Repository Layout
+
+- `config/`: lint, format, unit test, integration test, and E2E test configuration.
+- `infra/`: local infrastructure such as Docker Compose.
+- `scripts/`: maintenance scripts grouped by responsibility.
+- `src/`: application source code.
+- `tests/`: unit, integration, and E2E tests.
+- `docs/`: project requirements, architecture, decisions, and phase plans.
