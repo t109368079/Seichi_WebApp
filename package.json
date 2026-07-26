@@ -1,0 +1,53 @@
+{
+  "name": "seichi-pilgrimage-app",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "format:check": "prettier --check .",
+    "test:unit": "vitest run --config vitest.unit.config.ts",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "test:e2e": "playwright test",
+    "prepare:e2e": "playwright install chromium",
+    "db:migrate": "tsx scripts/migrate-database.ts --dev",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:reset": "tsx scripts/reset-database.ts --dev",
+    "db:test:reset": "tsx scripts/reset-database.ts --test",
+    "verify": "npm run format:check && npm run lint && npm run typecheck && npm run test:unit && npm run db:test:reset && npm run test:integration && npm run build && npm run test:e2e",
+    "postinstall": "prisma generate"
+  },
+  "dependencies": {
+    "@prisma/client": "6.19.3",
+    "next": "16.2.12",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.30.0",
+    "@playwright/test": "^1.56.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.0",
+    "@types/node": "^20.19.25",
+    "@types/pg": "^8.15.6",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "autoprefixer": "^10.4.22",
+    "dotenv": "^17.2.3",
+    "eslint": "9.30.0",
+    "eslint-config-prettier": "^10.1.8",
+    "jsdom": "26.1.0",
+    "pg": "^8.16.3",
+    "postcss": "^8.5.6",
+    "prettier": "^3.7.4",
+    "prisma": "6.19.3",
+    "tailwindcss": "3.4.19",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "8.47.0",
+    "vitest": "3.2.7"
+  }
+}

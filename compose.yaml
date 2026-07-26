@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: seichi-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: seichi
+      POSTGRES_PASSWORD: seichi_dev_password
+      POSTGRES_DB: seichi_dev
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U seichi -d seichi_dev"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - seichi-postgres-data:/var/lib/postgresql/data
+
+volumes:
+  seichi-postgres-data:
