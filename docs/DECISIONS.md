@@ -65,3 +65,21 @@ Scene catalog pages are rendered dynamically at runtime. This keeps production b
 Status: Accepted
 
 Playwright starts the Next.js dev server with `DATABASE_URL` pointed at the test database. This lets `npm run verify` reset and seed the test database before browser tests inspect the scene catalog.
+
+## D-0012: Scene Import CSV V1 Is An Adapter Contract
+
+Status: Accepted
+
+Phase 2 defines CSV v1 with explicit `work_short_code` and `area_name` columns. CSV parsing converts rows into a normalized import model, so future Google Sheets import can reuse validation and commit behavior without coupling the app to CSV column names.
+
+## D-0013: Scene Import Uses All-Or-Nothing Upsert
+
+Status: Accepted
+
+Scene import previews create and update counts before writing. Confirmed imports use a single database transaction and match existing data by `sceneCode`, `workShortCode`, and `locationName + areaName`. Existing Scene status is preserved, new scenes default to `NOT_SHOT`, and any validation error prevents all writes.
+
+## D-0014: Playwright Uses A Dedicated Local Port
+
+Status: Accepted
+
+Playwright uses port `3100` by default, with `E2E_PORT` available for override. This avoids colliding with the normal developer server on port `3000` while keeping browser tests pointed at the test database.

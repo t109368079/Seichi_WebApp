@@ -11,22 +11,30 @@ export default function Home() {
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-8 md:flex-row md:items-end md:justify-between">
           <div className="max-w-2xl">
             <p className="text-sm font-semibold uppercase tracking-wide text-field">
-              Phase 1 Scene Catalog
+              Phase 2 Scene Import
             </p>
             <h1 className="mt-3 text-4xl font-semibold leading-tight md:text-5xl">
               Seichi Pilgrimage
             </h1>
             <p className="mt-4 text-base leading-7 text-night">
-              Browse demo pilgrimage scenes by permanent scene identity, work,
-              location, and reversible shooting status.
+              Import CSV scene data and browse pilgrimage scenes by permanent
+              scene identity, work, location, and reversible shooting status.
             </p>
           </div>
-          <Link
-            href="/scenes"
-            className="flex min-h-11 w-fit items-center rounded bg-field px-5 text-sm font-semibold text-white"
-          >
-            Open scene catalog
-          </Link>
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <Link
+              href="/imports/scenes"
+              className="flex min-h-11 w-fit items-center rounded bg-field px-5 text-sm font-semibold text-white"
+            >
+              Import scenes
+            </Link>
+            <Link
+              href="/scenes"
+              className="flex min-h-11 w-fit items-center rounded border border-rail px-5 text-sm font-semibold"
+            >
+              Open catalog
+            </Link>
+          </div>
         </div>
       </section>
 
@@ -36,10 +44,8 @@ export default function Home() {
         <section className="rounded border border-rail bg-white p-5">
           <h2 className="text-lg font-semibold">Current Boundary</h2>
           <p className="mt-3 text-sm leading-6 text-night">
-            Phase 1 adds the first product catalog slice: Work, Location, Scene,
-            SceneStatus, deterministic demo data, and a browsable scene list.
-            Imports, maps, trips, photo binding, and Google integrations remain
-            deferred.
+            Phase 2 adds CSV import preview and transaction-backed scene upsert.
+            Maps, trips, photo binding, and Google integrations remain deferred.
           </p>
           <dl className="mt-5 grid gap-3 text-sm">
             <div className="flex items-center justify-between border-t border-rail pt-3">

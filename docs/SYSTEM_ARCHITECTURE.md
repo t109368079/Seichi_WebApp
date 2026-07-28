@@ -20,6 +20,13 @@ Phase 1 adds the first product slice:
 - Runtime-rendered `/scenes` and `/scenes/[sceneId]` pages.
 - Deterministic fictional demo data for catalog validation.
 
+Phase 2 adds the CSV import slice:
+
+- Application-layer Scene Import CSV v1 parser, validation, normalization, and diff calculation.
+- Infrastructure repository functions for preview and transaction-backed import commit.
+- Runtime-rendered `/imports/scenes` page using server actions.
+- Homepage and catalog navigation entry points for import and review of imported scenes.
+
 ## Target Layering
 
 Product phases follow this layering:
@@ -31,7 +38,7 @@ Presentation Layer
   -> Infrastructure Layer
 ```
 
-Phase 1 keeps business rules in pure domain and application modules. The presentation layer renders catalog data but does not call Google APIs or encode external integration rules.
+Phase 2 keeps CSV format concerns at the import adapter/parser boundary. The rest of the app uses a normalized import model so future Google Sheets import can reuse the same validation and commit path. The presentation layer renders catalog and import data but does not call Google APIs or encode external integration rules.
 
 ## Adapter Rules
 
@@ -51,3 +58,10 @@ The database now contains:
 - `SceneStatus`, the legal Phase 1 status enum.
 
 Trip planning, photo binding, review data, Google import data, and storage metadata remain out of scope until later phases.
+
+Phase 2 does not add database tables. CSV import writes to the existing Work, Location, and Scene tables by upsert:
+
+- Work matches by `shortCode`.
+- Location matches by `name + areaName`.
+- Scene matches by `sceneCode`.
+- Existing Scene `status` is preserved.

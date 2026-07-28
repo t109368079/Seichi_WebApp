@@ -899,9 +899,11 @@ build
 ```text
 scene_code
 work_name
+work_short_code
 episode
 anime_drive_file_id
 location_name
+area_name
 latitude
 longitude
 maps_url
@@ -913,6 +915,7 @@ notes
 - 缺少必填欄位時回報錯誤。
 - 重複 Scene Code 時回報錯誤。
 - 經緯度錯誤時指出行號。
+- 不接受 `status` 欄位，以免覆蓋現地與 Review 狀態。
 - 不允許靜默忽略錯誤。
 
 #### Block 2.2：CSV Parser and Validation
@@ -948,6 +951,12 @@ notes
 - 使用者確認前不寫入。
 - 顯示新增、更新與錯誤數量。
 - 寫入失敗時不可留下部分不一致資料。
+- 採全有全無 upsert；任一錯誤整批不寫入。
+- 既有 Scene 以 `scene_code` 更新資料但保留 `id` 與 `status`。
+- 新 Scene 預設為 `NOT_SHOT`。
+- Work 以 `work_short_code` match/create/update。
+- Location 以 `location_name + area_name` match/create/update。
+- CSV 中缺席的既有資料不會被刪除。
 
 ### 主要單元測試
 

@@ -73,6 +73,36 @@ Phase 1 constraints:
 
 Scene identity uses stable `id` and unique `sceneCode`. Filenames, folder names, Drive file ids, and file deletion do not represent scene identity or completion state.
 
+## Phase 2 Import Model
+
+Phase 2 does not add new database models. It adds Scene Import CSV v1 as an external input format that normalizes into the existing Work, Location, and Scene model.
+
+CSV v1 columns:
+
+```text
+scene_code
+work_name
+work_short_code
+episode
+anime_drive_file_id
+location_name
+area_name
+latitude
+longitude
+maps_url
+notes
+```
+
+Import matching and write rules:
+
+- `scene_code` maps to unique `Scene.sceneCode`.
+- `work_short_code` maps to unique `Work.shortCode`; `work_name` updates `Work.name`.
+- `location_name + area_name` maps to the unique Location key.
+- Existing Scene rows keep their existing `id` and `status`.
+- New Scene rows default to `NOT_SHOT`.
+- Import does not accept or overwrite status.
+- Missing CSV rows do not delete existing data.
+
 ## Future Product Models
 
 Later phases will add:

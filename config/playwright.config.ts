@@ -3,21 +3,23 @@ import { defineConfig, devices } from "@playwright/test";
 const testDatabaseUrl =
   process.env.TEST_DATABASE_URL ??
   "postgresql://seichi:seichi_dev_password@localhost:5432/seichi_test?schema=public";
+const e2ePort = process.env.E2E_PORT ?? "3100";
+const e2eBaseUrl = `http://127.0.0.1:${e2ePort}`;
 
 export default defineConfig({
   testDir: "../tests/e2e",
   fullyParallel: true,
   reporter: [["list"], ["html", { open: "never" }]],
   use: {
-    baseURL: "http://127.0.0.1:3000",
+    baseURL: e2eBaseUrl,
     trace: "on-first-retry",
   },
   webServer: {
-    command: "npm run dev",
+    command: `npm run dev -- --port ${e2ePort}`,
     env: {
       DATABASE_URL: testDatabaseUrl,
     },
-    url: "http://127.0.0.1:3000",
+    url: e2eBaseUrl,
     reuseExistingServer: false,
     timeout: 120000,
   },

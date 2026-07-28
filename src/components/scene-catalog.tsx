@@ -55,22 +55,30 @@ export function SceneCatalog({
               Browse permanent scene identities across works and locations.
             </p>
           </div>
-          <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-3">
-            <CatalogStat label="Visible" value={scenes.length.toString()} />
-            <CatalogStat label="Total" value={totalSceneCount.toString()} />
-            <CatalogStat label="Works" value={works.length.toString()} />
+          <div className="grid gap-3">
+            <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-3">
+              <CatalogStat label="Visible" value={scenes.length.toString()} />
+              <CatalogStat label="Total" value={totalSceneCount.toString()} />
+              <CatalogStat label="Works" value={works.length.toString()} />
+            </div>
+            <Link
+              href="/imports/scenes"
+              className="flex min-h-10 w-fit items-center rounded bg-field px-4 text-sm font-semibold text-white"
+            >
+              Import scenes
+            </Link>
           </div>
         </div>
       </header>
 
-      <div className="mx-auto grid w-full max-w-6xl gap-5 px-5 py-6 lg:grid-cols-[17rem_1fr]">
+      <div className="mx-auto grid w-full max-w-6xl gap-5 px-5 py-6 lg:grid-cols-[minmax(0,17rem)_minmax(0,1fr)]">
         <SceneFilterForm
           filters={filters}
           works={works}
           locations={locations}
         />
 
-        <section aria-label="Scene results" className="grid gap-4">
+        <section aria-label="Scene results" className="grid min-w-0 gap-4">
           {scenes.length === 0 ? (
             <div className="rounded border border-rail bg-white p-6">
               <h2 className="text-lg font-semibold">No matching scenes</h2>
@@ -106,21 +114,21 @@ function SceneFilterForm({
   return (
     <aside
       aria-label="Scene filters"
-      className="h-fit bg-paper lg:sticky lg:top-4"
+      className="min-w-0 bg-paper lg:sticky lg:top-4 lg:h-fit"
     >
       <form
         action="/scenes"
-        className="grid gap-4 rounded border border-rail bg-white p-4"
+        className="grid min-w-0 gap-4 rounded border border-rail bg-white p-4"
       >
         <h2 className="text-base font-semibold">Filters</h2>
 
-        <label className="grid gap-2 text-sm font-medium">
+        <label className="grid min-w-0 gap-2 text-sm font-medium">
           Work
           <select
             name="workId"
             aria-label="Filter by work"
             defaultValue={filters.workId ?? ""}
-            className="min-h-10 rounded border border-rail bg-white px-3 text-sm"
+            className="min-h-10 w-full min-w-0 rounded border border-rail bg-white px-3 text-sm"
           >
             <option value="">All works</option>
             {works.map((work) => (
@@ -131,13 +139,13 @@ function SceneFilterForm({
           </select>
         </label>
 
-        <label className="grid gap-2 text-sm font-medium">
+        <label className="grid min-w-0 gap-2 text-sm font-medium">
           Location
           <select
             name="locationId"
             aria-label="Filter by location"
             defaultValue={filters.locationId ?? ""}
-            className="min-h-10 rounded border border-rail bg-white px-3 text-sm"
+            className="min-h-10 w-full min-w-0 rounded border border-rail bg-white px-3 text-sm"
           >
             <option value="">All locations</option>
             {locations.map((location) => (
@@ -149,13 +157,13 @@ function SceneFilterForm({
           </select>
         </label>
 
-        <label className="grid gap-2 text-sm font-medium">
+        <label className="grid min-w-0 gap-2 text-sm font-medium">
           Status
           <select
             name="status"
             aria-label="Filter by status"
             defaultValue={filters.status ?? ""}
-            className="min-h-10 rounded border border-rail bg-white px-3 text-sm"
+            className="min-h-10 w-full min-w-0 rounded border border-rail bg-white px-3 text-sm"
           >
             <option value="">All statuses</option>
             {getSceneStatusOptions().map((status) => (
@@ -166,16 +174,16 @@ function SceneFilterForm({
           </select>
         </label>
 
-        <div className="flex flex-col gap-2 pt-1 sm:flex-row lg:flex-col">
+        <div className="grid min-w-0 grid-cols-1 gap-2 pt-1 sm:grid-cols-2 lg:grid-cols-1">
           <button
             type="submit"
-            className="min-h-10 rounded bg-field px-4 text-sm font-semibold text-white"
+            className="min-h-10 w-full min-w-0 rounded bg-field px-4 text-sm font-semibold text-white"
           >
             Apply filters
           </button>
           <Link
             href="/scenes"
-            className="flex min-h-10 items-center justify-center rounded border border-rail px-4 text-sm font-semibold"
+            className="flex min-h-10 w-full min-w-0 items-center justify-center rounded border border-rail px-4 text-sm font-semibold"
           >
             Clear
           </Link>
