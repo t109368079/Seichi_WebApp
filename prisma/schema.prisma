@@ -14,3 +14,58 @@ model FoundationMetadata {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+model Work {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  shortCode   String   @unique
+  description String?
+  scenes      Scene[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Location {
+  id        String   @id @default(cuid())
+  name      String
+  areaName  String?
+  latitude  Float
+  longitude Float
+  mapsUrl   String?
+  scenes    Scene[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([name, areaName])
+  @@index([areaName])
+}
+
+model Scene {
+  id                    String      @id @default(cuid())
+  sceneCode             String      @unique
+  workId                String
+  episode               String?
+  animeImageDriveFileId String
+  locationId            String
+  latitude              Float
+  longitude             Float
+  mapsUrl               String?
+  notes                 String?
+  status                SceneStatus @default(NOT_SHOT)
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+  work                  Work        @relation(fields: [workId], references: [id], onDelete: Restrict)
+  location              Location    @relation(fields: [locationId], references: [id], onDelete: Restrict)
+
+  @@index([workId])
+  @@index([locationId])
+  @@index([status])
+}
+
+enum SceneStatus {
+  NOT_SHOT
+  PENDING_REVIEW
+  REVIEWED
+  RETAKE_REQUIRED
+  SKIPPED
+}

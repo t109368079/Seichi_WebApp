@@ -47,3 +47,21 @@ Phase completion commits must use `[Phase <n>] <feature>`, for example `[Phase 0
 Status: Accepted
 
 Root should keep only required project entrypoints and tool-discovery files. Config files live in `config/`, local infrastructure in `infra/`, maintenance scripts in `scripts/`, application code in `src/`, tests in `tests/`, and canonical requirements in `docs/`.
+
+## D-0009: Fictional Deterministic Demo Catalog
+
+Status: Accepted
+
+Phase 1 uses fictional works, public-place coordinates, and synthetic Drive file ids. Seed data uses deterministic IDs so unit, integration, E2E, and acceptance checks can assert stable cross-work catalog behavior without private Google data.
+
+## D-0010: Dynamic Catalog Pages
+
+Status: Accepted
+
+Scene catalog pages are rendered dynamically at runtime. This keeps production builds independent from a live database connection while preserving Prisma-backed catalog browsing when the app runs.
+
+## D-0011: E2E Uses Test Database
+
+Status: Accepted
+
+Playwright starts the Next.js dev server with `DATABASE_URL` pointed at the test database. This lets `npm run verify` reset and seed the test database before browser tests inspect the scene catalog.

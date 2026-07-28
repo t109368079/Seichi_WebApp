@@ -1,5 +1,9 @@
 import { defineConfig, devices } from "@playwright/test";
 
+const testDatabaseUrl =
+  process.env.TEST_DATABASE_URL ??
+  "postgresql://seichi:seichi_dev_password@localhost:5432/seichi_test?schema=public";
+
 export default defineConfig({
   testDir: "../tests/e2e",
   fullyParallel: true,
@@ -10,8 +14,11 @@ export default defineConfig({
   },
   webServer: {
     command: "npm run dev",
+    env: {
+      DATABASE_URL: testDatabaseUrl,
+    },
     url: "http://127.0.0.1:3000",
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
     timeout: 120000,
   },
   projects: [

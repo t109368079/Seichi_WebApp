@@ -1,8 +1,8 @@
 # System Architecture
 
-## Phase 0 Architecture
+## Current Architecture
 
-Phase 0 establishes the engineering harness:
+Phase 0 established the engineering harness:
 
 - Next.js App Router for the responsive web app shell.
 - React and TypeScript for UI implementation.
@@ -12,9 +12,17 @@ Phase 0 establishes the engineering harness:
 - Vitest for unit and integration tests.
 - Playwright for browser E2E tests.
 
+Phase 1 adds the first product slice:
+
+- Domain layer validation for Work, Location, Scene, and SceneStatus concepts.
+- Application-layer scene catalog filtering.
+- Infrastructure repository functions backed by Prisma.
+- Runtime-rendered `/scenes` and `/scenes/[sceneId]` pages.
+- Deterministic fictional demo data for catalog validation.
+
 ## Target Layering
 
-Future product phases follow this layering:
+Product phases follow this layering:
 
 ```text
 Presentation Layer
@@ -23,7 +31,7 @@ Presentation Layer
   -> Infrastructure Layer
 ```
 
-Phase 0 only creates the scaffold needed to support these layers. It intentionally avoids product domain entities.
+Phase 1 keeps business rules in pure domain and application modules. The presentation layer renders catalog data but does not call Google APIs or encode external integration rules.
 
 ## Adapter Rules
 
@@ -34,4 +42,12 @@ Phase 0 only creates the scaffold needed to support these layers. It intentional
 
 ## Current Database Boundary
 
-The only Phase 0 database model is `FoundationMetadata`, used to prove migration, seed, reset, and integration testing work. Product models begin in Phase 1.
+The database now contains:
+
+- `FoundationMetadata`, retained from Phase 0.
+- `Work`, representing fictional demo anime works.
+- `Location`, representing named places and areas.
+- `Scene`, representing permanent scene identities linked to exactly one Work and one Location.
+- `SceneStatus`, the legal Phase 1 status enum.
+
+Trip planning, photo binding, review data, Google import data, and storage metadata remain out of scope until later phases.

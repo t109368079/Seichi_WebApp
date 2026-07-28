@@ -1,8 +1,8 @@
 # Seichi Pilgrimage App
 
-Responsive web app foundation for managing anime pilgrimage scenes, trips, field photo binding, and review workflows.
+Responsive web app for managing anime pilgrimage scenes, trips, field photo binding, and review workflows.
 
-Phase 0 is an engineering harness only. It intentionally does not implement Scene, Work, Location, Trip, photo upload, Google APIs, or map features.
+Phase 1 currently provides a demo scene catalog backed by Prisma and PostgreSQL. It intentionally does not yet implement imports, maps, trips, photo upload, Google APIs, or review workflows.
 
 ## Requirements
 
@@ -30,6 +30,12 @@ Open:
 
 ```text
 http://localhost:3000
+```
+
+The Phase 1 catalog is available at:
+
+```text
+http://localhost:3000/scenes
 ```
 
 ## Verification
