@@ -67,6 +67,12 @@ export function SceneCatalog({
             >
               Import scenes
             </Link>
+            <Link
+              href={buildMapHref(filters)}
+              className="flex min-h-10 w-fit items-center rounded border border-rail px-4 text-sm font-semibold"
+            >
+              Map view
+            </Link>
           </div>
         </div>
       </header>
@@ -245,4 +251,24 @@ function SceneCard({ scene }: { scene: SceneCatalogItem }) {
       ) : null}
     </article>
   );
+}
+
+function buildMapHref(filters: SceneCatalogFilters): string {
+  const params = new URLSearchParams();
+
+  if (filters.workId) {
+    params.set("workId", filters.workId);
+  }
+
+  if (filters.locationId) {
+    params.set("locationId", filters.locationId);
+  }
+
+  if (filters.status) {
+    params.set("status", filters.status);
+  }
+
+  const query = params.toString();
+
+  return query ? `/map?${query}` : "/map";
 }

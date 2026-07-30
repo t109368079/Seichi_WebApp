@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getSceneStatusLabel } from "@/application/scene-catalog";
+import { getNavigationTarget } from "@/application/scene-map";
 import { getSceneDetail } from "@/infrastructure/repositories/scene-catalog-repository";
 
 export const dynamic = "force-dynamic";
@@ -20,6 +21,8 @@ export default async function SceneDetailPage({
   if (!scene) {
     notFound();
   }
+
+  const navigation = getNavigationTarget(scene);
 
   return (
     <main className="min-h-screen bg-paper text-ink">
@@ -55,6 +58,29 @@ export default async function SceneDetailPage({
             <span className="w-fit rounded border border-rail bg-paper px-3 py-1 text-xs font-semibold uppercase tracking-wide text-night">
               {getSceneStatusLabel(scene.status)}
             </span>
+          </div>
+
+          <div className="mt-5 flex flex-col gap-2 sm:flex-row">
+            <Link
+              href={`/map?locationId=${scene.location.id}`}
+              className="flex min-h-10 w-fit items-center rounded border border-rail px-4 text-sm font-semibold"
+            >
+              View on map
+            </Link>
+            {navigation.href ? (
+              <a
+                href={navigation.href}
+                target="_blank"
+                rel="noreferrer"
+                className="flex min-h-10 w-fit items-center rounded bg-field px-4 text-sm font-semibold text-white"
+              >
+                Open navigation
+              </a>
+            ) : (
+              <span className="flex min-h-10 w-fit items-center rounded border border-rail px-4 text-sm font-semibold text-night">
+                {navigation.disabledReason ?? "Navigation unavailable"}
+              </span>
+            )}
           </div>
 
           <dl className="mt-5 grid gap-4 text-sm sm:grid-cols-2">

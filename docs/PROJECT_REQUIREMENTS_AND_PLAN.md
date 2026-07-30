@@ -982,6 +982,8 @@ notes
 
 以地理位置瀏覽場景，提供每個場景的導航點，不做自動路線最佳化。
 
+Phase 3 採 no-external-API local projected map，不使用 Google Maps JavaScript、API key、OAuth、外部 tile service 或真實 map provider。Google Maps 僅作為產生出的導航 URL，由瀏覽器或裝置交給 Google Maps App/網頁處理。
+
 ### Blocks
 
 #### Block 3.1：Scene Map
@@ -991,7 +993,7 @@ notes
 - 顯示所有場景 Marker
 - 依作品、地點、狀態篩選
 - 點擊 Marker 顯示場景資訊
-- 顯示動畫縮圖、作品與集數
+- 顯示動畫圖 reference placeholder、作品與集數
 
 驗收條件：
 
@@ -1006,6 +1008,7 @@ notes
 - 相同或鄰近位置群組化
 - 點開後列出所有場景
 - 保留每部作品識別
+- 預設以 `35m` 半徑處理鄰近位置
 
 驗收條件：
 
@@ -1034,6 +1037,22 @@ notes
 - Missing coordinate handling
 - Marker grouping
 - Map filter logic
+
+### 主要 Integration Test
+
+- Deterministic map data from seeded scenes
+- Cross-work same-location marker grouping
+- Map filters matching catalog filters
+
+### 主要 E2E Test
+
+```text
+開啟 /map
+→ 點擊 grouped marker
+→ 查看跨作品場景身份
+→ 確認導航 URL
+→ 套用篩選並保留於 URL
+```
 
 ---
 

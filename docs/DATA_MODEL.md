@@ -103,6 +103,18 @@ Import matching and write rules:
 - Import does not accept or overwrite status.
 - Missing CSV rows do not delete existing data.
 
+## Phase 3 Map View Model
+
+Phase 3 does not add database tables. Map markers are derived from existing Scene coordinates at read time.
+
+Derived map behavior:
+
+- Scene coordinates are validated before map placement.
+- Scenes within `35m` are grouped into one marker.
+- Marker groups preserve each individual `Scene.id`, `sceneCode`, Work identity, status, and anime image file id reference.
+- Google Maps navigation URLs are generated from Scene latitude and longitude.
+- No route order, Trip, TripDay, or TripScene data is created in Phase 3.
+
 ## Future Product Models
 
 Later phases will add:

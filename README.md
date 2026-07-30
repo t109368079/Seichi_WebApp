@@ -2,7 +2,7 @@
 
 Responsive web app for managing anime pilgrimage scenes, trips, field photo binding, and review workflows.
 
-Phase 2 currently provides a CSV scene import flow and a demo scene catalog backed by Prisma and PostgreSQL. It intentionally does not yet implement maps, trips, photo upload, Google APIs, or review workflows.
+Phase 3 currently provides a CSV scene import flow, a no-external-API scene map, and a demo scene catalog backed by Prisma and PostgreSQL. It intentionally does not yet implement trips, photo upload, Google APIs, or review workflows.
 
 ## Requirements
 
@@ -38,6 +38,12 @@ The Phase 2 scene import page is available at:
 http://localhost:3000/imports/scenes
 ```
 
+The Phase 3 map and navigation page is available at:
+
+```text
+http://localhost:3000/map
+```
+
 The scene catalog is available at:
 
 ```text
@@ -51,6 +57,8 @@ scene_code,work_name,work_short_code,episode,anime_drive_file_id,location_name,a
 ```
 
 `scene_code`, `work_name`, `work_short_code`, `anime_drive_file_id`, `location_name`, `area_name`, `latitude`, and `longitude` are required. Values containing commas must be quoted as standard CSV.
+
+The Phase 3 map uses local coordinate projection and generated Google Maps navigation URLs. It does not require Google Maps JavaScript, API keys, OAuth, or external map tiles.
 
 ## Verification
 

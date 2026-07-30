@@ -83,3 +83,21 @@ Scene import previews create and update counts before writing. Confirmed imports
 Status: Accepted
 
 Playwright uses port `3100` by default, with `E2E_PORT` available for override. This avoids colliding with the normal developer server on port `3000` while keeping browser tests pointed at the test database.
+
+## D-0015: Phase 3 Uses A Local Projected Map
+
+Status: Accepted
+
+Phase 3 renders Scene coordinates with local projection instead of Google Maps JavaScript, external map tiles, or a map service SDK. This keeps map browsing testable without API keys or network access and leaves real map provider integration for a later adapter phase.
+
+## D-0016: Marker Groups Use A 35m Radius
+
+Status: Accepted
+
+Phase 3 groups exact and nearby Scene coordinates within `35m`. This handles cross-work same-location scenes and small coordinate differences without route optimization or automatic itinerary sorting.
+
+## D-0017: E2E Runs With One Worker
+
+Status: Accepted
+
+Playwright uses one worker because the scene import E2E writes to the shared test database. Serial browser execution keeps map and catalog assertions deterministic after `npm run db:test:reset`.

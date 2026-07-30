@@ -11,14 +11,14 @@ export default function Home() {
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-8 md:flex-row md:items-end md:justify-between">
           <div className="max-w-2xl">
             <p className="text-sm font-semibold uppercase tracking-wide text-field">
-              Phase 2 Scene Import
+              Phase 3 Map and Navigation
             </p>
             <h1 className="mt-3 text-4xl font-semibold leading-tight md:text-5xl">
               Seichi Pilgrimage
             </h1>
             <p className="mt-4 text-base leading-7 text-night">
-              Import CSV scene data and browse pilgrimage scenes by permanent
-              scene identity, work, location, and reversible shooting status.
+              Import CSV scene data, browse scenes by permanent identity, and
+              inspect coordinate groups before opening navigation.
             </p>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row">
@@ -27,6 +27,12 @@ export default function Home() {
               className="flex min-h-11 w-fit items-center rounded bg-field px-5 text-sm font-semibold text-white"
             >
               Import scenes
+            </Link>
+            <Link
+              href="/map"
+              className="flex min-h-11 w-fit items-center rounded border border-rail px-5 text-sm font-semibold"
+            >
+              Open map
             </Link>
             <Link
               href="/scenes"
@@ -44,8 +50,9 @@ export default function Home() {
         <section className="rounded border border-rail bg-white p-5">
           <h2 className="text-lg font-semibold">Current Boundary</h2>
           <p className="mt-3 text-sm leading-6 text-night">
-            Phase 2 adds CSV import preview and transaction-backed scene upsert.
-            Maps, trips, photo binding, and Google integrations remain deferred.
+            Phase 3 adds a no-external-API coordinate map, grouped scene
+            markers, and Google Maps navigation links. Trips, photo binding, and
+            Google API integrations remain deferred.
           </p>
           <dl className="mt-5 grid gap-3 text-sm">
             <div className="flex items-center justify-between border-t border-rail pt-3">

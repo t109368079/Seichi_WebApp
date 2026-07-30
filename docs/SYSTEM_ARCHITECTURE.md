@@ -27,6 +27,13 @@ Phase 2 adds the CSV import slice:
 - Runtime-rendered `/imports/scenes` page using server actions.
 - Homepage and catalog navigation entry points for import and review of imported scenes.
 
+Phase 3 adds the map and navigation slice:
+
+- Application-layer map utilities for filtering, coordinate validation, marker grouping, coordinate projection, and navigation URL generation.
+- Infrastructure repository functions that reuse Scene Catalog data for map rendering.
+- Runtime-rendered `/map` page with a client-side selected marker interaction.
+- Scene Detail, Scene Catalog, and homepage navigation entry points for map and navigation.
+
 ## Target Layering
 
 Product phases follow this layering:
@@ -38,7 +45,9 @@ Presentation Layer
   -> Infrastructure Layer
 ```
 
-Phase 2 keeps CSV format concerns at the import adapter/parser boundary. The rest of the app uses a normalized import model so future Google Sheets import can reuse the same validation and commit path. The presentation layer renders catalog and import data but does not call Google APIs or encode external integration rules.
+Phase 2 keeps CSV format concerns at the import adapter/parser boundary. The rest of the app uses a normalized import model so future Google Sheets import can reuse the same validation and commit path.
+
+Phase 3 keeps map behavior in application utilities. The presentation layer renders catalog, import, and local map data but does not call Google APIs or encode external integration rules. Google Maps is used only as a generated navigation URL handed off to the browser.
 
 ## Adapter Rules
 
@@ -65,3 +74,5 @@ Phase 2 does not add database tables. CSV import writes to the existing Work, Lo
 - Location matches by `name + areaName`.
 - Scene matches by `sceneCode`.
 - Existing Scene `status` is preserved.
+
+Phase 3 does not add database tables. It reads existing Scene coordinates and handles missing or invalid coordinates defensively in application logic.
