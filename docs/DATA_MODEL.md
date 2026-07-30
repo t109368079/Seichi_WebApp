@@ -115,11 +115,45 @@ Derived map behavior:
 - Google Maps navigation URLs are generated from Scene latitude and longitude.
 - No route order, Trip, TripDay, or TripScene data is created in Phase 3.
 
+## Phase 4 Trip Planning Model
+
+Phase 4 adds itinerary planning tables:
+
+```prisma
+model Trip {
+  id        String
+  name      String
+  startDate DateTime
+  endDate   DateTime
+}
+
+model TripDay {
+  id     String
+  tripId String
+  date   DateTime
+  title  String?
+}
+
+model TripScene {
+  id        String
+  tripDayId String
+  sceneId   String
+  sortOrder Int
+}
+```
+
+Trip planning rules:
+
+- Dates are accepted as `yyyy-mm-dd`.
+- Creating a Trip automatically creates one TripDay for every inclusive date in the range.
+- Deleting a Trip cascades its TripDay and TripScene rows while preserving Scene, Work, and Location rows.
+- A Scene can appear only once in the same TripDay.
+- New TripScene rows append to the end of that day.
+- `sortOrder` starts at 1, is manually controlled, and is normalized after reorder or removal.
+- The system does not optimize or automatically reorder itinerary scenes by location.
+
 ## Future Product Models
 
 Later phases will add:
 
-- Trip
-- TripDay
-- TripScene
 - ScenePhoto

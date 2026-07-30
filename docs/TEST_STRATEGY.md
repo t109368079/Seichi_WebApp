@@ -36,6 +36,9 @@ Current unit coverage includes:
 - Google Maps navigation URL generation.
 - Missing and invalid map coordinate handling.
 - Marker grouping, projected marker bounds, and map filter behavior.
+- Trip date validation and inclusive TripDay generation.
+- TripScene append, move, reorder, removal order normalization, and duplicate prevention.
+- Trip progress aggregation by SceneStatus and missing coordinate count.
 
 ## Integration Tests
 
@@ -54,6 +57,11 @@ Current integration coverage includes:
 - Deterministic map data and marker groups from seeded scenes.
 - Cross-work same-location marker grouping.
 - Map filters matching catalog filters.
+- Trip creation with generated TripDays.
+- Add Scene to TripDay with duplicate rejection.
+- Reorder, move, remove, and reload persisted TripScene order.
+- Trip delete cascade for planning rows while preserving Scene rows.
+- Trip summary counts from seeded Scene statuses.
 
 ## E2E Tests
 
@@ -70,9 +78,10 @@ Current E2E coverage includes:
 - Scene map loads demo marker groups and grouped scene identities.
 - Scene map filters through URL query parameters.
 - Scene map exposes generated Google Maps navigation hrefs without opening external navigation during tests.
+- Trip planning creates a multi-day trip, adds scenes from catalog and map, reorders with fallback controls, persists order after reload, and removes scenes.
 
 Playwright runs the Next.js dev server on port `3100` by default with `DATABASE_URL` pointed at the test database, so `npm run verify` uses the seeded test data prepared by `npm run db:test:reset`. Set `E2E_PORT` to override the browser test port. Browser tests run with one worker because the scene import E2E writes to the shared test database.
 
 ## External Services
 
-No Google APIs are used in Phase 3. Google Maps appears only as generated navigation URLs. Future adapters must be tested with mocks or fixtures and should reuse the normalized import model introduced for CSV.
+No Google APIs are used through Phase 4. Google Maps appears only as generated navigation URLs. Future adapters must be tested with mocks or fixtures and should reuse the normalized import model introduced for CSV.

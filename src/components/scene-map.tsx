@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { AddToTripDayForm } from "@/components/add-to-trip-day-form";
+import { TripDayContextBanner } from "@/components/trip-day-context-banner";
 import {
   getSceneStatusLabel,
   getSceneStatusOptions,
@@ -13,6 +15,10 @@ import {
   getNavigationTarget,
   type SceneMapMarkerGroup,
 } from "@/application/scene-map";
+import {
+  isSceneAddedToTripDay,
+  type TripDaySelectionContext,
+} from "@/application/trip-planning";
 
 interface SceneMapProps {
   markerGroups: readonly SceneMapMarkerGroup[];
@@ -30,6 +36,8 @@ interface SceneMapProps {
     areaName?: string;
   }[];
   filters: SceneCatalogFilters;
+  tripDayContext?: TripDaySelectionContext;
+  returnTo: string;
 }
 
 const statusTone = {
@@ -48,6 +56,8 @@ export function SceneMap({
   works,
   locations,
   filters,
+  tripDayContext,
+  returnTo,
 }: SceneMapProps) {
   const [selectedGroupId, setSelectedGroupId] = useState(
     markerGroups[0]?.id ?? "",
@@ -84,7 +94,7 @@ export function SceneMap({
               <MapStat label="總數" value={totalSceneCount.toString()} />
             </div>
             <Link
-              href={buildCatalogHref(filters)}
+              href={buildCatalogHref(filters, tripDayContext?.tripDayId)}
               className="flex min-h-10 w-fit items-center rounded border border-rail px-4 text-sm font-semibold"
             >
               場景目錄
@@ -94,9 +104,15 @@ export function SceneMap({
       </header>
 
       <div className="mx-auto grid w-full max-w-6xl gap-5 px-5 py-6 lg:grid-cols-[minmax(0,17rem)_minmax(0,1fr)]">
-        <MapFilterForm filters={filters} works={works} locations={locations} />
+        <MapFilterForm
+          filters={filters}
+          works={works}
+          locations={locations}
+          tripDayId={tripDayContext?.tripDayId}
+        />
 
         <section className="grid min-w-0 gap-5" aria-label="地圖結果">
+          <TripDayContextBanner context={tripDayContext} />
           {omittedSceneCount > 0 ? (
             <div className="rounded border border-[#f1c6bb] bg-white p-4 text-sm text-signal">
               {omittedSceneCount} 個場景因座標缺失或無效，無法放在地圖上。
@@ -109,7 +125,11 @@ export function SceneMap({
               selectedGroupId={selectedGroup?.id ?? ""}
               onSelectGroup={setSelectedGroupId}
             />
-            <SelectedMarkerPanel group={selectedGroup} />
+            <SelectedMarkerPanel
+              group={selectedGroup}
+              tripDayContext={tripDayContext}
+              returnTo={returnTo}
+            />
           </div>
         </section>
       </div>
@@ -132,7 +152,10 @@ function MapFilterForm({
   filters,
   works,
   locations,
-}: Pick<SceneMapProps, "filters" | "works" | "locations">) {
+  tripDayId,
+}: Pick<SceneMapProps, "filters" | "works" | "locations"> & {
+  tripDayId?: string;
+}) {
   return (
     <aside
       aria-label="地圖篩選"
@@ -142,6 +165,9 @@ function MapFilterForm({
         action="/map"
         className="grid min-w-0 gap-4 rounded border border-rail bg-white p-4"
       >
+        {tripDayId ? (
+          <input type="hidden" name="tripDayId" value={tripDayId} />
+        ) : null}
         <h2 className="text-base font-semibold">篩選條件</h2>
 
         <label className="grid min-w-0 gap-2 text-sm font-medium">
@@ -204,7 +230,7 @@ function MapFilterForm({
             套用篩選
           </button>
           <Link
-            href="/map"
+            href={tripDayId ? `/map?tripDayId=${tripDayId}` : "/map"}
             className="flex min-h-10 w-full min-w-0 items-center justify-center rounded border border-rail px-4 text-sm font-semibold"
           >
             清除
@@ -267,7 +293,15 @@ function ProjectedMap({
   );
 }
 
-function SelectedMarkerPanel({ group }: { group?: SceneMapMarkerGroup }) {
+function SelectedMarkerPanel({
+  group,
+  tripDayContext,
+  returnTo,
+}: {
+  group?: SceneMapMarkerGroup;
+  tripDayContext?: TripDaySelectionContext;
+  returnTo: string;
+}) {
   if (!group) {
     return (
       <aside
@@ -297,14 +331,27 @@ function SelectedMarkerPanel({ group }: { group?: SceneMapMarkerGroup }) {
 
       <div className="grid gap-4">
         {group.scenes.map((scene) => (
-          <SceneMapCard key={scene.id} scene={scene} />
+          <SceneMapCard
+            key={scene.id}
+            scene={scene}
+            tripDayContext={tripDayContext}
+            returnTo={returnTo}
+          />
         ))}
       </div>
     </aside>
   );
 }
 
-function SceneMapCard({ scene }: { scene: SceneCatalogItem }) {
+function SceneMapCard({
+  scene,
+  tripDayContext,
+  returnTo,
+}: {
+  scene: SceneCatalogItem;
+  tripDayContext?: TripDaySelectionContext;
+  returnTo: string;
+}) {
   const navigation = getNavigationTarget(scene);
   const coordinateIssue = getCoordinateIssue(scene);
 
@@ -319,7 +366,9 @@ function SceneMapCard({ scene }: { scene: SceneCatalogItem }) {
         </div>
         <div className="min-w-0">
           <Link
-            href={`/scenes/${scene.id}`}
+            href={`/scenes/${scene.id}${
+              tripDayContext ? `?tripDayId=${tripDayContext.tripDayId}` : ""
+            }`}
             className="font-semibold text-field underline-offset-4 hover:underline"
           >
             {scene.sceneCode}
@@ -351,13 +400,29 @@ function SceneMapCard({ scene }: { scene: SceneCatalogItem }) {
             {coordinateIssue ?? "無法導航"}
           </span>
         )}
+        {tripDayContext ? (
+          <AddToTripDayForm
+            tripDayId={tripDayContext.tripDayId}
+            sceneId={scene.id}
+            sceneCode={scene.sceneCode}
+            returnTo={returnTo}
+            added={isSceneAddedToTripDay(tripDayContext, scene.id)}
+          />
+        ) : null}
       </div>
     </article>
   );
 }
 
-function buildCatalogHref(filters: SceneCatalogFilters): string {
+function buildCatalogHref(
+  filters: SceneCatalogFilters,
+  tripDayId?: string,
+): string {
   const params = new URLSearchParams();
+
+  if (tripDayId) {
+    params.set("tripDayId", tripDayId);
+  }
 
   if (filters.workId) {
     params.set("workId", filters.workId);

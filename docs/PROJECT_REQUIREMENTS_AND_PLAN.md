@@ -1071,12 +1071,13 @@ Phase 3 採 no-external-API local projected map，不使用 Google Maps JavaScri
 - 建立旅行
 - 設定起訖日期
 - 建立每日行程
+- 建立旅行時自動產生含首尾日期的每日行程
 
 驗收條件：
 
 - 日期範圍合法。
 - 每日行程與旅行正確關聯。
-- 旅行刪除策略明確。
+- 旅行刪除採硬刪，cascade 刪除 TripDay 與 TripScene，但保留 Scene、Work、Location。
 
 #### Block 4.2：Add Scene to TripDay
 
@@ -1085,6 +1086,7 @@ Phase 3 採 no-external-API local projected map，不使用 Google Maps JavaScri
 - 從場景列表加入
 - 從地圖加入
 - 從地點頁加入
+- 從場景詳情頁加入
 - 顯示已加入狀態
 
 驗收條件：
@@ -1098,6 +1100,7 @@ Phase 3 採 no-external-API local projected map，不使用 Google Maps JavaScri
 功能：
 
 - 拖曳排序
+- 上移與下移 fallback
 - 保存 `sortOrder`
 - 重新整理後保留
 - 可在同一天移動順序
@@ -1105,6 +1108,7 @@ Phase 3 採 no-external-API local projected map，不使用 Google Maps JavaScri
 驗收條件：
 
 - 系統不自動重排。
+- 系統不依座標、距離或地圖 marker 自動排序。
 - 排序結果持久化。
 - 並發或失敗時避免順序損壞。
 
@@ -1134,6 +1138,19 @@ Phase 3 採 no-external-API local projected map，不使用 Google Maps JavaScri
 - Reorder and persist
 - Remove scene
 - Reload and verify order
+- Delete trip cascades planning rows but preserves Scene rows
+
+### 主要 E2E Test
+
+```text
+開啟 /trips
+→ 建立多日旅行
+→ 從場景目錄加入 Scene
+→ 從地圖加入 Scene
+→ 手動調整順序
+→ 重新整理後順序保留
+→ 移除 Scene
+```
 
 ---
 

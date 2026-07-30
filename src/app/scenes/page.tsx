@@ -1,6 +1,7 @@
 import { SceneCatalog } from "@/components/scene-catalog";
 import { isSceneStatus, type SceneStatus } from "@/domain/scene";
 import { getSceneCatalogData } from "@/infrastructure/repositories/scene-catalog-repository";
+import { getTripDaySelectionContext } from "@/infrastructure/repositories/trip-planning-repository";
 
 export const dynamic = "force-dynamic";
 
@@ -29,8 +30,13 @@ function readFilters(params: Record<string, string | string[] | undefined>) {
 }
 
 export default async function ScenesPage({ searchParams }: ScenePageProps) {
-  const filters = readFilters(await searchParams);
-  const catalog = await getSceneCatalogData(filters);
+  const params = await searchParams;
+  const filters = readFilters(params);
+  const tripDayId = firstSearchParam(params.tripDayId);
+  const [catalog, tripDayContext] = await Promise.all([
+    getSceneCatalogData(filters),
+    getTripDaySelectionContext(tripDayId),
+  ]);
 
   return (
     <SceneCatalog
@@ -39,6 +45,29 @@ export default async function ScenesPage({ searchParams }: ScenePageProps) {
       works={catalog.works}
       locations={catalog.locations}
       filters={filters}
+      tripDayContext={tripDayContext}
+      returnTo={buildCurrentHref("/scenes", params)}
     />
   );
+}
+
+function buildCurrentHref(
+  pathname: string,
+  params: Record<string, string | string[] | undefined>,
+): string {
+  const searchParams = new URLSearchParams();
+
+  for (const [key, value] of Object.entries(params)) {
+    if (Array.isArray(value)) {
+      for (const item of value) {
+        searchParams.append(key, item);
+      }
+    } else if (value) {
+      searchParams.set(key, value);
+    }
+  }
+
+  const query = searchParams.toString();
+
+  return query ? `${pathname}?${query}` : pathname;
 }

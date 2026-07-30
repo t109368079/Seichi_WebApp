@@ -11,14 +11,14 @@ export default function Home() {
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-8 md:flex-row md:items-end md:justify-between">
           <div className="max-w-2xl">
             <p className="text-sm font-semibold uppercase tracking-wide text-field">
-              第三階段：地圖與導航
+              第四階段：旅行規劃
             </p>
             <h1 className="mt-3 text-4xl font-semibold leading-tight md:text-5xl">
               聖地巡禮
             </h1>
             <p className="mt-4 text-base leading-7 text-night">
               匯入 CSV
-              場景資料，以永久場景身份瀏覽，並在出發前檢視座標群組與導航。
+              場景資料，以永久場景身份瀏覽，並在出發前安排每日行程與拍攝順序。
             </p>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row">
@@ -33,6 +33,12 @@ export default function Home() {
               className="flex min-h-11 w-fit items-center rounded border border-rail px-5 text-sm font-semibold"
             >
               開啟地圖
+            </Link>
+            <Link
+              href="/trips"
+              className="flex min-h-11 w-fit items-center rounded border border-rail px-5 text-sm font-semibold"
+            >
+              開啟旅行規劃
             </Link>
             <Link
               href="/scenes"
@@ -50,8 +56,8 @@ export default function Home() {
         <section className="rounded border border-rail bg-white p-5">
           <h2 className="text-lg font-semibold">目前範圍</h2>
           <p className="mt-3 text-sm leading-6 text-night">
-            Phase 3 加入不依賴外部 API 的座標地圖、群組場景標記與 Google Maps
-            導航連結。行程、照片綁定與 Google API 整合仍留待後續階段。
+            Phase 4 加入旅行建立、每日行程、場景加入與手動排序。照片綁定、Field
+            Mode、Review 與 Google API 整合仍留待後續階段。
           </p>
           <dl className="mt-5 grid gap-3 text-sm">
             <div className="flex items-center justify-between border-t border-rail pt-3">
@@ -63,8 +69,8 @@ export default function Home() {
               <dd className="font-medium">12</dd>
             </div>
             <div className="flex items-center justify-between border-t border-rail pt-3">
-              <dt className="text-night">外部 API</dt>
-              <dd className="font-medium">延後整合</dd>
+              <dt className="text-night">行程排序</dt>
+              <dd className="font-medium">手動保存</dd>
             </div>
           </dl>
         </section>

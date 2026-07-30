@@ -101,3 +101,21 @@ Phase 3 groups exact and nearby Scene coordinates within `35m`. This handles cro
 Status: Accepted
 
 Playwright uses one worker because the scene import E2E writes to the shared test database. Serial browser execution keeps map and catalog assertions deterministic after `npm run db:test:reset`.
+
+## D-0018: Trip Delete Cascades Planning Rows Only
+
+Status: Accepted
+
+Phase 4 hard deletes Trip rows and cascades TripDay and TripScene rows. Scene, Work, and Location records are preserved because trip planning is a scheduling layer over permanent scene identities.
+
+## D-0019: Trip Creation Generates Days Inclusively
+
+Status: Accepted
+
+Creating a Trip from `startDate` to `endDate` automatically creates one TripDay for every `yyyy-mm-dd` calendar date in the inclusive range. This keeps trip setup fast and avoids a separate manual day-management flow in Phase 4.
+
+## D-0020: Manual Ordering Uses Native Drag And Fallback Buttons
+
+Status: Accepted
+
+Phase 4 uses native browser drag-and-drop for manual ordering and provides up/down buttons as the reliable touch and accessibility fallback. No drag-and-drop dependency is introduced, and the system never auto-sorts itinerary scenes by map distance.

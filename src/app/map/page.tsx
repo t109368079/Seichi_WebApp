@@ -1,6 +1,7 @@
 import { SceneMap } from "@/components/scene-map";
 import { isSceneStatus, type SceneStatus } from "@/domain/scene";
 import { getSceneMapData } from "@/infrastructure/repositories/scene-map-repository";
+import { getTripDaySelectionContext } from "@/infrastructure/repositories/trip-planning-repository";
 
 export const dynamic = "force-dynamic";
 
@@ -31,8 +32,13 @@ function readFilters(params: Record<string, string | string[] | undefined>) {
 export default async function SceneMapPage({
   searchParams,
 }: SceneMapPageProps) {
-  const filters = readFilters(await searchParams);
-  const mapData = await getSceneMapData(filters);
+  const params = await searchParams;
+  const filters = readFilters(params);
+  const tripDayId = firstSearchParam(params.tripDayId);
+  const [mapData, tripDayContext] = await Promise.all([
+    getSceneMapData(filters),
+    getTripDaySelectionContext(tripDayId),
+  ]);
 
   return (
     <SceneMap
@@ -43,6 +49,29 @@ export default async function SceneMapPage({
       works={mapData.works}
       locations={mapData.locations}
       filters={filters}
+      tripDayContext={tripDayContext}
+      returnTo={buildCurrentHref("/map", params)}
     />
   );
+}
+
+function buildCurrentHref(
+  pathname: string,
+  params: Record<string, string | string[] | undefined>,
+): string {
+  const searchParams = new URLSearchParams();
+
+  for (const [key, value] of Object.entries(params)) {
+    if (Array.isArray(value)) {
+      for (const item of value) {
+        searchParams.append(key, item);
+      }
+    } else if (value) {
+      searchParams.set(key, value);
+    }
+  }
+
+  const query = searchParams.toString();
+
+  return query ? `${pathname}?${query}` : pathname;
 }

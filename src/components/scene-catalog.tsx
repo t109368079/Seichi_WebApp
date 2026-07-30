@@ -1,10 +1,16 @@
 import Link from "next/link";
+import { AddToTripDayForm } from "@/components/add-to-trip-day-form";
+import { TripDayContextBanner } from "@/components/trip-day-context-banner";
 import {
   getSceneStatusLabel,
   getSceneStatusOptions,
   type SceneCatalogFilters,
   type SceneCatalogItem,
 } from "@/application/scene-catalog";
+import {
+  isSceneAddedToTripDay,
+  type TripDaySelectionContext,
+} from "@/application/trip-planning";
 
 interface SceneCatalogProps {
   scenes: readonly SceneCatalogItem[];
@@ -20,6 +26,8 @@ interface SceneCatalogProps {
     areaName?: string;
   }[];
   filters: SceneCatalogFilters;
+  tripDayContext?: TripDaySelectionContext;
+  returnTo: string;
 }
 
 const statusTone = {
@@ -36,6 +44,8 @@ export function SceneCatalog({
   works,
   locations,
   filters,
+  tripDayContext,
+  returnTo,
 }: SceneCatalogProps) {
   return (
     <main className="min-h-screen bg-paper text-ink">
@@ -68,10 +78,16 @@ export function SceneCatalog({
               匯入場景
             </Link>
             <Link
-              href={buildMapHref(filters)}
+              href={buildMapHref(filters, tripDayContext?.tripDayId)}
               className="flex min-h-10 w-fit items-center rounded border border-rail px-4 text-sm font-semibold"
             >
               地圖檢視
+            </Link>
+            <Link
+              href="/trips"
+              className="flex min-h-10 w-fit items-center rounded border border-rail px-4 text-sm font-semibold"
+            >
+              旅行規劃
             </Link>
           </div>
         </div>
@@ -82,9 +98,11 @@ export function SceneCatalog({
           filters={filters}
           works={works}
           locations={locations}
+          tripDayId={tripDayContext?.tripDayId}
         />
 
         <section aria-label="場景結果" className="grid min-w-0 gap-4">
+          <TripDayContextBanner context={tripDayContext} />
           {scenes.length === 0 ? (
             <div className="rounded border border-rail bg-white p-6">
               <h2 className="text-lg font-semibold">沒有符合的場景</h2>
@@ -93,7 +111,14 @@ export function SceneCatalog({
               </p>
             </div>
           ) : (
-            scenes.map((scene) => <SceneCard key={scene.id} scene={scene} />)
+            scenes.map((scene) => (
+              <SceneCard
+                key={scene.id}
+                scene={scene}
+                tripDayContext={tripDayContext}
+                returnTo={returnTo}
+              />
+            ))
           )}
         </section>
       </div>
@@ -116,7 +141,10 @@ function SceneFilterForm({
   filters,
   works,
   locations,
-}: Omit<SceneCatalogProps, "scenes" | "totalSceneCount">) {
+  tripDayId,
+}: Pick<SceneCatalogProps, "filters" | "works" | "locations"> & {
+  tripDayId?: string;
+}) {
   return (
     <aside
       aria-label="場景篩選"
@@ -126,6 +154,9 @@ function SceneFilterForm({
         action="/scenes"
         className="grid min-w-0 gap-4 rounded border border-rail bg-white p-4"
       >
+        {tripDayId ? (
+          <input type="hidden" name="tripDayId" value={tripDayId} />
+        ) : null}
         <h2 className="text-base font-semibold">篩選條件</h2>
 
         <label className="grid min-w-0 gap-2 text-sm font-medium">
@@ -199,13 +230,23 @@ function SceneFilterForm({
   );
 }
 
-function SceneCard({ scene }: { scene: SceneCatalogItem }) {
+function SceneCard({
+  scene,
+  tripDayContext,
+  returnTo,
+}: {
+  scene: SceneCatalogItem;
+  tripDayContext?: TripDaySelectionContext;
+  returnTo: string;
+}) {
   return (
     <article className="rounded border border-rail bg-white p-4">
       <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div className="min-w-0">
           <Link
-            href={`/scenes/${scene.id}`}
+            href={`/scenes/${scene.id}${
+              tripDayContext ? `?tripDayId=${tripDayContext.tripDayId}` : ""
+            }`}
             className="text-xl font-semibold text-field underline-offset-4 hover:underline"
           >
             {scene.sceneCode}
@@ -226,7 +267,14 @@ function SceneCard({ scene }: { scene: SceneCatalogItem }) {
         <div className="border-t border-rail pt-3">
           <dt className="font-semibold">地點</dt>
           <dd className="mt-1 text-night">
-            {scene.location.name}
+            <Link
+              href={`/locations/${scene.location.id}${
+                tripDayContext ? `?tripDayId=${tripDayContext.tripDayId}` : ""
+              }`}
+              className="underline-offset-4 hover:underline"
+            >
+              {scene.location.name}
+            </Link>
             {scene.location.areaName ? `, ${scene.location.areaName}` : ""}
           </dd>
         </div>
@@ -249,12 +297,31 @@ function SceneCard({ scene }: { scene: SceneCatalogItem }) {
           {scene.notes}
         </p>
       ) : null}
+
+      {tripDayContext ? (
+        <div className="mt-4 border-t border-rail pt-4">
+          <AddToTripDayForm
+            tripDayId={tripDayContext.tripDayId}
+            sceneId={scene.id}
+            sceneCode={scene.sceneCode}
+            returnTo={returnTo}
+            added={isSceneAddedToTripDay(tripDayContext, scene.id)}
+          />
+        </div>
+      ) : null}
     </article>
   );
 }
 
-function buildMapHref(filters: SceneCatalogFilters): string {
+function buildMapHref(
+  filters: SceneCatalogFilters,
+  tripDayId?: string,
+): string {
   const params = new URLSearchParams();
+
+  if (tripDayId) {
+    params.set("tripDayId", tripDayId);
+  }
 
   if (filters.workId) {
     params.set("workId", filters.workId);
