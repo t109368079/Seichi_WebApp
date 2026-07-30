@@ -26,13 +26,13 @@ export function SceneImportForm() {
   return (
     <div className="grid gap-5">
       <section className="rounded border border-rail bg-white p-5">
-        <h2 className="text-lg font-semibold">CSV v1</h2>
+        <h2 className="text-lg font-semibold">CSV 格式 v1</h2>
         <div className="mt-4 overflow-x-auto">
           <table className="w-full min-w-[42rem] border-collapse text-left text-sm">
             <thead>
               <tr className="border-b border-rail text-xs uppercase tracking-wide text-night">
-                <th className="py-2 pr-4 font-semibold">Column</th>
-                <th className="py-2 pr-4 font-semibold">Required</th>
+                <th className="py-2 pr-4 font-semibold">欄位</th>
+                <th className="py-2 pr-4 font-semibold">必填</th>
               </tr>
             </thead>
             <tbody>
@@ -43,8 +43,8 @@ export function SceneImportForm() {
                     {requiredSceneImportCsvColumns.includes(
                       column as (typeof requiredSceneImportCsvColumns)[number],
                     )
-                      ? "Yes"
-                      : "No"}
+                      ? "是"
+                      : "否"}
                   </td>
                 </tr>
               ))}
@@ -57,7 +57,7 @@ export function SceneImportForm() {
         <form action={formAction} className="grid gap-4">
           <input type="hidden" name="intent" value="preview" />
           <label className="grid gap-2 text-sm font-medium">
-            Scene CSV
+            場景 CSV
             <input
               name="csvFile"
               type="file"
@@ -70,7 +70,7 @@ export function SceneImportForm() {
             disabled={isPending}
             className="min-h-11 w-fit rounded bg-field px-5 text-sm font-semibold text-white disabled:opacity-60"
           >
-            {isPending ? "Working..." : "Preview CSV"}
+            {isPending ? "處理中..." : "預覽 CSV"}
           </button>
         </form>
       </section>
@@ -123,12 +123,12 @@ function SceneImportPreviewPanel({
   committed: boolean;
 }) {
   return (
-    <section aria-label="Import preview" className="grid gap-4">
+    <section aria-label="匯入預覽" className="grid gap-4">
       <div className="grid gap-3 sm:grid-cols-4">
-        <ImportStat label="Rows" value={preview.summary.totalRows} />
-        <ImportStat label="Creates" value={preview.summary.createCount} />
-        <ImportStat label="Updates" value={preview.summary.updateCount} />
-        <ImportStat label="Errors" value={preview.summary.errorCount} />
+        <ImportStat label="資料列" value={preview.summary.totalRows} />
+        <ImportStat label="新增" value={preview.summary.createCount} />
+        <ImportStat label="更新" value={preview.summary.updateCount} />
+        <ImportStat label="錯誤" value={preview.summary.errorCount} />
       </div>
 
       {preview.errors.length > 0 ? (
@@ -139,12 +139,12 @@ function SceneImportPreviewPanel({
 
       {committed ? (
         <div className="rounded border border-rail bg-white p-5">
-          <h2 className="text-lg font-semibold">Import complete</h2>
+          <h2 className="text-lg font-semibold">匯入完成</h2>
           <Link
             href="/scenes"
             className="mt-4 flex min-h-11 w-fit items-center rounded bg-field px-5 text-sm font-semibold text-white"
           >
-            View scene catalog
+            查看場景目錄
           </Link>
         </div>
       ) : preview.canCommit ? (
@@ -164,7 +164,7 @@ function SceneImportPreviewPanel({
             disabled={isPending}
             className="min-h-11 rounded bg-field px-5 text-sm font-semibold text-white disabled:opacity-60"
           >
-            {isPending ? "Working..." : "Confirm import"}
+            {isPending ? "處理中..." : "確認匯入"}
           </button>
         </form>
       ) : null}
@@ -190,17 +190,17 @@ function SceneImportErrors({
 }) {
   return (
     <section
-      aria-label="Import errors"
+      aria-label="匯入錯誤"
       className="rounded border border-[#f1c6bb] bg-white p-5"
     >
-      <h2 className="text-lg font-semibold text-signal">Errors</h2>
+      <h2 className="text-lg font-semibold text-signal">錯誤</h2>
       <div className="mt-4 overflow-x-auto">
         <table className="w-full min-w-[42rem] border-collapse text-left text-sm">
           <thead>
             <tr className="border-b border-rail text-xs uppercase tracking-wide text-night">
-              <th className="py-2 pr-4 font-semibold">Row</th>
-              <th className="py-2 pr-4 font-semibold">Field</th>
-              <th className="py-2 pr-4 font-semibold">Message</th>
+              <th className="py-2 pr-4 font-semibold">列</th>
+              <th className="py-2 pr-4 font-semibold">欄位</th>
+              <th className="py-2 pr-4 font-semibold">訊息</th>
             </tr>
           </thead>
           <tbody>
@@ -224,19 +224,19 @@ function SceneImportErrors({
 function SceneImportRows({ rows }: { rows: SceneImportPreview["rows"] }) {
   return (
     <section
-      aria-label="Import rows"
+      aria-label="匯入資料列"
       className="rounded border border-rail bg-white p-5"
     >
-      <h2 className="text-lg font-semibold">Rows</h2>
+      <h2 className="text-lg font-semibold">資料列</h2>
       <div className="mt-4 overflow-x-auto">
         <table className="w-full min-w-[58rem] border-collapse text-left text-sm">
           <thead>
             <tr className="border-b border-rail text-xs uppercase tracking-wide text-night">
-              <th className="py-2 pr-4 font-semibold">Action</th>
-              <th className="py-2 pr-4 font-semibold">Scene</th>
-              <th className="py-2 pr-4 font-semibold">Work</th>
-              <th className="py-2 pr-4 font-semibold">Location</th>
-              <th className="py-2 pr-4 font-semibold">Coordinates</th>
+              <th className="py-2 pr-4 font-semibold">動作</th>
+              <th className="py-2 pr-4 font-semibold">場景</th>
+              <th className="py-2 pr-4 font-semibold">作品</th>
+              <th className="py-2 pr-4 font-semibold">地點</th>
+              <th className="py-2 pr-4 font-semibold">座標</th>
             </tr>
           </thead>
           <tbody>
@@ -245,7 +245,9 @@ function SceneImportRows({ rows }: { rows: SceneImportPreview["rows"] }) {
                 key={`${row.rowNumber}-${row.sceneCode}`}
                 className="border-b border-rail last:border-0"
               >
-                <td className="py-2 pr-4 capitalize">{row.action}</td>
+                <td className="py-2 pr-4">
+                  {getImportActionLabel(row.action)}
+                </td>
                 <td className="py-2 pr-4 font-mono text-xs">{row.sceneCode}</td>
                 <td className="py-2 pr-4">
                   {row.workShortCode} - {row.workName}
@@ -263,4 +265,15 @@ function SceneImportRows({ rows }: { rows: SceneImportPreview["rows"] }) {
       </div>
     </section>
   );
+}
+
+function getImportActionLabel(
+  action: SceneImportPreview["rows"][number]["action"],
+): string {
+  const labels = {
+    create: "新增",
+    update: "更新",
+  } satisfies Record<SceneImportPreview["rows"][number]["action"], string>;
+
+  return labels[action];
 }

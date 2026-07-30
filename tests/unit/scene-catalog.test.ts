@@ -123,6 +123,6 @@ describe("scene catalog filtering", () => {
     expect(
       countDistinctWorksAtLocation(scenes, "location-ikebukuro-east-gate"),
     ).toBe(2);
-    expect(getSceneStatusLabel("PENDING_REVIEW")).toBe("Pending review");
+    expect(getSceneStatusLabel("PENDING_REVIEW")).toBe("待確認");
   });
 });

@@ -14,10 +14,10 @@ export interface FoundationSummary {
 }
 
 export const foundationChecks = [
-  { label: "Documentation", status: "verified" },
-  { label: "Web application shell", status: "verified" },
-  { label: "Database harness", status: "verified" },
-  { label: "Unified verification", status: "verified" },
+  { label: "文件", status: "verified" },
+  { label: "Web 應用外殼", status: "verified" },
+  { label: "資料庫測試基礎", status: "verified" },
+  { label: "統一驗證流程", status: "verified" },
 ] as const satisfies readonly FoundationCheck[];
 
 export function summarizeFoundationChecks(

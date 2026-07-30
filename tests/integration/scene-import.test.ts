@@ -167,7 +167,7 @@ describe("scene import repository", () => {
       {
         rowNumber: 3,
         field: "latitude",
-        message: "Invalid latitude: 91",
+        message: "緯度無效：91",
       },
     ]);
     expect(createdCount).toBe(0);
@@ -191,7 +191,7 @@ describe("scene import repository", () => {
       {
         rowNumber: 3,
         field: "scene_code",
-        message: "Duplicate scene_code NRI-301; first seen on row 2.",
+        message: "scene_code NRI-301 重複；第一次出現在第 2 列。",
       },
     ]);
     expect(createdCount).toBe(0);

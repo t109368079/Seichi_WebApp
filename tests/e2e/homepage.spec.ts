@@ -5,14 +5,12 @@ test("homepage links to scene import, map, and the catalog", async ({
 }) => {
   await page.goto("/");
 
+  await expect(page.getByRole("heading", { name: "聖地巡禮" })).toBeVisible();
+  await expect(page.getByText("第三階段：地圖與導航")).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "Seichi Pilgrimage" }),
+    page.getByRole("region", { name: "基礎工程狀態" }),
   ).toBeVisible();
-  await expect(page.getByText("Phase 3 Map and Navigation")).toBeVisible();
-  await expect(
-    page.getByRole("region", { name: "Foundation status" }),
-  ).toBeVisible();
-  await expect(page.getByRole("link", { name: "Import scenes" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Open map" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Open catalog" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "匯入場景" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "開啟地圖" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "開啟場景目錄" })).toBeVisible();
 });

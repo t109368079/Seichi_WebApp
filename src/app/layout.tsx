@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Seichi Pilgrimage",
-  description: "Engineering foundation for the Seichi Pilgrimage app.",
+  title: "聖地巡禮",
+  description: "聖地巡禮照片管理網頁應用程式。",
 };
 
 export default function RootLayout({
@@ -12,7 +12,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="zh-Hant">
       <body>{children}</body>
     </html>
   );

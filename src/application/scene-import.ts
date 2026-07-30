@@ -93,7 +93,7 @@ export function parseSceneImportCsv(csvText: string): SceneImportParseResult {
         {
           rowNumber: 1,
           field: "csv",
-          message: "CSV header row is required.",
+          message: "CSV 需要標題列。",
         },
         ...csv.errors,
       ],
@@ -128,7 +128,7 @@ export function parseSceneImportCsv(csvText: string): SceneImportParseResult {
     errors.push({
       rowNumber: headerRecord.rowNumber,
       field: "csv",
-      message: "CSV must contain at least one data row.",
+      message: "CSV 必須至少包含一筆資料列。",
     });
   }
 
@@ -241,7 +241,7 @@ function parseCsvRecords(csvText: string): {
     errors.push({
       rowNumber: recordStartLine,
       field: "csv",
-      message: "CSV quoted field is not closed.",
+      message: "CSV 引號欄位尚未關閉。",
     });
   }
 
@@ -267,7 +267,7 @@ function validateHeaders(
       errors.push({
         rowNumber,
         field: header || "header",
-        message: `Unknown CSV column: ${header || "(empty)"}.`,
+        message: `未知的 CSV 欄位：${header || "（空白）"}。`,
       });
     }
 
@@ -279,7 +279,7 @@ function validateHeaders(
       errors.push({
         rowNumber,
         field: column,
-        message: `Missing CSV column: ${column}.`,
+        message: `缺少 CSV 欄位：${column}。`,
       });
     }
   }
@@ -289,7 +289,7 @@ function validateHeaders(
       errors.push({
         rowNumber,
         field: header || "header",
-        message: `Duplicate CSV column: ${header || "(empty)"}.`,
+        message: `重複的 CSV 欄位：${header || "（空白）"}。`,
       });
     }
   }
@@ -306,7 +306,7 @@ function normalizeDataRecord(
     errors.push({
       rowNumber: record.rowNumber,
       field: "csv",
-      message: "Row has more values than the CSV header.",
+      message: "此列的值多於 CSV 標題欄位。",
     });
   }
 
@@ -327,7 +327,7 @@ function normalizeDataRecord(
       errors.push({
         rowNumber: record.rowNumber,
         field: column,
-        message: `Required value is empty for ${column}.`,
+        message: `${column} 為必填欄位，不能空白。`,
       });
     }
 
@@ -346,14 +346,14 @@ function normalizeDataRecord(
         longitude,
       });
     } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Invalid latitude or longitude.";
+      const rawMessage = error instanceof Error ? error.message : "";
+      const message = rawMessage
+        ? translateCoordinateError(rawMessage)
+        : "緯度或經度無效。";
       hasRowError = true;
       errors.push({
         rowNumber: record.rowNumber,
-        field: message.includes("longitude") ? "longitude" : "latitude",
+        field: rawMessage.includes("longitude") ? "longitude" : "latitude",
         message,
       });
     }
@@ -401,6 +401,18 @@ function normalizeIdentifier(value: string): string {
   return value.trim().toUpperCase();
 }
 
+function translateCoordinateError(message: string): string {
+  if (message.startsWith("Invalid latitude: ")) {
+    return message.replace("Invalid latitude: ", "緯度無效：");
+  }
+
+  if (message.startsWith("Invalid longitude: ")) {
+    return message.replace("Invalid longitude: ", "經度無效：");
+  }
+
+  return message;
+}
+
 function findDuplicateSceneCodeErrors(
   rows: readonly SceneImportRow[],
 ): SceneImportError[] {
@@ -414,7 +426,7 @@ function findDuplicateSceneCodeErrors(
       errors.push({
         rowNumber: row.rowNumber,
         field: "scene_code",
-        message: `Duplicate scene_code ${row.sceneCode}; first seen on row ${firstRow}.`,
+        message: `scene_code ${row.sceneCode} 重複；第一次出現在第 ${firstRow} 列。`,
       });
     } else {
       firstSeenRows.set(row.sceneCode, row.rowNumber);

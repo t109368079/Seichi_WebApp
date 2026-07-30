@@ -32,19 +32,19 @@ export default async function SceneDetailPage({
             href="/scenes"
             className="text-sm font-semibold uppercase tracking-wide text-field"
           >
-            Back to scene catalog
+            返回場景目錄
           </Link>
           <h1 className="mt-3 text-3xl font-semibold md:text-4xl">
             {scene.sceneCode}
           </h1>
           <p className="mt-3 text-sm leading-6 text-night">
-            Permanent scene identity for {scene.work.name}.
+            {scene.work.name} 的永久場景身份。
           </p>
         </div>
       </header>
 
       <section
-        aria-label="Scene detail"
+        aria-label="場景詳情"
         className="mx-auto grid w-full max-w-4xl gap-5 px-5 py-6"
       >
         <div className="rounded border border-rail bg-white p-5">
@@ -52,7 +52,7 @@ export default async function SceneDetailPage({
             <div>
               <h2 className="text-xl font-semibold">{scene.work.name}</h2>
               <p className="mt-1 text-sm text-night">
-                {scene.episode ? `Episode ${scene.episode}` : "No episode set"}
+                {scene.episode ? `第 ${scene.episode} 集` : "未設定集數"}
               </p>
             </div>
             <span className="w-fit rounded border border-rail bg-paper px-3 py-1 text-xs font-semibold uppercase tracking-wide text-night">
@@ -65,7 +65,7 @@ export default async function SceneDetailPage({
               href={`/map?locationId=${scene.location.id}`}
               className="flex min-h-10 w-fit items-center rounded border border-rail px-4 text-sm font-semibold"
             >
-              View on map
+              在地圖查看
             </Link>
             {navigation.href ? (
               <a
@@ -74,37 +74,37 @@ export default async function SceneDetailPage({
                 rel="noreferrer"
                 className="flex min-h-10 w-fit items-center rounded bg-field px-4 text-sm font-semibold text-white"
               >
-                Open navigation
+                開啟導航
               </a>
             ) : (
               <span className="flex min-h-10 w-fit items-center rounded border border-rail px-4 text-sm font-semibold text-night">
-                {navigation.disabledReason ?? "Navigation unavailable"}
+                {navigation.disabledReason ?? "無法導航"}
               </span>
             )}
           </div>
 
           <dl className="mt-5 grid gap-4 text-sm sm:grid-cols-2">
-            <DetailRow label="Scene ID" value={scene.id} />
-            <DetailRow label="Scene Code" value={scene.sceneCode} />
-            <DetailRow label="Work Code" value={scene.work.shortCode} />
+            <DetailRow label="場景 ID" value={scene.id} />
+            <DetailRow label="場景代碼" value={scene.sceneCode} />
+            <DetailRow label="作品代碼" value={scene.work.shortCode} />
             <DetailRow
-              label="Location"
+              label="地點"
               value={`${scene.location.name}${
                 scene.location.areaName ? `, ${scene.location.areaName}` : ""
               }`}
             />
             <DetailRow
-              label="Coordinates"
+              label="座標"
               value={`${scene.latitude.toFixed(5)}, ${scene.longitude.toFixed(
                 5,
               )}`}
             />
             <DetailRow
-              label="Anime Drive File ID"
+              label="動畫 Drive 檔案 ID"
               value={scene.animeImageDriveFileId}
             />
-            <DetailRow label="Maps URL" value={scene.mapsUrl ?? "Not set"} />
-            <DetailRow label="Notes" value={scene.notes ?? "Not set"} />
+            <DetailRow label="地圖 URL" value={scene.mapsUrl ?? "未設定"} />
+            <DetailRow label="備註" value={scene.notes ?? "未設定"} />
           </dl>
         </div>
       </section>

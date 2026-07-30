@@ -91,11 +91,11 @@ export function countDistinctWorksAtLocation(
 
 export function getSceneStatusLabel(status: SceneStatus): string {
   const labels = {
-    NOT_SHOT: "Not shot",
-    PENDING_REVIEW: "Pending review",
-    REVIEWED: "Reviewed",
-    RETAKE_REQUIRED: "Retake required",
-    SKIPPED: "Skipped",
+    NOT_SHOT: "未拍攝",
+    PENDING_REVIEW: "待確認",
+    REVIEWED: "已審核",
+    RETAKE_REQUIRED: "需要補拍",
+    SKIPPED: "已略過",
   } satisfies Record<SceneStatus, string>;
 
   return labels[status];

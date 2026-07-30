@@ -68,26 +68,26 @@ export function SceneMap({
               href="/"
               className="text-sm font-semibold uppercase tracking-wide text-field"
             >
-              Seichi Pilgrimage
+              聖地巡禮
             </Link>
             <h1 className="mt-3 text-3xl font-semibold md:text-4xl">
-              Scene Map
+              場景地圖
             </h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-night">
-              Browse scenes by coordinate groups and open navigation points.
+              依座標群組瀏覽場景，並開啟導航點。
             </p>
           </div>
           <div className="grid gap-3">
             <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-3">
-              <MapStat label="Scenes" value={mapSceneCount.toString()} />
-              <MapStat label="Markers" value={markerGroups.length.toString()} />
-              <MapStat label="Total" value={totalSceneCount.toString()} />
+              <MapStat label="場景" value={mapSceneCount.toString()} />
+              <MapStat label="標記" value={markerGroups.length.toString()} />
+              <MapStat label="總數" value={totalSceneCount.toString()} />
             </div>
             <Link
               href={buildCatalogHref(filters)}
               className="flex min-h-10 w-fit items-center rounded border border-rail px-4 text-sm font-semibold"
             >
-              Scene catalog
+              場景目錄
             </Link>
           </div>
         </div>
@@ -96,12 +96,10 @@ export function SceneMap({
       <div className="mx-auto grid w-full max-w-6xl gap-5 px-5 py-6 lg:grid-cols-[minmax(0,17rem)_minmax(0,1fr)]">
         <MapFilterForm filters={filters} works={works} locations={locations} />
 
-        <section className="grid min-w-0 gap-5" aria-label="Map results">
+        <section className="grid min-w-0 gap-5" aria-label="地圖結果">
           {omittedSceneCount > 0 ? (
             <div className="rounded border border-[#f1c6bb] bg-white p-4 text-sm text-signal">
-              {omittedSceneCount} scene
-              {omittedSceneCount === 1 ? "" : "s"} cannot be placed because
-              coordinates are missing or invalid.
+              {omittedSceneCount} 個場景因座標缺失或無效，無法放在地圖上。
             </div>
           ) : null}
 
@@ -137,24 +135,24 @@ function MapFilterForm({
 }: Pick<SceneMapProps, "filters" | "works" | "locations">) {
   return (
     <aside
-      aria-label="Map filters"
+      aria-label="地圖篩選"
       className="min-w-0 bg-paper lg:sticky lg:top-4 lg:h-fit"
     >
       <form
         action="/map"
         className="grid min-w-0 gap-4 rounded border border-rail bg-white p-4"
       >
-        <h2 className="text-base font-semibold">Filters</h2>
+        <h2 className="text-base font-semibold">篩選條件</h2>
 
         <label className="grid min-w-0 gap-2 text-sm font-medium">
-          Work
+          作品
           <select
             name="workId"
-            aria-label="Filter map by work"
+            aria-label="依作品篩選地圖"
             defaultValue={filters.workId ?? ""}
             className="min-h-10 w-full min-w-0 rounded border border-rail bg-white px-3 text-sm"
           >
-            <option value="">All works</option>
+            <option value="">全部作品</option>
             {works.map((work) => (
               <option key={work.id} value={work.id}>
                 {work.shortCode} - {work.name}
@@ -164,14 +162,14 @@ function MapFilterForm({
         </label>
 
         <label className="grid min-w-0 gap-2 text-sm font-medium">
-          Location
+          地點
           <select
             name="locationId"
-            aria-label="Filter map by location"
+            aria-label="依地點篩選地圖"
             defaultValue={filters.locationId ?? ""}
             className="min-h-10 w-full min-w-0 rounded border border-rail bg-white px-3 text-sm"
           >
-            <option value="">All locations</option>
+            <option value="">全部地點</option>
             {locations.map((location) => (
               <option key={location.id} value={location.id}>
                 {location.areaName ? `${location.areaName} - ` : ""}
@@ -182,14 +180,14 @@ function MapFilterForm({
         </label>
 
         <label className="grid min-w-0 gap-2 text-sm font-medium">
-          Status
+          狀態
           <select
             name="status"
-            aria-label="Filter map by status"
+            aria-label="依狀態篩選地圖"
             defaultValue={filters.status ?? ""}
             className="min-h-10 w-full min-w-0 rounded border border-rail bg-white px-3 text-sm"
           >
-            <option value="">All statuses</option>
+            <option value="">全部狀態</option>
             {getSceneStatusOptions().map((status) => (
               <option key={status} value={status}>
                 {getSceneStatusLabel(status)}
@@ -203,13 +201,13 @@ function MapFilterForm({
             type="submit"
             className="min-h-10 w-full min-w-0 rounded bg-field px-4 text-sm font-semibold text-white"
           >
-            Apply filters
+            套用篩選
           </button>
           <Link
             href="/map"
             className="flex min-h-10 w-full min-w-0 items-center justify-center rounded border border-rail px-4 text-sm font-semibold"
           >
-            Clear
+            清除
           </Link>
         </div>
       </form>
@@ -228,7 +226,7 @@ function ProjectedMap({
 }) {
   return (
     <section
-      aria-label="Projected scene map"
+      aria-label="投影場景地圖"
       className="relative min-h-[30rem] overflow-hidden rounded border border-rail bg-[#eef3ee]"
     >
       <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(43,58,50,0.12)_1px,transparent_1px),linear-gradient(0deg,rgba(43,58,50,0.12)_1px,transparent_1px)] bg-[size:12.5%_12.5%]" />
@@ -237,7 +235,7 @@ function ProjectedMap({
 
       {markerGroups.length === 0 ? (
         <div className="absolute inset-0 grid place-items-center p-6 text-center text-sm text-night">
-          No scenes with valid coordinates match the current filters.
+          目前篩選沒有符合且座標有效的場景。
         </div>
       ) : null}
 
@@ -248,7 +246,7 @@ function ProjectedMap({
           <button
             key={group.id}
             type="button"
-            aria-label={`Select marker group: ${group.sceneCount} scenes at ${group.label}`}
+            aria-label={`選取標記群組：${group.sceneCount} 個場景，地點 ${group.label}`}
             aria-pressed={selected}
             onClick={() => onSelectGroup(group.id)}
             className={`absolute flex min-h-11 min-w-11 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border text-sm font-semibold shadow-sm transition ${
@@ -273,12 +271,12 @@ function SelectedMarkerPanel({ group }: { group?: SceneMapMarkerGroup }) {
   if (!group) {
     return (
       <aside
-        aria-label="Selected marker"
+        aria-label="選取的標記"
         className="rounded border border-rail bg-white p-5"
       >
-        <h2 className="text-lg font-semibold">Selected marker</h2>
+        <h2 className="text-lg font-semibold">選取的標記</h2>
         <p className="mt-3 text-sm leading-6 text-night">
-          Choose a marker group to inspect scene identities.
+          選擇一個標記群組來查看場景身份。
         </p>
       </aside>
     );
@@ -286,14 +284,14 @@ function SelectedMarkerPanel({ group }: { group?: SceneMapMarkerGroup }) {
 
   return (
     <aside
-      aria-label="Selected marker"
+      aria-label="選取的標記"
       className="grid h-fit gap-4 rounded border border-rail bg-white p-5"
     >
       <div>
         <h2 className="text-lg font-semibold">{group.label}</h2>
         <p className="mt-2 text-sm text-night">
-          {group.sceneCount} scene{group.sceneCount === 1 ? "" : "s"} at{" "}
-          {group.latitude.toFixed(5)}, {group.longitude.toFixed(5)}
+          {group.sceneCount} 個場景，座標 {group.latitude.toFixed(5)},{" "}
+          {group.longitude.toFixed(5)}
         </p>
       </div>
 
@@ -314,7 +312,7 @@ function SceneMapCard({ scene }: { scene: SceneCatalogItem }) {
     <article className="rounded border border-rail bg-paper p-4">
       <div className="grid grid-cols-[4.5rem_minmax(0,1fr)] gap-3">
         <div className="flex aspect-square min-w-0 flex-col justify-center rounded border border-rail bg-white p-2 text-xs">
-          <span className="font-semibold">Anime ref</span>
+          <span className="font-semibold">動畫參考</span>
           <span className="mt-1 break-all text-night">
             {scene.animeImageDriveFileId}
           </span>
@@ -328,7 +326,7 @@ function SceneMapCard({ scene }: { scene: SceneCatalogItem }) {
           </Link>
           <p className="mt-1 text-sm leading-5 text-night">
             {scene.work.shortCode} - {scene.work.name}
-            {scene.episode ? ` · Episode ${scene.episode}` : ""}
+            {scene.episode ? ` · 第 ${scene.episode} 集` : ""}
           </p>
           <span
             className={`mt-2 inline-flex w-fit rounded border px-2 py-1 text-xs font-semibold uppercase tracking-wide ${statusTone[scene.status]}`}
@@ -346,11 +344,11 @@ function SceneMapCard({ scene }: { scene: SceneCatalogItem }) {
             rel="noreferrer"
             className="flex min-h-10 w-fit items-center rounded bg-field px-4 text-sm font-semibold text-white"
           >
-            Open navigation
+            開啟導航
           </a>
         ) : (
           <span className="flex min-h-10 w-fit items-center rounded border border-rail px-4 text-sm font-semibold text-night">
-            {coordinateIssue ?? "Navigation unavailable"}
+            {coordinateIssue ?? "無法導航"}
           </span>
         )}
       </div>

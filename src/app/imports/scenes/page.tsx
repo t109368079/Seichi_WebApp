@@ -13,21 +13,20 @@ export default function SceneImportPage() {
               href="/"
               className="text-sm font-semibold uppercase tracking-wide text-field"
             >
-              Seichi Pilgrimage
+              聖地巡禮
             </Link>
             <h1 className="mt-3 text-3xl font-semibold md:text-4xl">
-              Scene Import
+              場景匯入
             </h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-night">
-              Preview and commit CSV scene data before it appears in the
-              catalog.
+              在寫入場景目錄前，先預覽並確認 CSV 場景資料。
             </p>
           </div>
           <Link
             href="/scenes"
             className="flex min-h-11 w-fit items-center rounded border border-rail px-5 text-sm font-semibold"
           >
-            Scene catalog
+            場景目錄
           </Link>
         </div>
       </header>

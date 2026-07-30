@@ -34,9 +34,9 @@ describe("foundation summary", () => {
     );
 
     expect(
-      screen.getByRole("region", { name: "Foundation status" }),
+      screen.getByRole("region", { name: "基礎工程狀態" }),
     ).toBeInTheDocument();
-    expect(screen.getByText("Engineering Harness")).toBeInTheDocument();
-    expect(screen.getByText("Ready")).toBeInTheDocument();
+    expect(screen.getByText("工程基礎")).toBeInTheDocument();
+    expect(screen.getByText("已就緒")).toBeInTheDocument();
   });
 });

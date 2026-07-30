@@ -35,8 +35,8 @@ export async function handleSceneImportAction(
       stage: "error",
       message:
         error instanceof Error
-          ? `Import failed before any database changes were kept. ${error.message}`
-          : "Import failed before any database changes were kept.",
+          ? `匯入失敗，資料庫未保留任何變更。${error.message}`
+          : "匯入失敗，資料庫未保留任何變更。",
     };
   }
 }
@@ -49,7 +49,7 @@ async function previewImport(
   if (!(file instanceof File) || file.size === 0) {
     return {
       stage: "error",
-      message: "Choose a CSV file before previewing.",
+      message: "請先選擇 CSV 檔案再預覽。",
     };
   }
 
@@ -61,8 +61,8 @@ async function previewImport(
     csvText,
     preview,
     message: preview.canCommit
-      ? "Preview is ready."
-      : "Fix CSV errors before confirming the import.",
+      ? "預覽已完成。"
+      : "請先修正 CSV 錯誤，再確認匯入。",
   };
 }
 
@@ -74,7 +74,7 @@ async function commitImport(
   if (typeof csvText !== "string" || csvText.trim().length === 0) {
     return {
       stage: "error",
-      message: "Preview a CSV file before confirming the import.",
+      message: "請先預覽 CSV 檔案，再確認匯入。",
     };
   }
 
@@ -85,7 +85,7 @@ async function commitImport(
       stage: "preview",
       csvText,
       preview: result.preview,
-      message: "Fix CSV errors before confirming the import.",
+      message: "請先修正 CSV 錯誤，再確認匯入。",
     };
   }
 
@@ -93,7 +93,7 @@ async function commitImport(
     stage: "committed",
     csvText,
     preview: result.preview,
-    message: "Import complete.",
+    message: "匯入完成。",
     commitResult: {
       createdCount: result.createdCount,
       updatedCount: result.updatedCount,

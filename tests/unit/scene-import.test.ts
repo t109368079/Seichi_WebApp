@@ -44,17 +44,17 @@ describe("scene import CSV parsing", () => {
         expect.objectContaining({
           rowNumber: 1,
           field: "longitude",
-          message: "Missing CSV column: longitude.",
+          message: "缺少 CSV 欄位：longitude。",
         }),
         expect.objectContaining({
           rowNumber: 1,
           field: "notes",
-          message: "Duplicate CSV column: notes.",
+          message: "重複的 CSV 欄位：notes。",
         }),
         expect.objectContaining({
           rowNumber: 1,
           field: "status",
-          message: "Unknown CSV column: status.",
+          message: "未知的 CSV 欄位：status。",
         }),
       ]),
     );
@@ -71,7 +71,7 @@ describe("scene import CSV parsing", () => {
       {
         rowNumber: 2,
         field: "scene_code",
-        message: "Required value is empty for scene_code.",
+        message: "scene_code 為必填欄位，不能空白。",
       },
     ]);
   });
@@ -87,7 +87,7 @@ nri-101,Night Rail,NRI,03,demo-drive-2,West Gate,Ikebukuro,35.73100,139.71200,,`
       {
         rowNumber: 3,
         field: "scene_code",
-        message: "Duplicate scene_code NRI-101; first seen on row 2.",
+        message: "scene_code NRI-101 重複；第一次出現在第 2 列。",
       },
     ]);
   });
@@ -104,7 +104,7 @@ NRI-102,Night Rail,NRI,03,demo-drive-2,West Gate,Ikebukuro,35.73100,181,,`,
       {
         rowNumber: 3,
         field: "longitude",
-        message: "Invalid longitude: 181",
+        message: "經度無效：181",
       },
     ]);
   });

@@ -88,13 +88,13 @@ describe("scene map coordinates and navigation", () => {
       false,
     );
     expect(getCoordinateIssue({ latitude: null, longitude: 139 })).toBe(
-      "Coordinates are missing.",
+      "座標缺失。",
     );
     expect(getCoordinateIssue({ latitude: 91, longitude: 139 })).toBe(
-      "Invalid latitude: 91",
+      "緯度無效：91",
     );
     expect(getNavigationTarget({ latitude: 35, longitude: 181 })).toEqual({
-      disabledReason: "Invalid longitude: 181",
+      disabledReason: "經度無效：181",
     });
   });
 });
@@ -105,7 +105,7 @@ describe("scene map grouping and projection", () => {
 
     expect(groups).toHaveLength(2);
     expect(groups[0]?.sceneCount).toBe(3);
-    expect(groups[0]?.label).toBe("Ikebukuro nearby scenes");
+    expect(groups[0]?.label).toBe("Ikebukuro 附近場景");
     expect(groups[0]?.scenes.map((mapScene) => mapScene.sceneCode)).toEqual([
       "BHC-001",
       "SLC-001",

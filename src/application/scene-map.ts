@@ -68,15 +68,15 @@ export function getCoordinateIssue(
     typeof coordinates.latitude !== "number" ||
     typeof coordinates.longitude !== "number"
   ) {
-    return "Coordinates are missing.";
+    return "座標缺失。";
   }
 
   if (!isValidLatitude(coordinates.latitude)) {
-    return `Invalid latitude: ${coordinates.latitude}`;
+    return `緯度無效：${coordinates.latitude}`;
   }
 
   if (!isValidLongitude(coordinates.longitude)) {
-    return `Invalid longitude: ${coordinates.longitude}`;
+    return `經度無效：${coordinates.longitude}`;
   }
 
   return undefined;
@@ -247,7 +247,7 @@ function getMarkerGroupLabel(scenes: readonly SceneCatalogItem[]): string {
   const firstScene = scenes[0];
 
   if (!firstScene) {
-    return "Empty marker group";
+    return "空白標記群組";
   }
 
   const locationIds = new Set(scenes.map((scene) => scene.location.id));
@@ -257,8 +257,8 @@ function getMarkerGroupLabel(scenes: readonly SceneCatalogItem[]): string {
   }
 
   return firstScene.location.areaName
-    ? `${firstScene.location.areaName} nearby scenes`
-    : "Nearby scenes";
+    ? `${firstScene.location.areaName} 附近場景`
+    : "附近場景";
 }
 
 function average(values: readonly number[]): number {
