@@ -152,7 +152,7 @@ test("field mode keeps REVIEWED scenes read only", async ({ page }) => {
     page.getByRole("figure", { name: "ARS-001 動畫參考圖" }),
   ).toBeVisible();
   await expect(page.getByLabel("目前狀態")).toHaveText("已審核");
-  await expect(page.getByText("Phase 5 不提供變更")).toBeVisible();
+  await expect(page.getByText("現地模式不提供變更")).toBeVisible();
   await expect(page.getByRole("button", { name: "標記待確認" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "跳過此場景" })).toHaveCount(0);
 });

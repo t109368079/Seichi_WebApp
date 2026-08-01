@@ -26,7 +26,7 @@ export function FieldStatusActions({
     return (
       <div className="rounded border border-rail bg-paper p-4 text-sm leading-6 text-night">
         此場景已標記為「{getSceneStatusLabel(status)}
-        」，Phase 5 不提供變更。審核狀態的調整留待 Phase 7 的 Review 流程。
+        」，現地模式不提供變更。請從 Review 流程調整審核狀態。
       </div>
     );
   }

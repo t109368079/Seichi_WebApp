@@ -188,10 +188,15 @@ export async function deleteScenePhoto(
     const remainingTakes = await transaction.scenePhoto.count({
       where: { sceneId: photo.sceneId },
     });
+    const remainingBestTakes = await transaction.scenePhoto.count({
+      where: { sceneId: photo.sceneId, isBest: true },
+    });
     const previousStatus = assertSceneStatus(photo.scene.status);
     const nextStatus = resolveStatusAfterPhotoRemoval(
       previousStatus,
       remainingTakes,
+      photo.isBest,
+      remainingBestTakes,
     );
 
     if (nextStatus !== previousStatus) {

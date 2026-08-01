@@ -12,13 +12,13 @@ import {
 
 const expectedTransitions: Record<SceneStatus, SceneStatus[]> = {
   NOT_SHOT: ["PENDING_REVIEW", "RETAKE_REQUIRED", "SKIPPED"],
-  PENDING_REVIEW: ["RETAKE_REQUIRED", "SKIPPED", "NOT_SHOT"],
-  REVIEWED: [],
+  PENDING_REVIEW: ["REVIEWED", "RETAKE_REQUIRED", "SKIPPED", "NOT_SHOT"],
+  REVIEWED: ["PENDING_REVIEW", "NOT_SHOT"],
   RETAKE_REQUIRED: ["PENDING_REVIEW", "SKIPPED", "NOT_SHOT"],
   SKIPPED: ["NOT_SHOT"],
 };
 
-describe("phase 5 scene status transitions", () => {
+describe("scene status transitions", () => {
   it("accepts every legal transition in the table", () => {
     for (const status of sceneStatuses) {
       for (const target of expectedTransitions[status]) {
@@ -43,15 +43,19 @@ describe("phase 5 scene status transitions", () => {
     }
   });
 
-  it("never allows a transition into REVIEWED in phase 5", () => {
-    for (const status of sceneStatuses) {
-      expect(getAllowedSceneStatusTransitions(status)).not.toContain(
-        "REVIEWED",
-      );
-    }
+  it("allows Phase 7 review completion only from pending review", () => {
+    expect(getAllowedSceneStatusTransitions("PENDING_REVIEW")).toContain(
+      "REVIEWED",
+    );
+    expect(getAllowedSceneStatusTransitions("NOT_SHOT")).not.toContain(
+      "REVIEWED",
+    );
+    expect(getAllowedSceneStatusTransitions("RETAKE_REQUIRED")).not.toContain(
+      "REVIEWED",
+    );
   });
 
-  it("treats REVIEWED as terminal and exposes no field actions", () => {
+  it("keeps REVIEWED read-only in Field Mode", () => {
     expect(isTerminalFieldStatus("REVIEWED")).toBe(true);
     expect(getFieldStatusActions("REVIEWED")).toEqual([]);
   });

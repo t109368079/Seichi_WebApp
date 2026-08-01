@@ -11,14 +11,15 @@ export default function Home() {
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-8 md:flex-row md:items-end md:justify-between">
           <div className="max-w-2xl">
             <p className="text-sm font-semibold uppercase tracking-wide text-field">
-              第五階段：平板現地模式
+              第七階段：審核流程
             </p>
             <h1 className="mt-3 text-4xl font-semibold leading-tight md:text-5xl">
               聖地巡禮
             </h1>
             <p className="mt-4 text-base leading-7 text-night">
               匯入 CSV
-              場景資料，以永久場景身份瀏覽，出發前安排每日拍攝順序，現地依序查看動畫參考圖並記錄可逆的拍攝狀態。
+              場景資料，以永久場景身份瀏覽，現地上傳實景照片，事後選出最佳 Take
+              並完成審核。
             </p>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row">
@@ -41,6 +42,12 @@ export default function Home() {
               開啟旅行規劃
             </Link>
             <Link
+              href="/reviews"
+              className="flex min-h-11 w-fit items-center rounded border border-rail px-5 text-sm font-semibold"
+            >
+              開啟審核佇列
+            </Link>
+            <Link
               href="/scenes"
               className="flex min-h-11 w-fit items-center rounded border border-rail px-5 text-sm font-semibold"
             >
@@ -56,9 +63,8 @@ export default function Home() {
         <section className="rounded border border-rail bg-white p-5">
           <h2 className="text-lg font-semibold">目前範圍</h2>
           <p className="mt-3 text-sm leading-6 text-night">
-            Phase 5
-            加入平板現地模式：今日行程、動畫參考圖、導航與可逆的現地狀態。照片綁定、Review
-            與 Google API 整合仍留待後續階段。
+            Phase 7 加入審核佇列、動畫與實景並排比較、最佳照片選擇與 Review
+            狀態管理。Google API 整合仍留待後續階段。
           </p>
           <dl className="mt-5 grid gap-3 text-sm">
             <div className="flex items-center justify-between border-t border-rail pt-3">

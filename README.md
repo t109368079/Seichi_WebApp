@@ -2,7 +2,7 @@
 
 Responsive web app for managing anime pilgrimage scenes, trips, field photo binding, and review workflows.
 
-Phase 6 currently provides CSV scene import, a no-external-API scene map, a scene catalog, trip planning, tablet field mode, and mobile photo binding, all backed by Prisma and PostgreSQL. It intentionally does not yet implement Google APIs or review workflows.
+Phase 7 currently provides CSV scene import, a no-external-API scene map, a scene catalog, trip planning, tablet field mode, mobile photo binding, and the post-trip review workflow, all backed by Prisma and PostgreSQL. It intentionally does not yet implement Google APIs.
 
 ## Requirements
 
@@ -81,7 +81,7 @@ The Phase 3 map uses local coordinate projection and generated Google Maps navig
 
 Phase 4 trip planning lets you create a trip, auto-generate daily itineraries from a date range, add scenes from catalog/map/location/detail pages, and save manual scene order. It does not optimize or auto-sort routes.
 
-Phase 5 field mode shows a day's scenes in the manually planned order, displays an anime reference panel for the current scene, generates the Google Maps navigation URL, moves between scenes with previous/next, and records reversible status. Field status actions are 待確認, 需要補拍, 跳過 and 返回未拍攝. `REVIEWED` scenes are read-only until the Phase 7 review workflow. The anime reference is a placeholder until Phase 8 supplies Drive images, and it is never removed by a status change.
+Phase 5 field mode shows a day's scenes in the manually planned order, displays an anime reference panel for the current scene, generates the Google Maps navigation URL, moves between scenes with previous/next, and records reversible status. Field status actions are 待確認, 需要補拍, 跳過 and 返回未拍攝. `REVIEWED` scenes are read-only in Field Mode; review changes happen in the Phase 7 review workflow. The anime reference is a placeholder until Phase 8 supplies Drive images, and it is never removed by a status change.
 
 Phase 6 photo binding lets the phone upload a real photo from the local library and bind it permanently to one Scene:
 
@@ -92,6 +92,15 @@ http://localhost:3000/field/<tripDayId>/<tripSceneId>/upload
 Accepted formats are JPEG, PNG, and WebP, up to 15 MB per file. The first successful upload moves a scene from 未拍攝 to 待確認 automatically, and removing the last photo moves it back. A scene keeps every take; a new upload never overwrites an earlier one. Deleting a trip never deletes photos.
 
 Photo bytes are written through a storage adapter to `PHOTO_STORAGE_DIR` (default `storage/scene-photos`), which is gitignored. Uploaded photos are personal data and must never be committed. Google Drive storage arrives in Phase 8 by replacing the adapter; no schema change is needed.
+
+Phase 7 review starts from the review queue:
+
+```text
+http://localhost:3000/reviews
+http://localhost:3000/reviews/<sceneId>
+```
+
+The queue can filter by review bucket, work, location, trip, and Scene status. The detail view keeps the anime reference and all real-world takes visible, lets the user mark exactly one best photo, and only enables `REVIEWED` after a best photo exists. Deleting the best or last photo from a reviewed scene reopens the Scene so completion cannot point at a missing take.
 
 ## Verification
 

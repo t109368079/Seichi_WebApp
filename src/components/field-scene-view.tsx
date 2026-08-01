@@ -134,6 +134,7 @@ export function FieldSceneView({
 
       <ScenePhotoGallery
         photos={photos}
+        sceneId={scene.id}
         sceneCode={scene.sceneCode}
         tripDayId={day.tripDayId}
         tripSceneId={current.id}

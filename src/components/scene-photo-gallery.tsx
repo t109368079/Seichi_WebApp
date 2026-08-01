@@ -10,11 +10,13 @@ import {
 
 export function ScenePhotoGallery({
   photos,
+  sceneId,
   sceneCode,
   tripDayId,
   tripSceneId,
 }: {
   photos: readonly ScenePhotoItem[];
+  sceneId: string;
   sceneCode: string;
   tripDayId: string;
   tripSceneId: string;
@@ -39,6 +41,12 @@ export function ScenePhotoGallery({
         >
           上傳實景照片
         </Link>
+        <Link
+          href={`/reviews/${sceneId}`}
+          className="flex min-h-11 w-fit items-center rounded border border-rail px-5 text-base font-semibold"
+        >
+          開啟審核
+        </Link>
       </div>
 
       {photos.length > 0 ? (
@@ -58,6 +66,7 @@ export function ScenePhotoGallery({
               <div className="min-w-0">
                 <p className="text-base font-semibold">
                   {getTakeLabel(photo.takeNumber)}
+                  {photo.isBest ? " · 最佳照片" : ""}
                 </p>
                 <p className="mt-1 break-all text-sm text-night">
                   {photo.fileName}

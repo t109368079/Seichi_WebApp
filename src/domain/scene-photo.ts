@@ -92,18 +92,27 @@ export function resolveStatusAfterUpload(current: SceneStatus): SceneStatus {
 }
 
 /**
- * Keeps status honest about whether real photos exist. Only the pending-review
- * case reverts; REVIEWED is owned by Phase 7 and SKIPPED never depended on a photo.
+ * Keeps status honest about whether real photos and review completion still
+ * exist. Phase 7 reopens REVIEWED when its required best photo disappears.
  */
 export function resolveStatusAfterPhotoRemoval(
   current: SceneStatus,
   remainingPhotoCount: number,
+  removedWasBest = false,
+  remainingBestPhotoCount = 0,
 ): SceneStatus {
   if (remainingPhotoCount > 0) {
+    if (
+      current === "REVIEWED" &&
+      (removedWasBest || remainingBestPhotoCount === 0)
+    ) {
+      return "PENDING_REVIEW";
+    }
+
     return current;
   }
 
-  if (current === "PENDING_REVIEW") {
+  if (current === "PENDING_REVIEW" || current === "REVIEWED") {
     return "NOT_SHOT";
   }
 

@@ -116,7 +116,9 @@ describe("status after upload", () => {
 
 describe("status after photo removal", () => {
   it("keeps the status while any take remains", () => {
-    for (const status of sceneStatuses) {
+    for (const status of sceneStatuses.filter(
+      (candidate) => candidate !== "REVIEWED",
+    )) {
       expect(resolveStatusAfterPhotoRemoval(status, 1)).toBe(status);
     }
   });
@@ -127,13 +129,23 @@ describe("status after photo removal", () => {
     );
   });
 
-  it("leaves other statuses unchanged when the last take is gone", () => {
-    const untouched: SceneStatus[] = [
+  it("reopens a reviewed scene when its best photo is removed", () => {
+    expect(resolveStatusAfterPhotoRemoval("REVIEWED", 1, true, 0)).toBe(
+      "PENDING_REVIEW",
+    );
+    expect(resolveStatusAfterPhotoRemoval("REVIEWED", 0, true, 0)).toBe(
       "NOT_SHOT",
-      "SKIPPED",
+    );
+  });
+
+  it("keeps a reviewed scene reviewed when a non-best photo is removed", () => {
+    expect(resolveStatusAfterPhotoRemoval("REVIEWED", 1, false, 1)).toBe(
       "REVIEWED",
-      "RETAKE_REQUIRED",
-    ];
+    );
+  });
+
+  it("leaves other statuses unchanged when the last take is gone", () => {
+    const untouched: SceneStatus[] = ["NOT_SHOT", "SKIPPED", "RETAKE_REQUIRED"];
 
     for (const status of untouched) {
       expect(resolveStatusAfterPhotoRemoval(status, 0)).toBe(status);

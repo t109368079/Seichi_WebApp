@@ -6,7 +6,7 @@ test("homepage links to scene import, map, and the catalog", async ({
   await page.goto("/");
 
   await expect(page.getByRole("heading", { name: "聖地巡禮" })).toBeVisible();
-  await expect(page.getByText("第五階段：平板現地模式")).toBeVisible();
+  await expect(page.getByText("第七階段：審核流程")).toBeVisible();
   await expect(
     page.getByRole("region", { name: "基礎工程狀態" }),
   ).toBeVisible();

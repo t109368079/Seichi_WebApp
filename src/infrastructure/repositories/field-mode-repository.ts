@@ -7,7 +7,7 @@ import {
 } from "@/application/field-mode";
 import { assertSceneStatus, type SceneStatus } from "@/domain/scene";
 import {
-  assertSceneStatusTransition,
+  getFieldStatusActions,
   resolveFieldStatusTarget,
   type FieldStatusAction,
 } from "@/domain/scene-status";
@@ -123,10 +123,13 @@ export async function updateSceneStatusFromField(
     }
 
     const previousStatus = assertSceneStatus(scene.status);
-    const nextStatus = assertSceneStatusTransition(
-      previousStatus,
-      resolveFieldStatusTarget(action),
-    );
+    const nextStatus = resolveFieldStatusTarget(action);
+
+    if (!getFieldStatusActions(previousStatus).includes(action)) {
+      throw new Error(
+        `Illegal SceneStatus transition: ${previousStatus} -> ${nextStatus}`,
+      );
+    }
 
     await transaction.scene.update({
       where: {

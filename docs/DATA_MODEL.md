@@ -156,7 +156,7 @@ Trip planning rules:
 
 Phase 5 does not add database tables or columns. It writes only the existing `Scene.status` column through a validated, transaction-backed update.
 
-Phase 5 transition table:
+Field Mode capture transition table:
 
 ```text
 NOT_SHOT        -> PENDING_REVIEW, RETAKE_REQUIRED, SKIPPED
@@ -168,9 +168,9 @@ REVIEWED        -> (no transitions in Phase 5)
 
 Field status rules:
 
-- The table lives in `src/domain/scene-status.ts` and is the only place transitions are defined.
+- Field Mode actions stay scoped to capture work. The shared status transition table still lives in `src/domain/scene-status.ts`.
 - Every transition is reversible, so no status change destroys work state.
-- `REVIEWED` is unreachable and unleavable in Phase 5; Phase 7 owns review transitions.
+- `REVIEWED` is read-only in Field Mode; Phase 7 review routes own review transitions.
 - `PENDING_REVIEW` is set manually in Phase 5; Phase 6 adds the photo-triggered transition.
 - Status changes never delete, hide, or replace the anime image reference.
 - A rejected transition leaves the stored status unchanged.
@@ -216,14 +216,44 @@ upload  : NOT_SHOT        -> PENDING_REVIEW
           PENDING_REVIEW / SKIPPED / REVIEWED -> unchanged
 
 delete  : PENDING_REVIEW  -> NOT_SHOT   (only when the last photo is removed)
+          REVIEWED        -> PENDING_REVIEW (when the best photo is removed and photos remain)
+          REVIEWED        -> NOT_SHOT   (when the last photo is removed)
           all other statuses -> unchanged
 ```
 
-Both directions validate against the Phase 5 transition table rather than defining new rules.
+Photo-triggered status targets validate against the shared domain transition table rather than defining separate repository rules.
+
+## Phase 7 Review Workflow Model
+
+Phase 7 adds no migration. It activates the existing `ScenePhoto.isBest` column and its partial unique index.
+
+Review rules:
+
+- A Scene can be marked `REVIEWED` only from `PENDING_REVIEW`.
+- A Scene needs at least one photo before it can become `REVIEWED`.
+- A reviewed Scene must have exactly one best photo.
+- Selecting a best photo clears any previous best photo for the same Scene.
+- All takes remain bound to the Scene; selecting or replacing the best photo never deletes or hides older takes.
+- `PENDING_REVIEW` can move to `RETAKE_REQUIRED` when the review rejects the current takes.
+- `RETAKE_REQUIRED` can move back to `PENDING_REVIEW` when a new take is uploaded or when the reviewer manually returns it.
+- If a reviewed Scene loses its best photo while other photos remain, it returns to `PENDING_REVIEW`.
+- If a reviewed Scene loses its last photo, it returns to `NOT_SHOT`.
+- Field Mode remains capture-only and does not expose review completion actions.
+
+Review queue buckets are derived, not stored:
+
+```text
+待確認                 Scene.status = PENDING_REVIEW
+需要補拍               Scene.status = RETAKE_REQUIRED
+未拍攝                 Scene.status = NOT_SHOT
+有照片但未選最佳照片   ScenePhoto count > 0 and no isBest photo
+已審核                 Scene.status = REVIEWED
+```
+
+The `有照片但未選最佳照片` bucket can overlap with status buckets. It exists so the reviewer can find scenes that have takes but cannot yet be completed.
 
 ## Future Product Models
 
 Later phases will add:
 
-- Best photo selection behavior on the existing `ScenePhoto.isBest` column
 - Google Sheets and Google Drive integration metadata

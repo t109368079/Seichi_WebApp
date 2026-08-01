@@ -59,6 +59,15 @@ Phase 6 adds the mobile photo binding slice:
 - The project's first route handlers: `POST /api/scene-photos` for upload and `GET /api/scene-photos/[photoId]` for reads.
 - A client upload page at `/field/[tripDayId]/[tripSceneId]/upload` and a take gallery on the Field Mode scene page.
 
+Phase 7 adds the review workflow slice:
+
+- Domain-layer review eligibility, best-photo uniqueness, review bucket matching, and review status actions.
+- Application-layer review queue filters, summary helpers, status labels, and selected-photo resolution.
+- Infrastructure repository functions for review queue reads, scene review detail reads, best-photo selection, and transaction-backed review status writes.
+- Runtime-rendered `/reviews` and `/reviews/[sceneId]` pages using server actions.
+- Review entry points from the homepage, Scene Detail, and Field Mode take gallery.
+- A browser E2E review path that includes real local file upload as setup for selecting the best take.
+
 ## Target Layering
 
 Product phases follow this layering:
@@ -80,6 +89,8 @@ Phase 5 keeps every status transition rule in one domain module so Phase 6 photo
 
 Phase 6 reuses the Phase 5 transition table without modifying it: upload and deletion resolve a target status in the photo domain and then validate it against the same table. Photo bytes cross the `PhotoStorageAdapter` boundary only, so no layer above infrastructure knows the filesystem exists. The upload writes storage inside the database transaction so a storage failure rolls the row back.
 
+Phase 7 extends the shared status transition table for review completion while keeping Field Mode on a capture-scoped action list. Review rules live in `src/domain/review.ts`; repository writes load the Scene and its photos inside one transaction before choosing a best photo or changing review status. No UI calls a storage implementation directly: review image URLs still go through the Phase 6 photo route handler and adapter.
+
 ## Adapter Rules
 
 - UI must not directly call Google APIs.
@@ -99,8 +110,9 @@ The database now contains:
 - `Trip`, representing a planned trip.
 - `TripDay`, representing one calendar day in a trip.
 - `TripScene`, representing a Scene manually added to a TripDay with user-controlled order.
+- `ScenePhoto`, representing one real-world take permanently bound to a Scene, with optional Trip and TripDay capture context.
 
-Photo binding, review data, Google import data, and storage metadata remain out of scope until later phases.
+Google import data and Google Drive metadata remain out of scope until later phases. Photo bytes are outside the database behind the storage adapter.
 
 Phase 2 does not add database tables. CSV import writes to the existing Work, Location, and Scene tables by upsert:
 
@@ -116,3 +128,5 @@ Phase 4 adds planning tables only. Hard deleting a Trip cascades planning rows b
 Phase 5 does not add database tables or a migration. It writes only the existing `Scene.status` column, and every write validates against the Phase 5 transition table before the transaction commits.
 
 Phase 6 adds `ScenePhoto`, holding the permanent binding between a real photo and exactly one Scene. Scene deletion cascades to its photos; Trip and TripDay deletion nulls the capture context but preserves the photo. Photo bytes are not stored in the database.
+
+Phase 7 adds no migration. It uses the existing `ScenePhoto.isBest` column and partial unique index, and stores review completion in the existing `Scene.status` enum.

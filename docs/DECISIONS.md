@@ -187,3 +187,39 @@ Status: Accepted
 Status: Accepted
 
 `isBest` is part of the Gate 2 approved data model. Phase 6 creates the column and a partial unique index guaranteeing at most one `isBest = true` row per Scene, but no domain rule or UI reads or writes it. This avoids a second migration in Phase 7 while keeping best-photo selection out of Phase 6 scope.
+
+## D-0032: Phase 7 Uses Existing isBest Storage
+
+Status: Accepted
+
+Phase 7 does not add a schema migration. The review workflow activates the `ScenePhoto.isBest` column and the partial unique index created in Phase 6. Best-photo selection is a transaction that clears previous best flags for the Scene and then marks the selected photo, so the database and domain rule both preserve at most one best photo.
+
+## D-0033: Reviewed Requires A Best Photo
+
+Status: Accepted
+
+`Scene.status = REVIEWED` means review completion, not merely that photos exist. A Scene can move from `PENDING_REVIEW` to `REVIEWED` only when at least one photo is bound and exactly one photo is marked best. The UI disables the reviewed action until this is true, and the repository repeats the check before writing.
+
+## D-0034: Field Mode Stays Capture Only
+
+Status: Accepted
+
+Phase 7 extends the shared status transition table with review transitions, including `PENDING_REVIEW -> REVIEWED`, but Field Mode continues to expose only capture actions. `src/domain/scene-status.ts` therefore keeps a separate Field Mode action list so a tablet user cannot mark a Scene reviewed while standing on site.
+
+## D-0035: Deleting A Best Photo Reopens Review
+
+Status: Accepted
+
+Deleting photos must not leave review completion pointing at a missing take. If a `REVIEWED` Scene loses its best photo and still has other photos, it returns to `PENDING_REVIEW` so the reviewer can choose a replacement. If it loses its last photo, it returns to `NOT_SHOT`. All remaining takes stay bound to the Scene.
+
+## D-0036: Review Buckets Are Derived Filters
+
+Status: Accepted
+
+The review queue does not store bucket state. Buckets are derived from `Scene.status`, photo count, and whether a best photo exists, then combined with work, location, trip, and status filters. The "has photos but no best" bucket can overlap with status buckets because it highlights an actionable review problem rather than a separate status.
+
+## D-0037: Phase 7 E2E Includes Real Upload Setup
+
+Status: Accepted
+
+Phase 6 deferred browser upload E2E coverage by explicit request. Phase 7 adds a review workflow E2E path that creates a trip, uploads multiple local PNG files through the real browser file input, selects the best take, marks the Scene reviewed, and verifies trip progress. This covers the missing upload browser path while keeping review completion as the primary assertion.

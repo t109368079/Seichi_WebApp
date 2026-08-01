@@ -16,12 +16,19 @@ const fieldStatusActionTargets = {
   RESET_TO_NOT_SHOT: "NOT_SHOT",
 } satisfies Record<FieldStatusAction, SceneStatus>;
 
+const sceneStatusTransitions = {
+  NOT_SHOT: ["PENDING_REVIEW", "RETAKE_REQUIRED", "SKIPPED"],
+  PENDING_REVIEW: ["REVIEWED", "RETAKE_REQUIRED", "SKIPPED", "NOT_SHOT"],
+  REVIEWED: ["PENDING_REVIEW", "NOT_SHOT"],
+  RETAKE_REQUIRED: ["PENDING_REVIEW", "SKIPPED", "NOT_SHOT"],
+  SKIPPED: ["NOT_SHOT"],
+} satisfies Record<SceneStatus, readonly SceneStatus[]>;
+
 /**
- * Phase 5 transition table. `REVIEWED` has no outgoing transitions because the
- * requirements never list it as a transition source; Phase 7 owns review
- * transitions and will extend this table.
+ * Field Mode remains a capture workflow. Phase 7 review transitions are legal
+ * domain transitions, but they are not exposed as field actions.
  */
-const phase5Transitions = {
+const fieldModeTransitions = {
   NOT_SHOT: ["PENDING_REVIEW", "RETAKE_REQUIRED", "SKIPPED"],
   PENDING_REVIEW: ["RETAKE_REQUIRED", "SKIPPED", "NOT_SHOT"],
   REVIEWED: [],
@@ -50,7 +57,7 @@ export function resolveFieldStatusTarget(
 export function getAllowedSceneStatusTransitions(
   current: SceneStatus,
 ): readonly SceneStatus[] {
-  return phase5Transitions[assertSceneStatus(current)];
+  return sceneStatusTransitions[assertSceneStatus(current)];
 }
 
 export function canTransitionSceneStatus(
@@ -74,7 +81,8 @@ export function assertSceneStatusTransition(
 export function getFieldStatusActions(
   current: SceneStatus,
 ): FieldStatusAction[] {
-  const allowed = getAllowedSceneStatusTransitions(current);
+  const allowed: readonly SceneStatus[] =
+    fieldModeTransitions[assertSceneStatus(current)];
 
   return fieldStatusActions.filter((action) =>
     allowed.includes(resolveFieldStatusTarget(action)),
@@ -82,5 +90,5 @@ export function getFieldStatusActions(
 }
 
 export function isTerminalFieldStatus(current: SceneStatus): boolean {
-  return getAllowedSceneStatusTransitions(current).length === 0;
+  return fieldModeTransitions[assertSceneStatus(current)].length === 0;
 }

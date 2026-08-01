@@ -83,6 +83,12 @@ export default async function SceneDetailPage({
             >
               在地圖查看
             </Link>
+            <Link
+              href={`/reviews/${scene.id}`}
+              className="flex min-h-10 w-fit items-center rounded border border-rail px-4 text-sm font-semibold"
+            >
+              開啟審核
+            </Link>
             {navigation.href ? (
               <a
                 href={navigation.href}
