@@ -54,9 +54,10 @@ model Scene {
   status                SceneStatus @default(NOT_SHOT)
   createdAt             DateTime    @default(now())
   updatedAt             DateTime    @updatedAt
-  work                  Work        @relation(fields: [workId], references: [id], onDelete: Restrict)
-  location              Location    @relation(fields: [locationId], references: [id], onDelete: Restrict)
+  work                  Work         @relation(fields: [workId], references: [id], onDelete: Restrict)
+  location              Location     @relation(fields: [locationId], references: [id], onDelete: Restrict)
   tripScenes            TripScene[]
+  photos                ScenePhoto[]
 
   @@index([workId])
   @@index([locationId])
@@ -64,26 +65,28 @@ model Scene {
 }
 
 model Trip {
-  id        String    @id @default(cuid())
+  id        String       @id @default(cuid())
   name      String
-  startDate DateTime  @db.Date
-  endDate   DateTime  @db.Date
+  startDate DateTime     @db.Date
+  endDate   DateTime     @db.Date
   days      TripDay[]
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  photos    ScenePhoto[]
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
 
   @@index([startDate])
 }
 
 model TripDay {
-  id         String      @id @default(cuid())
+  id         String       @id @default(cuid())
   tripId     String
-  date       DateTime    @db.Date
+  date       DateTime     @db.Date
   title      String?
-  trip       Trip        @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  trip       Trip         @relation(fields: [tripId], references: [id], onDelete: Cascade)
   tripScenes TripScene[]
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
+  photos     ScenePhoto[]
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
 
   @@unique([tripId, date])
   @@index([date])
@@ -102,6 +105,31 @@ model TripScene {
   @@unique([tripDayId, sceneId])
   @@index([tripDayId, sortOrder])
   @@index([sceneId])
+}
+
+model ScenePhoto {
+  id            String    @id @default(cuid())
+  sceneId       String
+  tripId        String?
+  tripDayId     String?
+  fileName      String
+  mimeType      String
+  fileSize      Int
+  storageFileId String    @unique
+  capturedAt    DateTime?
+  uploadedAt    DateTime  @default(now())
+  takeNumber    Int
+  isBest        Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  scene         Scene     @relation(fields: [sceneId], references: [id], onDelete: Cascade)
+  trip          Trip?     @relation(fields: [tripId], references: [id], onDelete: SetNull)
+  tripDay       TripDay?  @relation(fields: [tripDayId], references: [id], onDelete: SetNull)
+
+  @@unique([sceneId, takeNumber])
+  @@index([sceneId, takeNumber])
+  @@index([tripId])
+  @@index([tripDayId])
 }
 
 enum SceneStatus {

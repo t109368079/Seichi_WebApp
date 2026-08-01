@@ -94,6 +94,13 @@ function TripDayPlanner({ day }: { day: TripDayPlanningItem }) {
           >
             從地圖加入
           </Link>
+          <Link
+            href={`/field/${day.id}`}
+            aria-label={`進入 ${day.date} 現地模式`}
+            className="flex min-h-10 w-fit items-center rounded border border-rail px-4 text-sm font-semibold"
+          >
+            進入現地模式
+          </Link>
         </div>
       </div>
 

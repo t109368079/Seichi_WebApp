@@ -78,15 +78,24 @@ export default async function TripsPage() {
                       {trip.startDate} 至 {trip.endDate}
                     </p>
                   </div>
-                  <form action={deleteTripAction}>
-                    <input type="hidden" name="tripId" value={trip.id} />
-                    <button
-                      type="submit"
-                      className="min-h-10 rounded border border-rail px-4 text-sm font-semibold text-night"
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <Link
+                      href={`/trips/${trip.id}/field`}
+                      aria-label={`${trip.name} 今日行程`}
+                      className="flex min-h-10 w-fit items-center rounded border border-rail px-4 text-sm font-semibold"
                     >
-                      刪除旅行
-                    </button>
-                  </form>
+                      今日行程
+                    </Link>
+                    <form action={deleteTripAction}>
+                      <input type="hidden" name="tripId" value={trip.id} />
+                      <button
+                        type="submit"
+                        className="min-h-10 rounded border border-rail px-4 text-sm font-semibold text-night"
+                      >
+                        刪除旅行
+                      </button>
+                    </form>
+                  </div>
                 </div>
                 <dl className="mt-5 grid gap-3 text-sm sm:grid-cols-4">
                   <TripCardStat label="天數" value={trip.dayCount} />

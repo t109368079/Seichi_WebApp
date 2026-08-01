@@ -224,6 +224,20 @@ export function tripDateToString(value: Date): string {
   return formatTripDate(value);
 }
 
+/**
+ * Derives `yyyy-mm-dd` from the local calendar, not from UTC. `tripDateToString`
+ * reads UTC fields because stored TripDay dates are UTC midnight; using it for
+ * "today" would return the previous day for any timezone ahead of UTC during
+ * that offset's early morning hours.
+ */
+export function getLocalTripDateString(value: Date): string {
+  const year = value.getFullYear();
+  const month = `${value.getMonth() + 1}`.padStart(2, "0");
+  const day = `${value.getDate()}`.padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
 function parseTripDate(value: string): Date | undefined {
   const [yearText, monthText, dayText] = value.split("-");
   const year = Number(yearText);

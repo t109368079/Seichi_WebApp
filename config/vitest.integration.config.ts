@@ -9,6 +9,10 @@ export default defineConfig({
     include: ["tests/integration/**/*.test.ts"],
     fileParallelism: false,
     testTimeout: 30000,
+    env: {
+      // Integration tests write real files; keep them out of the dev photo store.
+      PHOTO_STORAGE_DIR: "storage/test-scene-photos",
+    },
   },
   resolve: {
     alias: {

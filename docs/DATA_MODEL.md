@@ -152,8 +152,78 @@ Trip planning rules:
 - `sortOrder` starts at 1, is manually controlled, and is normalized after reorder or removal.
 - The system does not optimize or automatically reorder itinerary scenes by location.
 
+## Phase 5 Field Status Model
+
+Phase 5 does not add database tables or columns. It writes only the existing `Scene.status` column through a validated, transaction-backed update.
+
+Phase 5 transition table:
+
+```text
+NOT_SHOT        -> PENDING_REVIEW, RETAKE_REQUIRED, SKIPPED
+PENDING_REVIEW  -> RETAKE_REQUIRED, SKIPPED, NOT_SHOT
+RETAKE_REQUIRED -> PENDING_REVIEW, SKIPPED, NOT_SHOT
+SKIPPED         -> NOT_SHOT
+REVIEWED        -> (no transitions in Phase 5)
+```
+
+Field status rules:
+
+- The table lives in `src/domain/scene-status.ts` and is the only place transitions are defined.
+- Every transition is reversible, so no status change destroys work state.
+- `REVIEWED` is unreachable and unleavable in Phase 5; Phase 7 owns review transitions.
+- `PENDING_REVIEW` is set manually in Phase 5; Phase 6 adds the photo-triggered transition.
+- Status changes never delete, hide, or replace the anime image reference.
+- A rejected transition leaves the stored status unchanged.
+
+## Phase 6 Photo Binding Model
+
+Phase 6 adds the ScenePhoto table:
+
+```prisma
+model ScenePhoto {
+  id            String
+  sceneId       String
+  tripId        String?
+  tripDayId     String?
+  fileName      String
+  mimeType      String
+  fileSize      Int
+  storageFileId String
+  capturedAt    DateTime?
+  uploadedAt    DateTime
+  takeNumber    Int
+  isBest        Boolean
+}
+```
+
+Binding and lifecycle rules:
+
+- A photo binds to exactly one Scene, and `sceneId` is required.
+- Deleting a Scene cascades its photos; a photo cannot outlive its Scene.
+- Deleting a Trip or TripDay nulls `tripId` and `tripDayId` but preserves the photo, because trip context is only a record of when the photo was taken.
+- `sceneId + takeNumber` is unique, so concurrent uploads cannot produce duplicate takes.
+- Take numbers append past the current maximum and are never reused within a Scene.
+- A new upload never overwrites an existing take.
+- A partial unique index allows at most one `isBest = true` row per Scene. Phase 6 writes the column default only; Phase 7 owns best photo selection.
+- `storageFileId` is the adapter key. Photo bytes live outside the database.
+- `capturedAt` is the browser file timestamp, not EXIF `DateTimeOriginal`.
+
+Status coupling:
+
+```text
+upload  : NOT_SHOT        -> PENDING_REVIEW
+          RETAKE_REQUIRED -> PENDING_REVIEW
+          PENDING_REVIEW / SKIPPED / REVIEWED -> unchanged
+
+delete  : PENDING_REVIEW  -> NOT_SHOT   (only when the last photo is removed)
+          all other statuses -> unchanged
+```
+
+Both directions validate against the Phase 5 transition table rather than defining new rules.
+
 ## Future Product Models
 
 Later phases will add:
 
-- ScenePhoto
+- Best photo selection behavior on the existing `ScenePhoto.isBest` column
+- Google Sheets and Google Drive integration metadata

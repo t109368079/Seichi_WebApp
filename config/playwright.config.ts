@@ -19,6 +19,8 @@ export default defineConfig({
     command: `npm run dev -- --port ${e2ePort}`,
     env: {
       DATABASE_URL: testDatabaseUrl,
+      PHOTO_STORAGE_DIR:
+        process.env.PHOTO_STORAGE_DIR ?? "storage/e2e-scene-photos",
     },
     url: e2eBaseUrl,
     reuseExistingServer: false,

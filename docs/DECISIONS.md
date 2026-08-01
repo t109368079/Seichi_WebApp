@@ -119,3 +119,71 @@ Creating a Trip from `startDate` to `endDate` automatically creates one TripDay 
 Status: Accepted
 
 Phase 4 uses native browser drag-and-drop for manual ordering and provides up/down buttons as the reliable touch and accessibility fallback. No drag-and-drop dependency is introduced, and the system never auto-sorts itinerary scenes by map distance.
+
+## D-0021: Field Mode Allows Manual PENDING_REVIEW Before Photo Binding
+
+Status: Accepted
+
+Section 8 of the requirements states that uploading the first photo moves a Scene from `NOT_SHOT` to `PENDING_REVIEW`, but photo binding does not exist until Phase 6. Field Mode therefore exposes a manual `待確認` action so the on-site loop can close in Phase 5. Phase 6 adds the automatic photo-triggered transition alongside the manual action rather than replacing the transition table.
+
+## D-0022: REVIEWED Is Terminal In Phase 5
+
+Status: Accepted
+
+The requirements never list `REVIEWED` as a transition source, so Phase 5 gives it no outgoing transitions. A reviewed Scene renders its status with no field actions and an explanation. Introducing `REVIEWED -> RETAKE_REQUIRED` would create an unapproved domain rule; Phase 7 owns review transitions and will extend the table in `src/domain/scene-status.ts`.
+
+## D-0023: Field Mode Routes Use TripDay Identity
+
+Status: Accepted
+
+Field Mode is keyed by TripDay identity at `/field/[tripDayId]` and `/field/[tripDayId]/[tripSceneId]`. `TripDay.id` is globally unique, so the trip id is redundant in the path. `/trips/[tripId]/field` is the only route that reads the clock: it resolves the local calendar date to a TripDay, falls back to the first day, and redirects. This keeps every tested route deterministic while still satisfying the "today itinerary" requirement.
+
+"Today" is derived with `getLocalTripDateString`, not the UTC-based `tripDateToString`, because a UTC-derived date is the previous calendar day for timezones ahead of UTC during early morning hours.
+
+## D-0024: Field Mode E2E Restores Seeded Scene Status
+
+Status: Accepted
+
+The E2E suite shares one test database with a single worker, and Playwright orders spec files by path, so `field-mode.spec.ts` runs before `scene-catalog.spec.ts` and `scene-map.spec.ts`. Both assert exact `RETAKE_REQUIRED` result sets, so the Field Mode spec restores every scene it mutates to its seeded status using the Block 5.3 reversible actions. Each Field Mode test also creates its own trip and navigates by captured URL rather than by trip name, so a re-run against a non-reset database cannot produce ambiguous locators.
+
+## D-0025: Anime Reference Stays A Placeholder Until Phase 8
+
+Status: Accepted
+
+`Scene.animeImageDriveFileId` holds a Drive file id that cannot be resolved to an image without the Phase 8 Drive adapter. Field Mode renders a large placeholder panel carrying the scene code, work, episode, and file id instead of introducing a temporary image source. The panel renders for every status and has no code path that hides it, because deleting the anime image to represent completion is the workflow this product replaces.
+
+## D-0026: Photo Bytes Live Behind A Storage Adapter
+
+Status: Accepted
+
+`PhotoStorageAdapter` is the only boundary that knows where photo bytes live. Phase 6 ships `LocalPhotoStorage`, writing to `PHOTO_STORAGE_DIR` (default `storage/scene-photos`, gitignored). The database stores only `storageFileId`, so Phase 8 replaces the implementation without a schema change or a data migration. Bytes are never stored in PostgreSQL, and uploaded photos are personal data that must never be committed.
+
+## D-0027: Photo Upload Uses A Route Handler
+
+Status: Accepted
+
+Server actions cap the request body at 1MB and phone photos are several megabytes. Upload therefore runs through `POST /api/scene-photos`, and `GET /api/scene-photos/[photoId]` serves stored bytes through the adapter so the browser never sees a filesystem path. These are the project's first route handlers. Everything else, including photo deletion, stays a server action because only upload needs the larger body.
+
+## D-0028: Deleting The Last Photo Reverts To NOT_SHOT
+
+Status: Accepted
+
+Uploading the first photo moves `NOT_SHOT` to `PENDING_REVIEW`, so removing the last photo returns `PENDING_REVIEW` to `NOT_SHOT`. Status then always reflects whether real photos exist, which also keeps requirements section 7.7 satisfied: a Scene with no photo can never sit in a state that Phase 7 would let a user review. Other statuses are left unchanged; `REVIEWED` belongs to Phase 7.
+
+## D-0029: capturedAt Comes From The Browser File Timestamp
+
+Status: Accepted
+
+`capturedAt` is taken from `File.lastModified` at selection time. This needs no EXIF dependency and is usually the capture time for a photo picked from a phone library. It is explicitly a file timestamp, not EXIF `DateTimeOriginal`; Phase 8 can backfill true EXIF when the Drive adapter lands.
+
+## D-0030: Deleting A Trip Preserves Photos
+
+Status: Accepted
+
+`ScenePhoto.tripId` and `ScenePhoto.tripDayId` use `ON DELETE SET NULL`. D-0018 hard deletes a Trip and cascades its planning rows, so a cascading photo relation would destroy real captured work when an old trip is cleaned up. A photo binds to a Scene, which is the permanent identity; trip context is only a record of when it was taken.
+
+## D-0031: The isBest Column Ships In Phase 6 Without Behavior
+
+Status: Accepted
+
+`isBest` is part of the Gate 2 approved data model. Phase 6 creates the column and a partial unique index guaranteeing at most one `isBest = true` row per Scene, but no domain rule or UI reads or writes it. This avoids a second migration in Phase 7 while keeping best-photo selection out of Phase 6 scope.

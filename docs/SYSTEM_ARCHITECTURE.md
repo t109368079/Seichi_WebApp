@@ -42,6 +42,23 @@ Phase 4 adds the trip planning slice:
 - Runtime-rendered `/trips`, `/trips/[tripId]`, and `/locations/[locationId]` pages using server actions.
 - Scene Catalog, Scene Detail, Map, and Location pages can carry `tripDayId` context for add-to-day actions.
 
+Phase 5 adds the tablet field mode slice:
+
+- Domain-layer Phase 5 SceneStatus transition table in `src/domain/scene-status.ts`, plus local calendar date derivation in the trip domain.
+- Application-layer field cursor, today resolution, completion summary, and action labels.
+- Infrastructure repository functions that reuse `getTripDetail` for read paths and apply validated, transaction-backed status writes.
+- Runtime-rendered `/field/[tripDayId]` and `/field/[tripDayId]/[tripSceneId]` pages plus the `/trips/[tripId]/field` redirect shortcut.
+- Field Mode entry points from the Trip list, Trip Detail day cards, and the homepage copy.
+
+Phase 6 adds the mobile photo binding slice:
+
+- Domain-layer photo validation, take numbering, and upload/removal status resolution in `src/domain/scene-photo.ts`.
+- Application-layer photo DTOs, size formatting, and photo route helpers.
+- A `PhotoStorageAdapter` boundary with a local filesystem implementation, the first infrastructure adapter in the project.
+- Infrastructure repository functions for transactional upload and deletion.
+- The project's first route handlers: `POST /api/scene-photos` for upload and `GET /api/scene-photos/[photoId]` for reads.
+- A client upload page at `/field/[tripDayId]/[tripSceneId]/upload` and a take gallery on the Field Mode scene page.
+
 ## Target Layering
 
 Product phases follow this layering:
@@ -58,6 +75,10 @@ Phase 2 keeps CSV format concerns at the import adapter/parser boundary. The res
 Phase 3 keeps map behavior in application utilities. The presentation layer renders catalog, import, and local map data but does not call Google APIs or encode external integration rules. Google Maps is used only as a generated navigation URL handed off to the browser.
 
 Phase 4 keeps itinerary ordering in domain/application logic and persists changes through repository transactions. The map can help users discover scenes, but it does not sort or optimize TripScene order.
+
+Phase 5 keeps every status transition rule in one domain module so Phase 6 photo binding and Phase 7 review can extend it rather than add competing rules. Field Mode reads its day through the Phase 4 trip repository, so on-site scene order can never diverge from the planned order. The presentation layer renders an anime reference placeholder and never calls a Google API.
+
+Phase 6 reuses the Phase 5 transition table without modifying it: upload and deletion resolve a target status in the photo domain and then validate it against the same table. Photo bytes cross the `PhotoStorageAdapter` boundary only, so no layer above infrastructure knows the filesystem exists. The upload writes storage inside the database transaction so a storage failure rolls the row back.
 
 ## Adapter Rules
 
@@ -91,3 +112,7 @@ Phase 2 does not add database tables. CSV import writes to the existing Work, Lo
 Phase 3 does not add database tables. It reads existing Scene coordinates and handles missing or invalid coordinates defensively in application logic.
 
 Phase 4 adds planning tables only. Hard deleting a Trip cascades planning rows but preserves catalog data.
+
+Phase 5 does not add database tables or a migration. It writes only the existing `Scene.status` column, and every write validates against the Phase 5 transition table before the transaction commits.
+
+Phase 6 adds `ScenePhoto`, holding the permanent binding between a real photo and exactly one Scene. Scene deletion cascades to its photos; Trip and TripDay deletion nulls the capture context but preserves the photo. Photo bytes are not stored in the database.
