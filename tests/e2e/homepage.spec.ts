@@ -6,12 +6,13 @@ test("homepage links to scene import, map, and the catalog", async ({
   await page.goto("/");
 
   await expect(page.getByRole("heading", { name: "聖地巡禮" })).toBeVisible();
-  await expect(page.getByText("第七階段：審核流程")).toBeVisible();
+  await expect(page.getByText("第八階段：Google 整合")).toBeVisible();
   await expect(
     page.getByRole("region", { name: "基礎工程狀態" }),
   ).toBeVisible();
   await expect(page.getByRole("link", { name: "匯入場景" })).toBeVisible();
   await expect(page.getByRole("link", { name: "開啟地圖" })).toBeVisible();
   await expect(page.getByRole("link", { name: "開啟旅行規劃" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Google 整合" })).toBeVisible();
   await expect(page.getByRole("link", { name: "開啟場景目錄" })).toBeVisible();
 });

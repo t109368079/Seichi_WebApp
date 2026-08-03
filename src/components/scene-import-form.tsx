@@ -16,12 +16,22 @@ const initialState: SceneImportActionState = {
   stage: "idle",
 };
 
-export function SceneImportForm() {
+export function SceneImportForm({
+  initialSheetId = "",
+  initialSheetRange = "Sheet1!A:K",
+  googleConnected = false,
+}: {
+  initialSheetId?: string;
+  initialSheetRange?: string;
+  googleConnected?: boolean;
+}) {
   const [state, formAction, isPending] = useActionState(
     handleSceneImportAction,
     initialState,
   );
   const preview = state.preview;
+  const sheetId = state.sheetId ?? initialSheetId;
+  const sheetRange = state.sheetRange ?? initialSheetRange;
 
   return (
     <div className="grid gap-5">
@@ -51,7 +61,7 @@ export function SceneImportForm() {
 
       <section className="rounded border border-rail bg-white p-5">
         <form action={formAction} className="grid gap-4">
-          <input type="hidden" name="intent" value="preview" />
+          <input type="hidden" name="intent" value="preview-csv" />
           <label className="grid gap-2 text-sm font-medium">
             場景 CSV
             <input
@@ -71,12 +81,58 @@ export function SceneImportForm() {
         </form>
       </section>
 
+      <section className="rounded border border-rail bg-white p-5">
+        <div className="flex flex-col gap-3 border-b border-rail pb-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h2 className="text-lg font-semibold">Google Sheet</h2>
+            <p className="mt-1 text-sm text-night">
+              {googleConnected ? "已連接 Google" : "尚未連接 Google"}
+            </p>
+          </div>
+          <Link
+            href="/integrations/google"
+            className="flex min-h-11 w-fit items-center rounded border border-rail px-5 text-sm font-semibold"
+          >
+            Google 設定
+          </Link>
+        </div>
+        <form action={formAction} className="mt-4 grid gap-4">
+          <input type="hidden" name="intent" value="preview-sheet" />
+          <label className="grid gap-2 text-sm font-medium">
+            Sheet ID
+            <input
+              name="sheetId"
+              defaultValue={sheetId}
+              className="min-h-11 rounded border border-rail bg-paper px-3 py-2 text-sm"
+            />
+          </label>
+          <label className="grid gap-2 text-sm font-medium">
+            Sheet Range
+            <input
+              name="sheetRange"
+              defaultValue={sheetRange}
+              className="min-h-11 rounded border border-rail bg-paper px-3 py-2 text-sm"
+            />
+          </label>
+          <button
+            type="submit"
+            disabled={isPending || !googleConnected}
+            className="min-h-11 w-fit rounded bg-field px-5 text-sm font-semibold text-white disabled:opacity-60"
+          >
+            {isPending ? "處理中..." : "預覽 Google Sheet"}
+          </button>
+        </form>
+      </section>
+
       <StatusMessage state={state} />
 
       {preview ? (
         <SceneImportPreviewPanel
           preview={preview}
           csvText={state.csvText}
+          source={state.source ?? "csv"}
+          sheetId={state.sheetId}
+          sheetRange={state.sheetRange}
           formAction={formAction}
           isPending={isPending}
           committed={state.stage === "committed"}
@@ -108,12 +164,18 @@ function StatusMessage({ state }: { state: SceneImportActionState }) {
 function SceneImportPreviewPanel({
   preview,
   csvText,
+  source,
+  sheetId,
+  sheetRange,
   formAction,
   isPending,
   committed,
 }: {
   preview: SceneImportPreview;
   csvText?: string;
+  source: "csv" | "sheet";
+  sheetId?: string;
+  sheetRange?: string;
   formAction: (payload: FormData) => void;
   isPending: boolean;
   committed: boolean;
@@ -148,19 +210,38 @@ function SceneImportPreviewPanel({
           action={formAction}
           className="rounded border border-rail bg-white p-5"
         >
-          <input type="hidden" name="intent" value="commit" />
-          <textarea
-            name="csvText"
-            value={csvText ?? ""}
-            readOnly
-            className="hidden"
+          <input
+            type="hidden"
+            name="intent"
+            value={source === "sheet" ? "commit-sheet" : "commit-csv"}
           />
+          {source === "sheet" ? (
+            <>
+              <input type="hidden" name="sheetId" value={sheetId ?? ""} />
+              <input
+                type="hidden"
+                name="sheetRange"
+                value={sheetRange ?? "Sheet1!A:K"}
+              />
+            </>
+          ) : (
+            <textarea
+              name="csvText"
+              value={csvText ?? ""}
+              readOnly
+              className="hidden"
+            />
+          )}
           <button
             type="submit"
             disabled={isPending}
             className="min-h-11 rounded bg-field px-5 text-sm font-semibold text-white disabled:opacity-60"
           >
-            {isPending ? "處理中..." : "確認匯入"}
+            {isPending
+              ? "處理中..."
+              : source === "sheet"
+                ? "確認 Google Sheet 匯入"
+                : "確認匯入"}
           </button>
         </form>
       ) : null}

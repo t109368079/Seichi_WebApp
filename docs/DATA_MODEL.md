@@ -268,8 +268,52 @@ Current navigation input rules:
 - URL-only Scenes are omitted from the projected local map until coordinates are added.
 - URL-only Scenes can still be imported, planned into trips, opened in Field Mode, photographed, reviewed, and opened in Google Maps.
 
+## Phase 8 Google Integration Model
+
+Phase 8 adds Google integration tables:
+
+```prisma
+model GoogleAccount {
+  id                    String
+  googleSubject         String
+  email                 String
+  name                  String?
+  pictureUrl            String?
+  scopes                String
+  encryptedAccessToken  String
+  encryptedRefreshToken String?
+  accessTokenExpiresAt  DateTime?
+  revokedAt             DateTime?
+}
+
+model GoogleSession {
+  id               String
+  accountId        String
+  sessionTokenHash String
+  expiresAt        DateTime
+  revokedAt        DateTime?
+}
+
+model GoogleIntegrationSettings {
+  id                 String
+  sheetId            String?
+  sheetRange         String
+  drivePhotoFolderId String?
+}
+```
+
+Google integration rules:
+
+- `GoogleAccount.googleSubject` is the stable external identity from Google OpenID Connect.
+- Access and refresh tokens are encrypted before storage with `GOOGLE_TOKEN_ENCRYPTION_KEY`.
+- App session cookies store only an opaque token in the browser; the database stores only `sessionTokenHash`.
+- Revocation is modeled with `revokedAt` on both accounts and sessions, so local access can be disabled without deleting audit state.
+- `GoogleIntegrationSettings` is a singleton row for default Sheet ID/range and Drive photo folder ID.
+- `Scene.animeImageDriveFileId` remains the stable Drive file id for anime references and is resolved through an app route.
+- With `PHOTO_STORAGE_BACKEND=google-drive`, `ScenePhoto.storageFileId` stores the Drive file id returned by upload. The ScenePhoto relation remains bound to `sceneId`, so Drive file moves or renames do not affect Scene identity.
+
 ## Future Product Models
 
 Later phases will add:
 
-- Google Sheets and Google Drive integration metadata
+- Follow-up operational metadata only when a later approved phase needs it

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AddToTripDayForm } from "@/components/add-to-trip-day-form";
+import { AnimeReferencePanel } from "@/components/anime-reference-panel";
 import { TripDayContextBanner } from "@/components/trip-day-context-banner";
 import {
   formatSceneCoordinates,
@@ -64,6 +65,7 @@ export default async function SceneDetailPage({
         className="mx-auto grid w-full max-w-4xl gap-5 px-5 py-6"
       >
         <TripDayContextBanner context={tripDayContext} />
+        <AnimeReferencePanel scene={scene} />
         <div className="rounded border border-rail bg-white p-5">
           <div className="flex flex-col gap-3 border-b border-rail pb-4 sm:flex-row sm:items-start sm:justify-between">
             <div>

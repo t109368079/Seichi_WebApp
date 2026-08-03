@@ -18,7 +18,9 @@ test("scene catalog loads demo scenes and opens a scene detail page", async ({
   await expect(page.getByRole("heading", { name: "BHC-001" })).toBeVisible({
     timeout: 15000,
   });
-  await expect(page.getByText("demo-drive-bhc-001")).toBeVisible();
+  await expect(
+    page.getByRole("definition").filter({ hasText: "demo-drive-bhc-001" }),
+  ).toBeVisible();
   await expect(page.getByText("場景 ID", { exact: true })).toBeVisible();
 });
 

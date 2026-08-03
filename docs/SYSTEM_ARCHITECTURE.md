@@ -68,6 +68,16 @@ Phase 7 adds the review workflow slice:
 - Review entry points from the homepage, Scene Detail, and Field Mode take gallery.
 - A browser E2E review path that includes real local file upload as setup for selecting the best take.
 
+Phase 8 adds the Google integration slice:
+
+- Application-layer Google scope constants, settings normalization, labels, and route helpers.
+- Infrastructure OAuth client functions for Google authorization, token exchange, token refresh, userinfo fetch, and token revocation.
+- Infrastructure token crypto and repository functions for encrypted Google tokens, hashed app sessions, and singleton integration settings.
+- Google Sheets and Drive adapters that use REST endpoints behind injectable fetch boundaries for tests.
+- A UI-facing anime image route at `/api/scenes/[sceneId]/anime-image`, so components never call Drive directly.
+- Google Drive photo storage as an optional `PhotoStorageAdapter` backend selected by `PHOTO_STORAGE_BACKEND=google-drive`.
+- Runtime-rendered `/integrations/google` settings and connection page plus Google Sheet import controls on `/imports/scenes`.
+
 ## Target Layering
 
 Product phases follow this layering:
@@ -91,6 +101,8 @@ Phase 6 reuses the Phase 5 transition table without modifying it: upload and del
 
 Phase 7 extends the shared status transition table for review completion while keeping Field Mode on a capture-scoped action list. Review rules live in `src/domain/review.ts`; repository writes load the Scene and its photos inside one transaction before choosing a best photo or changing review status. No UI calls a storage implementation directly: review image URLs still go through the Phase 6 photo route handler and adapter.
 
+Phase 8 keeps Google API calls in infrastructure only. Presentation components call server actions or app route handlers; repositories resolve sessions, fetch access tokens, and delegate to Sheets, Drive, or storage adapters. Google Sheet import converts `spreadsheets.values.get` rows into the same normalized import model as CSV before validation or commit. Drive anime references are rendered through the app image route, and Drive-backed real photos still cross the existing `PhotoStorageAdapter` boundary.
+
 ## Adapter Rules
 
 - UI must not directly call Google APIs.
@@ -111,8 +123,11 @@ The database now contains:
 - `TripDay`, representing one calendar day in a trip.
 - `TripScene`, representing a Scene manually added to a TripDay with user-controlled order.
 - `ScenePhoto`, representing one real-world take permanently bound to a Scene, with optional Trip and TripDay capture context.
+- `GoogleAccount`, representing the connected Google identity and encrypted tokens.
+- `GoogleSession`, representing hashed app session cookies tied to Google accounts.
+- `GoogleIntegrationSettings`, representing singleton defaults for Sheet import and Drive photo storage.
 
-Google import data and Google Drive metadata remain out of scope until later phases. Photo bytes are outside the database behind the storage adapter.
+Google API response payloads and Drive metadata are not stored as product data. Photo bytes are outside the database behind the storage adapter.
 
 Phase 2 does not add database tables. CSV import writes to the existing Work, Location, and Scene tables by upsert:
 
@@ -132,3 +147,5 @@ Phase 6 adds `ScenePhoto`, holding the permanent binding between a real photo an
 Phase 7 adds no migration. It uses the existing `ScenePhoto.isBest` column and partial unique index, and stores review completion in the existing `Scene.status` enum.
 
 After Phase 7, the optional-coordinate migration makes Scene and Location latitude/longitude nullable so manual CSV imports can use `maps_url` as the primary navigation reference. This does not add a map provider: URL-only Scenes skip local marker projection and hand the saved URL to the browser.
+
+Phase 8 adds Google integration persistence only. It does not alter Work, Location, Scene, Trip, TripDay, TripScene, or ScenePhoto identity. `Scene.animeImageDriveFileId` remains a Drive file id reference, and `ScenePhoto.storageFileId` remains the storage adapter key.

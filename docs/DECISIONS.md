@@ -235,3 +235,45 @@ Manual test CSV preparation often starts from Google Maps share URLs, while prec
 Status: Accepted
 
 The Phase 7 review workflow commit `b1c7063` had already been pushed before the URL-only navigation cleanup was finalized. To avoid rewriting published history, the cleanup is committed separately as `[Phase 7] allow url-only scene navigation` instead of amending the original Phase 7 commit.
+
+## D-0040: Phase 8 Uses Direct Google REST Adapters
+
+Status: Accepted
+
+Phase 8 integrates OAuth, Sheets, and Drive with small infrastructure REST adapters instead of introducing a broad Google client SDK. This keeps the app's external boundary explicit, makes test fetch injection straightforward, and limits the implemented surface to the approved Phase 8 endpoints.
+
+## D-0041: Google Sessions Store Hashes And Tokens Store Ciphertext
+
+Status: Accepted
+
+The browser receives an opaque httpOnly app session token. The database stores only `GoogleSession.sessionTokenHash`, and Google access/refresh tokens are encrypted with `GOOGLE_TOKEN_ENCRYPTION_KEY` before persistence. Revocation is modeled with `revokedAt` so logout and disconnect can invalidate local access without deleting rows.
+
+## D-0042: Google Sheet Import Reuses Scene Import Validation
+
+Status: Accepted
+
+Google Sheets rows from `spreadsheets.values.get` are converted into the same table contract as CSV v1 before validation. Preview and commit therefore share required columns, duplicate Scene code checks, coordinate-or-URL navigation rules, and all-or-nothing transaction behavior with CSV import.
+
+## D-0043: Drive Anime Images Are Served Through An App Route
+
+Status: Accepted
+
+UI components never construct Google Drive media URLs or call Google APIs. They render `/api/scenes/[sceneId]/anime-image`, and that route resolves the active Google session, reads Drive metadata/media through the adapter, validates image MIME types, and returns a stable fallback SVG when auth, permissions, file ids, or content type are not usable.
+
+## D-0044: Drive Photo Storage Is An Optional Adapter Backend
+
+Status: Accepted
+
+Local photo storage remains the default. Setting `PHOTO_STORAGE_BACKEND=google-drive` selects `GoogleDrivePhotoStorage`, which uploads through the Drive adapter and stores the returned Drive file id in `ScenePhoto.storageFileId`. Repository rollback behavior stays storage-agnostic: storage failure prevents database writes, and a later database failure triggers best-effort adapter cleanup.
+
+## D-0045: E2E Google Coverage Uses Test Mode Only
+
+Status: Accepted
+
+Playwright runs with `GOOGLE_INTEGRATION_TEST_MODE=1`, mock OAuth config, and mocked Google REST responses. The test-only mock connection route is unavailable unless that env var is enabled, keeping automated Google coverage deterministic and separate from production accounts or private Drive data.
+
+## D-0046: Only Root Photo Storage Data Is Ignored
+
+Status: Accepted
+
+Uploaded photo bytes remain personal data and are ignored under `/storage/`. The ignore rule is root-anchored so source files under `src/infrastructure/storage/` are tracked. This preserves the adapter boundary in clean clones while still preventing local uploaded photos from entering Git.

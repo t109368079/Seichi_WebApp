@@ -39,6 +39,11 @@ Current unit coverage includes:
 - Trip date validation and inclusive TripDay generation.
 - TripScene append, move, reorder, removal order normalization, and duplicate prevention.
 - Trip progress aggregation by SceneStatus and missing coordinate count.
+- Google OAuth scope selection and integration status labels.
+- Google settings normalization.
+- Google token encryption round trip and wrong-key rejection.
+- Google API error translation.
+- Google Sheet table parsing through the shared Scene Import validation path.
 
 ## Integration Tests
 
@@ -62,6 +67,12 @@ Current integration coverage includes:
 - Reorder, move, remove, and reload persisted TripScene order.
 - Trip delete cascade for planning rows while preserving Scene rows.
 - Trip summary counts from seeded Scene statuses.
+- Mock Google OAuth connection creating encrypted account tokens and hashed sessions.
+- Expired Google access token refresh updating stored encrypted token data.
+- Google logout and revoke disabling usable sessions.
+- Mock Google Sheet preview/commit writing through the existing import repository behavior.
+- Mock Drive anime image reads and non-image/error handling.
+- Google Drive photo storage save/read/delete and upload rollback behavior.
 
 ## E2E Tests
 
@@ -79,9 +90,17 @@ Current E2E coverage includes:
 - Scene map filters through URL query parameters.
 - Scene map exposes generated Google Maps navigation hrefs without opening external navigation during tests.
 - Trip planning creates a multi-day trip, adds scenes from catalog and map, reorders with fallback controls, persists order after reload, and removes scenes.
+- Mock Google connection and Google Sheet import smoke path.
 
 Playwright runs the Next.js dev server on port `3100` by default with `DATABASE_URL` pointed at the test database, so `npm run verify` uses the seeded test data prepared by `npm run db:test:reset`. Set `E2E_PORT` to override the browser test port. Browser tests run with one worker because the scene import E2E writes to the shared test database.
 
 ## External Services
 
-No Google APIs are used through Phase 4. Google Maps appears only as generated navigation URLs. Future adapters must be tested with mocks or fixtures and should reuse the normalized import model introduced for CSV.
+Google Maps navigation still appears only as generated or saved navigation URLs handed to the browser.
+
+Phase 8 Google OAuth, Sheets, and Drive integrations are tested through mocks:
+
+- Unit tests inject mock fetch behavior and do not touch network, database, or filesystem.
+- Integration tests use PostgreSQL plus mocked Google responses only.
+- E2E tests enable `GOOGLE_INTEGRATION_TEST_MODE=1`, which exposes a local mock connection route and mocked Google REST responses.
+- Automated tests must never use production Google accounts, Sheets, Drive files, OAuth secrets, access tokens, or refresh tokens.

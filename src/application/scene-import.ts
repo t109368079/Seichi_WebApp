@@ -168,6 +168,20 @@ export function parseSceneImportCsv(csvText: string): SceneImportParseResult {
   };
 }
 
+export function parseSceneImportTable(
+  values: readonly (readonly string[])[],
+): SceneImportParseResult {
+  return parseSceneImportCsv(sceneImportTableToCsv(values));
+}
+
+export function sceneImportTableToCsv(
+  values: readonly (readonly string[])[],
+): string {
+  return values
+    .map((row) => row.map((value) => escapeCsvValue(value)).join(","))
+    .join("\n");
+}
+
 export function buildSceneImportPreview(
   rows: readonly SceneImportRow[],
   existingSceneCodes: readonly string[],
@@ -461,6 +475,14 @@ function readOptionalValue(
   const value = (rawRow.get(column) ?? "").trim();
 
   return value.length > 0 ? value : undefined;
+}
+
+function escapeCsvValue(value: string): string {
+  if (/[",\n\r]/.test(value)) {
+    return `"${value.replace(/"/g, '""')}"`;
+  }
+
+  return value;
 }
 
 function normalizeIdentifier(value: string): string {

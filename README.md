@@ -1,8 +1,8 @@
 # Seichi Pilgrimage App
 
-Responsive web app for managing anime pilgrimage scenes, trips, field photo binding, and review workflows.
+Responsive web app for managing anime pilgrimage scenes, trips, field photo binding, review workflows, and Google-backed import/storage.
 
-Phase 7 currently provides CSV scene import, a no-external-API scene map, a scene catalog, trip planning, tablet field mode, mobile photo binding, and the post-trip review workflow, all backed by Prisma and PostgreSQL. It intentionally does not yet implement Google APIs.
+Phase 8 currently provides CSV and Google Sheet scene import, Drive-backed anime reference images, a no-external-API projected scene map, a scene catalog, trip planning, tablet field mode, mobile photo binding, optional Google Drive photo storage, and the post-trip review workflow, all backed by Prisma and PostgreSQL.
 
 ## Requirements
 
@@ -36,6 +36,14 @@ The Phase 2 scene import page is available at:
 
 ```text
 http://localhost:3000/imports/scenes
+```
+
+That page supports both CSV paste/import and Google Sheet preview/commit when a Google account is connected.
+
+The Phase 8 Google integration settings page is available at:
+
+```text
+http://localhost:3000/integrations/google
 ```
 
 The Phase 3 map and navigation page is available at:
@@ -81,7 +89,7 @@ The Phase 3 map uses local coordinate projection for scenes that have coordinate
 
 Phase 4 trip planning lets you create a trip, auto-generate daily itineraries from a date range, add scenes from catalog/map/location/detail pages, and save manual scene order. It does not optimize or auto-sort routes.
 
-Phase 5 field mode shows a day's scenes in the manually planned order, displays an anime reference panel for the current scene, generates the Google Maps navigation URL, moves between scenes with previous/next, and records reversible status. Field status actions are 待確認, 需要補拍, 跳過 and 返回未拍攝. `REVIEWED` scenes are read-only in Field Mode; review changes happen in the Phase 7 review workflow. The anime reference is a placeholder until Phase 8 supplies Drive images, and it is never removed by a status change.
+Phase 5 field mode shows a day's scenes in the manually planned order, displays an anime reference panel for the current scene, generates the Google Maps navigation URL, moves between scenes with previous/next, and records reversible status. Field status actions are 待確認, 需要補拍, 跳過 and 返回未拍攝. `REVIEWED` scenes are read-only in Field Mode; review changes happen in the Phase 7 review workflow. The anime reference is served through the app's Phase 8 Drive image route, with a stable fallback image when Google access or file metadata is unavailable, and it is never removed by a status change.
 
 Phase 6 photo binding lets the phone upload a real photo from the local library and bind it permanently to one Scene:
 
@@ -91,7 +99,7 @@ http://localhost:3000/field/<tripDayId>/<tripSceneId>/upload
 
 Accepted formats are JPEG, PNG, and WebP, up to 15 MB per file. The first successful upload moves a scene from 未拍攝 to 待確認 automatically, and removing the last photo moves it back. A scene keeps every take; a new upload never overwrites an earlier one. Deleting a trip never deletes photos.
 
-Photo bytes are written through a storage adapter to `PHOTO_STORAGE_DIR` (default `storage/scene-photos`), which is gitignored. Uploaded photos are personal data and must never be committed. Google Drive storage arrives in Phase 8 by replacing the adapter; no schema change is needed.
+Photo bytes are written through a storage adapter. The default local adapter writes to `PHOTO_STORAGE_DIR` (default `storage/scene-photos`), which is gitignored. Set `PHOTO_STORAGE_BACKEND=google-drive` to store uploaded real-world photos in Google Drive through the Phase 8 adapter; `ScenePhoto.storageFileId` stores the returned Drive file id. Uploaded photos are personal data and must never be committed.
 
 Phase 7 review starts from the review queue:
 
@@ -101,6 +109,30 @@ http://localhost:3000/reviews/<sceneId>
 ```
 
 The queue can filter by review bucket, work, location, trip, and Scene status. The detail view keeps the anime reference and all real-world takes visible, lets the user mark exactly one best photo, and only enables `REVIEWED` after a best photo exists. Deleting the best or last photo from a reviewed scene reopens the Scene so completion cannot point at a missing take.
+
+## Google Integration
+
+Phase 8 uses the Google OAuth web-server flow. Copy `.env.example` to `.env` and provide:
+
+```text
+GOOGLE_CLIENT_ID
+GOOGLE_CLIENT_SECRET
+GOOGLE_REDIRECT_URI
+GOOGLE_TOKEN_ENCRYPTION_KEY
+```
+
+`GOOGLE_TOKEN_ENCRYPTION_KEY` protects stored access and refresh tokens. It can be any strong local secret string; changing it invalidates previously stored encrypted tokens.
+
+The requested Google scopes are `openid`, `email`, `profile`, `spreadsheets.readonly`, `drive.readonly`, and `drive.file`. UI code never calls Google APIs directly: OAuth, Sheets, Drive image reads, and Drive photo storage all go through infrastructure adapters.
+
+Optional settings:
+
+```text
+PHOTO_STORAGE_BACKEND=google-drive
+GOOGLE_PHOTO_FOLDER_ID=<drive-folder-id>
+```
+
+`GOOGLE_PHOTO_FOLDER_ID` is a fallback for the app settings page's Drive photo folder id. Automated tests use mocks and never connect to production Google data.
 
 ## Verification
 

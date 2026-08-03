@@ -21,6 +21,11 @@ export default defineConfig({
       DATABASE_URL: testDatabaseUrl,
       PHOTO_STORAGE_DIR:
         process.env.PHOTO_STORAGE_DIR ?? "storage/e2e-scene-photos",
+      GOOGLE_INTEGRATION_TEST_MODE: "1",
+      GOOGLE_CLIENT_ID: "mock-google-client-id",
+      GOOGLE_CLIENT_SECRET: "mock-google-client-secret",
+      GOOGLE_REDIRECT_URI: `${e2eBaseUrl}/auth/google/callback`,
+      GOOGLE_TOKEN_ENCRYPTION_KEY: "playwright-google-token-encryption-key",
     },
     url: e2eBaseUrl,
     reuseExistingServer: false,

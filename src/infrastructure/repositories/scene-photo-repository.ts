@@ -22,6 +22,7 @@ export interface UploadScenePhotoInput {
   mimeType: string;
   capturedAt?: Date;
   bytes: Uint8Array;
+  googleSessionToken?: string;
 }
 
 export interface UploadScenePhotoResult {
@@ -49,7 +50,10 @@ export async function listScenePhotos(
   return photos.map(mapScenePhotoItem);
 }
 
-export async function readScenePhotoBytes(photoId: string): Promise<{
+export async function readScenePhotoBytes(
+  photoId: string,
+  googleSessionToken?: string,
+): Promise<{
   bytes: Uint8Array;
   mimeType: PhotoMimeType;
   fileName: string;
@@ -61,7 +65,7 @@ export async function readScenePhotoBytes(photoId: string): Promise<{
   }
 
   const descriptor = toStorageDescriptor(photo.storageFileId, photo.mimeType);
-  const stored = await getPhotoStorage().read(descriptor);
+  const stored = await getPhotoStorage(googleSessionToken).read(descriptor);
 
   return {
     bytes: stored.bytes,
@@ -83,12 +87,12 @@ export async function uploadScenePhoto(
     mimeType: input.mimeType,
     fileSize: input.bytes.byteLength,
   });
-  const storage = getPhotoStorage();
+  const storage = getPhotoStorage(input.googleSessionToken);
   const descriptor: StoredPhotoDescriptor = {
     storageFileId: randomUUID(),
     mimeType,
   };
-  let storedBytes = false;
+  let storedDescriptor: StoredPhotoDescriptor | undefined;
 
   try {
     return await prisma.$transaction(async (transaction) => {
@@ -117,6 +121,11 @@ export async function uploadScenePhoto(
         select: { takeNumber: true },
       });
       const takeNumber = getNextTakeNumber(existingTakes);
+      storedDescriptor = await storage.save({
+        ...descriptor,
+        fileName: input.fileName,
+        bytes: input.bytes,
+      });
 
       const created = await transaction.scenePhoto.create({
         data: {
@@ -126,14 +135,11 @@ export async function uploadScenePhoto(
           fileName: input.fileName,
           mimeType,
           fileSize: input.bytes.byteLength,
-          storageFileId: descriptor.storageFileId,
+          storageFileId: storedDescriptor.storageFileId,
           capturedAt: input.capturedAt ?? null,
           takeNumber,
         },
       });
-
-      await storage.save({ ...descriptor, bytes: input.bytes });
-      storedBytes = true;
 
       const previousStatus = assertSceneStatus(scene.status);
       const nextStatus = resolveStatusAfterUpload(previousStatus);
@@ -153,8 +159,8 @@ export async function uploadScenePhoto(
       };
     });
   } catch (error) {
-    if (storedBytes) {
-      await storage.delete(descriptor).catch(() => undefined);
+    if (storedDescriptor) {
+      await storage.delete(storedDescriptor).catch(() => undefined);
     }
 
     throw error;
@@ -168,6 +174,7 @@ export async function uploadScenePhoto(
  */
 export async function deleteScenePhoto(
   photoId: string,
+  googleSessionToken?: string,
 ): Promise<DeleteScenePhotoResult> {
   const outcome = await prisma.$transaction(async (transaction) => {
     const photo = await transaction.scenePhoto.findUnique({
@@ -219,7 +226,7 @@ export async function deleteScenePhoto(
     };
   });
 
-  await getPhotoStorage().delete(outcome.descriptor);
+  await getPhotoStorage(googleSessionToken).delete(outcome.descriptor);
 
   return outcome.result;
 }

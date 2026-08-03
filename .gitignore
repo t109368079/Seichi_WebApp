@@ -24,7 +24,7 @@ prisma/dev.db
 tsconfig.tsbuildinfo
 
 # uploaded scene photos are personal data and must never be committed
-storage/
+/storage/
 
 # logs
 npm-debug.log*

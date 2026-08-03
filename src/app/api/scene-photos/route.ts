@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { uploadScenePhoto } from "@/infrastructure/repositories/scene-photo-repository";
+import { readGoogleSessionCookie } from "@/infrastructure/google/google-session-cookie";
 
 export const dynamic = "force-dynamic";
 
@@ -35,6 +36,7 @@ export async function POST(request: Request): Promise<NextResponse> {
   }
 
   try {
+    const googleSessionToken = await readGoogleSessionCookie();
     const result = await uploadScenePhoto({
       sceneId,
       tripId: tripId || undefined,
@@ -43,6 +45,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       mimeType: file.type,
       capturedAt: parseCapturedAt(capturedAtRaw),
       bytes: new Uint8Array(await file.arrayBuffer()),
+      googleSessionToken,
     });
 
     if (tripDayId) {

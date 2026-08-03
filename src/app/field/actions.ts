@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { assertFieldStatusAction } from "@/domain/scene-status";
 import { updateSceneStatusFromField } from "@/infrastructure/repositories/field-mode-repository";
 import { deleteScenePhoto } from "@/infrastructure/repositories/scene-photo-repository";
+import { readGoogleSessionCookie } from "@/infrastructure/google/google-session-cookie";
 
 export async function applyFieldStatusAction(
   formData: FormData,
@@ -48,7 +49,7 @@ export async function deleteScenePhotoAction(
     : `/field/${tripDayId}`;
 
   try {
-    await deleteScenePhoto(photoId);
+    await deleteScenePhoto(photoId, await readGoogleSessionCookie());
   } catch (error) {
     destination = appendMessage(destination, translatePhotoError(error));
   }

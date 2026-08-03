@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { readScenePhotoBytes } from "@/infrastructure/repositories/scene-photo-repository";
+import { readGoogleSessionCookie } from "@/infrastructure/google/google-session-cookie";
 import { PhotoNotFoundError } from "@/infrastructure/storage/photo-storage";
 
 export const dynamic = "force-dynamic";
@@ -21,7 +22,8 @@ export async function GET(
   const { photoId } = await context.params;
 
   try {
-    const photo = await readScenePhotoBytes(photoId);
+    const googleSessionToken = await readGoogleSessionCookie();
+    const photo = await readScenePhotoBytes(photoId, googleSessionToken);
 
     if (!photo) {
       return NextResponse.json({ message: "找不到照片。" }, { status: 404 });

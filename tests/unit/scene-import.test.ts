@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildSceneImportPreview,
   parseSceneImportCsv,
+  parseSceneImportTable,
 } from "@/application/scene-import";
 
 const csvHeader =
@@ -44,6 +45,35 @@ NRI-101,Night Rail Ikebukuro,NRI,03,demo-drive-nri-101,East Gate,Ikebukuro,,,"ht
         latitude: null,
         longitude: null,
         mapsUrl: "https://maps.app.goo.gl/example",
+      }),
+    ]);
+  });
+
+  it("parses Google Sheet-style tables through the same validation", () => {
+    const result = parseSceneImportTable([
+      csvHeader.split(","),
+      [
+        "NRI-101",
+        "Night Rail Ikebukuro",
+        "NRI",
+        "03",
+        "demo-drive-nri-101",
+        "East Gate, Main",
+        "Ikebukuro",
+        "",
+        "",
+        "https://maps.app.goo.gl/example",
+        'Quoted "note", ok',
+      ],
+    ]);
+
+    expect(result.errors).toEqual([]);
+    expect(result.rows).toEqual([
+      expect.objectContaining({
+        sceneCode: "NRI-101",
+        locationName: "East Gate, Main",
+        mapsUrl: "https://maps.app.goo.gl/example",
+        notes: 'Quoted "note", ok',
       }),
     ]);
   });

@@ -15,6 +15,49 @@ model FoundationMetadata {
   updatedAt DateTime @updatedAt
 }
 
+model GoogleAccount {
+  id                    String          @id @default(cuid())
+  googleSubject         String          @unique
+  email                 String
+  name                  String?
+  pictureUrl            String?
+  scopes                String
+  encryptedAccessToken  String
+  encryptedRefreshToken String?
+  accessTokenExpiresAt  DateTime?
+  revokedAt             DateTime?
+  sessions              GoogleSession[]
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+
+  @@index([email])
+  @@index([revokedAt])
+}
+
+model GoogleSession {
+  id               String        @id @default(cuid())
+  accountId        String
+  sessionTokenHash String        @unique
+  expiresAt        DateTime
+  revokedAt        DateTime?
+  account          GoogleAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  @@index([accountId])
+  @@index([expiresAt])
+  @@index([revokedAt])
+}
+
+model GoogleIntegrationSettings {
+  id                 String   @id @default("singleton")
+  sheetId            String?
+  sheetRange         String   @default("Sheet1!A:K")
+  drivePhotoFolderId String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
 model Work {
   id          String   @id @default(cuid())
   name        String   @unique
