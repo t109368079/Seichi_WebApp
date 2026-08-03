@@ -29,8 +29,8 @@ model Location {
   id        String   @id @default(cuid())
   name      String
   areaName  String?
-  latitude  Float
-  longitude Float
+  latitude  Float?
+  longitude Float?
   mapsUrl   String?
   scenes    Scene[]
   createdAt DateTime @default(now())
@@ -47,8 +47,8 @@ model Scene {
   episode               String?
   animeImageDriveFileId String
   locationId            String
-  latitude              Float
-  longitude             Float
+  latitude              Float?
+  longitude             Float?
   mapsUrl               String?
   notes                 String?
   status                SceneStatus @default(NOT_SHOT)

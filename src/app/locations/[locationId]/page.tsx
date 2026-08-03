@@ -2,7 +2,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AddToTripDayForm } from "@/components/add-to-trip-day-form";
 import { TripDayContextBanner } from "@/components/trip-day-context-banner";
-import { getSceneStatusLabel } from "@/application/scene-catalog";
+import {
+  formatSceneCoordinates,
+  getSceneStatusLabel,
+} from "@/application/scene-catalog";
 import { isSceneAddedToTripDay } from "@/application/trip-planning";
 import { getLocationTripPlanningData } from "@/infrastructure/repositories/trip-planning-repository";
 
@@ -89,8 +92,7 @@ export default async function LocationPage({
                     {scene.episode ? ` · 第 ${scene.episode} 集` : ""}
                   </p>
                   <p className="text-sm leading-6 text-night">
-                    座標 {scene.latitude.toFixed(5)},{" "}
-                    {scene.longitude.toFixed(5)}
+                    座標 {formatSceneCoordinates(scene)}
                   </p>
                 </div>
                 <div className="flex flex-col gap-2 sm:flex-row md:flex-col">

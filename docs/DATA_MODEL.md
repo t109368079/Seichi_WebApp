@@ -32,8 +32,8 @@ model Location {
   id        String
   name      String
   areaName  String?
-  latitude  Float
-  longitude Float
+  latitude  Float?
+  longitude Float?
   mapsUrl   String?
 }
 
@@ -44,8 +44,8 @@ model Scene {
   episode               String?
   animeImageDriveFileId String
   locationId            String
-  latitude              Float
-  longitude             Float
+  latitude              Float?
+  longitude             Float?
   mapsUrl               String?
   notes                 String?
   status                SceneStatus
@@ -66,7 +66,8 @@ Phase 1 constraints:
 - `Location.name` plus `Location.areaName` is unique.
 - `Scene.sceneCode` is unique.
 - Each Scene belongs to exactly one Work and one Location.
-- Latitude and longitude are validated in domain code and stored on Location and Scene.
+- A Scene requires either a complete latitude/longitude pair or `mapsUrl`; `mapsUrl` is preferred for navigation when present.
+- Latitude and longitude are validated in domain code when provided and stored on Location and Scene.
 - Status values are restricted by the `SceneStatus` enum.
 
 ## Identity Rules
@@ -98,6 +99,8 @@ Import matching and write rules:
 - `scene_code` maps to unique `Scene.sceneCode`.
 - `work_short_code` maps to unique `Work.shortCode`; `work_name` updates `Work.name`.
 - `location_name + area_name` maps to the unique Location key.
+- `latitude + longitude` values are optional when `maps_url` is present. If one coordinate is provided, both must be provided and valid.
+- `maps_url` is optional only when both coordinates are present, and it is the preferred navigation target when present.
 - Existing Scene rows keep their existing `id` and `status`.
 - New Scene rows default to `NOT_SHOT`.
 - Import does not accept or overwrite status.
@@ -110,9 +113,10 @@ Phase 3 does not add database tables. Map markers are derived from existing Scen
 Derived map behavior:
 
 - Scene coordinates are validated before map placement.
+- Scenes without coordinates are omitted from the projected map but remain usable in catalog, trip planning, Field Mode, photo upload, and review.
 - Scenes within `35m` are grouped into one marker.
 - Marker groups preserve each individual `Scene.id`, `sceneCode`, Work identity, status, and anime image file id reference.
-- Google Maps navigation URLs are generated from Scene latitude and longitude.
+- Google Maps navigation uses `Scene.mapsUrl` when present, falling back to a generated URL from Scene latitude and longitude.
 - No route order, Trip, TripDay, or TripScene data is created in Phase 3.
 
 ## Phase 4 Trip Planning Model
@@ -251,6 +255,18 @@ Review queue buckets are derived, not stored:
 ```
 
 The `有照片但未選最佳照片` bucket can overlap with status buckets. It exists so the reviewer can find scenes that have takes but cannot yet be completed.
+
+## Post-Phase 7 Navigation Input Adjustment
+
+The `20260802090000_optional_scene_coordinates` migration makes `Location.latitude`, `Location.longitude`, `Scene.latitude`, and `Scene.longitude` nullable. This supports manual CSV preparation where a Google Maps share URL is easier to collect than precise coordinates.
+
+Current navigation input rules:
+
+- A Scene must have either a complete latitude/longitude pair or `mapsUrl`.
+- If one coordinate is provided, both latitude and longitude must be provided and valid.
+- `mapsUrl` is preferred for navigation when present.
+- URL-only Scenes are omitted from the projected local map until coordinates are added.
+- URL-only Scenes can still be imported, planned into trips, opened in Field Mode, photographed, reviewed, and opened in Google Maps.
 
 ## Future Product Models
 

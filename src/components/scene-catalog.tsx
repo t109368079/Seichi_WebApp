@@ -2,6 +2,7 @@ import Link from "next/link";
 import { AddToTripDayForm } from "@/components/add-to-trip-day-form";
 import { TripDayContextBanner } from "@/components/trip-day-context-banner";
 import {
+  formatSceneCoordinates,
   getSceneStatusLabel,
   getSceneStatusOptions,
   type SceneCatalogFilters,
@@ -280,9 +281,7 @@ function SceneCard({
         </div>
         <div className="border-t border-rail pt-3">
           <dt className="font-semibold">座標</dt>
-          <dd className="mt-1 text-night">
-            {scene.latitude.toFixed(5)}, {scene.longitude.toFixed(5)}
-          </dd>
+          <dd className="mt-1 text-night">{formatSceneCoordinates(scene)}</dd>
         </div>
         <div className="border-t border-rail pt-3">
           <dt className="font-semibold">動畫檔案 ID</dt>

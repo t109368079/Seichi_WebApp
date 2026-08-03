@@ -10,6 +10,7 @@ export const defaultMarkerGroupingRadiusMeters = 35;
 export interface CoordinateLike {
   latitude?: number | null;
   longitude?: number | null;
+  mapsUrl?: string | null;
 }
 
 export interface NavigationTarget {
@@ -28,10 +29,15 @@ export interface SceneMapMarkerGroup {
   scenes: SceneCatalogItem[];
 }
 
+type MappableSceneCatalogItem = SceneCatalogItem & {
+  latitude: number;
+  longitude: number;
+};
+
 interface MutableMarkerGroup {
   latitude: number;
   longitude: number;
-  scenes: SceneCatalogItem[];
+  scenes: MappableSceneCatalogItem[];
 }
 
 interface MapBounds {
@@ -44,7 +50,7 @@ interface MapBounds {
 export function filterSceneMapItems(
   scenes: readonly SceneCatalogItem[],
   filters: SceneCatalogFilters,
-): SceneCatalogItem[] {
+): MappableSceneCatalogItem[] {
   return filterSceneCatalogItems(scenes, filters).filter((scene) =>
     hasValidMapCoordinates(scene),
   );
@@ -95,6 +101,14 @@ export function buildGoogleMapsNavigationUrl(
 export function getNavigationTarget(
   coordinates: CoordinateLike,
 ): NavigationTarget {
+  const mapsUrl = coordinates.mapsUrl?.trim();
+
+  if (mapsUrl) {
+    return {
+      href: mapsUrl,
+    };
+  }
+
   const issue = getCoordinateIssue(coordinates);
 
   if (issue) {
@@ -119,12 +133,14 @@ export function groupSceneMapMarkers(
       continue;
     }
 
+    const mapScene: MappableSceneCatalogItem = scene;
+
     const existingGroup = groups.find(
-      (group) => distanceMeters(group, scene) <= radiusMeters,
+      (group) => distanceMeters(group, mapScene) <= radiusMeters,
     );
 
     if (existingGroup) {
-      existingGroup.scenes.push(scene);
+      existingGroup.scenes.push(mapScene);
       existingGroup.latitude = average(
         existingGroup.scenes.map((groupScene) => groupScene.latitude),
       );
@@ -133,9 +149,9 @@ export function groupSceneMapMarkers(
       );
     } else {
       groups.push({
-        latitude: scene.latitude,
-        longitude: scene.longitude,
-        scenes: [scene],
+        latitude: mapScene.latitude,
+        longitude: mapScene.longitude,
+        scenes: [mapScene],
       });
     }
   }

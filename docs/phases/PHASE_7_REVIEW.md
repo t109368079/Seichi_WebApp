@@ -34,6 +34,12 @@ None. Phase 7 adds no migration and writes only:
 - `ScenePhoto.isBest`, using the Phase 6 partial unique index that allows at most one best photo per Scene.
 - `Scene.status`, using the existing `SceneStatus` enum.
 
+## Post-Phase 7 Follow-Up
+
+The already-pushed Phase 7 commit remains unchanged. A follow-up cleanup commit allows URL-only scene navigation by making Scene and Location coordinates nullable while preserving the rule that every Scene needs either a complete coordinate pair or `mapsUrl`.
+
+This follow-up does not add Google API integration, Drive images, route optimization, or automatic ordering.
+
 ## Blocks
 
 ### Block 7.1: Review Domain And Queue
@@ -161,7 +167,7 @@ git status --short
 
 ## Completion Status
 
-Status: Pending final commit
+Status: Completed
 
 Completed Blocks:
 
@@ -192,5 +198,9 @@ Known Limitations:
 
 Commit:
 
-- Message format: `[Phase 7] add review workflow`
-- Hash: to be recorded in the final Phase 7 completion report.
+- Message: `[Phase 7] add review workflow`
+- Hash: `b1c7063`
+
+Follow-Up Commit:
+
+- Message: `[Phase 7] allow url-only scene navigation`

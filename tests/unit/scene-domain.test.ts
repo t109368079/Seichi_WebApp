@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   assertSceneStatus,
+  assertSceneNavigationReference,
   assertUniqueSceneCodes,
   assertValidCoordinates,
   createScene,
@@ -31,6 +32,35 @@ describe("scene domain validation", () => {
     ).toThrow("Invalid longitude");
   });
 
+  it("accepts either coordinates or a maps URL as the navigation reference", () => {
+    expect(() =>
+      assertSceneNavigationReference({
+        latitude: null,
+        longitude: null,
+        mapsUrl: "https://maps.app.goo.gl/example",
+      }),
+    ).not.toThrow();
+    expect(() =>
+      assertSceneNavigationReference({
+        latitude: 35.73,
+        longitude: 139.72,
+      }),
+    ).not.toThrow();
+    expect(() =>
+      assertSceneNavigationReference({
+        latitude: null,
+        longitude: null,
+      }),
+    ).toThrow("Scene requires either coordinates or mapsUrl.");
+    expect(() =>
+      assertSceneNavigationReference({
+        latitude: 35.73,
+        longitude: null,
+        mapsUrl: "https://maps.app.goo.gl/example",
+      }),
+    ).toThrow("Scene latitude and longitude must be provided together.");
+  });
+
   it("detects duplicate scene codes before database writes", () => {
     const scenes = [
       { sceneCode: "BHC-001" },
@@ -54,8 +84,9 @@ describe("scene domain validation", () => {
       episode: "01",
       animeImageDriveFileId: "demo-drive-bhc-001",
       locationId: "location-ikebukuro-east-gate",
-      latitude: 35.73028,
-      longitude: 139.71145,
+      latitude: null,
+      longitude: null,
+      mapsUrl: "https://maps.app.goo.gl/example",
       status: "NOT_SHOT",
     });
 

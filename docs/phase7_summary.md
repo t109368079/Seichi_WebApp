@@ -156,4 +156,8 @@ docs/DECISIONS.md
 ## Commit
 
 - Commit message: `[Phase 7] add review workflow`
-- Commit hash: recorded in the final assistant completion report after commit
+- Commit hash: `b1c7063`
+
+## Follow-Up Cleanup
+
+Phase 7 was already pushed before the URL-only navigation cleanup was finalized, so the pushed commit is preserved. The cleanup is recorded as a separate follow-up commit with message `[Phase 7] allow url-only scene navigation`.

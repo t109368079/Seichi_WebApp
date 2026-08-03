@@ -28,10 +28,7 @@ test("scene map loads demo marker groups and shows grouped scene identities", as
 
   await expect(
     page.getByRole("link", { name: "開啟導航" }).first(),
-  ).toHaveAttribute(
-    "href",
-    "https://www.google.com/maps/dir/?api=1&destination=35.73028,139.71145",
-  );
+  ).toHaveAttribute("href", "https://maps.google.com/?q=35.73028,139.71145");
 });
 
 test("scene map filters through URL query parameters", async ({ page }) => {

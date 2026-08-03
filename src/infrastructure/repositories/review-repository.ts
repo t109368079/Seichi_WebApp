@@ -230,8 +230,8 @@ function mapReviewQueueItem(scene: {
   sceneCode: string;
   episode: string | null;
   animeImageDriveFileId: string;
-  latitude: number;
-  longitude: number;
+  latitude: number | null;
+  longitude: number | null;
   mapsUrl: string | null;
   notes: string | null;
   status: string;
@@ -280,8 +280,8 @@ function mapSceneCatalogItem(scene: {
   sceneCode: string;
   episode: string | null;
   animeImageDriveFileId: string;
-  latitude: number;
-  longitude: number;
+  latitude: number | null;
+  longitude: number | null;
   mapsUrl: string | null;
   notes: string | null;
   status: string;

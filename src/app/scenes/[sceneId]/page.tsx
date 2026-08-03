@@ -2,7 +2,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AddToTripDayForm } from "@/components/add-to-trip-day-form";
 import { TripDayContextBanner } from "@/components/trip-day-context-banner";
-import { getSceneStatusLabel } from "@/application/scene-catalog";
+import {
+  formatSceneCoordinates,
+  getSceneStatusLabel,
+} from "@/application/scene-catalog";
 import { getNavigationTarget } from "@/application/scene-map";
 import { isSceneAddedToTripDay } from "@/application/trip-planning";
 import { getSceneDetail } from "@/infrastructure/repositories/scene-catalog-repository";
@@ -124,12 +127,7 @@ export default async function SceneDetailPage({
                 scene.location.areaName ? `, ${scene.location.areaName}` : ""
               }`}
             />
-            <DetailRow
-              label="座標"
-              value={`${scene.latitude.toFixed(5)}, ${scene.longitude.toFixed(
-                5,
-              )}`}
-            />
+            <DetailRow label="座標" value={formatSceneCoordinates(scene)} />
             <DetailRow
               label="動畫 Drive 檔案 ID"
               value={scene.animeImageDriveFileId}

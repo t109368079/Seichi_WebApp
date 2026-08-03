@@ -81,6 +81,24 @@ describe("scene map coordinates and navigation", () => {
     ).toEqual({
       href: "https://www.google.com/maps/dir/?api=1&destination=35.73028,139.71145",
     });
+    expect(
+      getNavigationTarget({
+        latitude: 35.73028,
+        longitude: 139.71145,
+        mapsUrl: "https://maps.app.goo.gl/example",
+      }),
+    ).toEqual({
+      href: "https://maps.app.goo.gl/example",
+    });
+    expect(
+      getNavigationTarget({
+        latitude: null,
+        longitude: null,
+        mapsUrl: "https://maps.app.goo.gl/example",
+      }),
+    ).toEqual({
+      href: "https://maps.app.goo.gl/example",
+    });
   });
 
   it("reports missing and invalid coordinates without generating URLs", () => {
@@ -134,8 +152,23 @@ describe("scene map grouping and projection", () => {
   });
 
   it("uses meter distance for grouping thresholds", () => {
-    expect(distanceMeters(scenes[0], scenes[2])).toBeLessThan(6);
-    expect(distanceMeters(scenes[0], scenes[3])).toBeGreaterThan(1500);
+    const firstScene = scenes[0];
+    const nearScene = scenes[2];
+    const farScene = scenes[3];
+
+    if (
+      !firstScene ||
+      !nearScene ||
+      !farScene ||
+      !hasValidMapCoordinates(firstScene) ||
+      !hasValidMapCoordinates(nearScene) ||
+      !hasValidMapCoordinates(farScene)
+    ) {
+      throw new Error("Map distance test scenes must have coordinates.");
+    }
+
+    expect(distanceMeters(firstScene, nearScene)).toBeLessThan(6);
+    expect(distanceMeters(firstScene, farScene)).toBeGreaterThan(1500);
   });
 });
 
@@ -159,13 +192,41 @@ describe("scene map filtering", () => {
       }).map((mapScene) => mapScene.sceneCode),
     ).toEqual(["NEAR-001"]);
   });
+
+  it("omits URL-only scenes from marker groups", () => {
+    const result = filterSceneMapItems(
+      [
+        ...scenes,
+        scene({
+          id: "scene-url-only",
+          sceneCode: "URL-001",
+          latitude: null,
+          longitude: null,
+          mapsUrl: "https://maps.app.goo.gl/example",
+          status: "NOT_SHOT",
+          workId: "work-blue-hour-crossing",
+          workName: "Blue Hour Crossing",
+          workShortCode: "BHC",
+          locationId: "location-url-only",
+          locationName: "URL Only Place",
+          areaName: "Ikebukuro",
+        }),
+      ],
+      {},
+    );
+
+    expect(result.map((mapScene) => mapScene.sceneCode)).not.toContain(
+      "URL-001",
+    );
+  });
 });
 
 function scene(input: {
   id: string;
   sceneCode: string;
-  latitude: number;
-  longitude: number;
+  latitude: number | null;
+  longitude: number | null;
+  mapsUrl?: string;
   status: SceneCatalogItem["status"];
   workId: string;
   workName: string;
@@ -181,6 +242,7 @@ function scene(input: {
     animeImageDriveFileId: `demo-drive-${input.sceneCode.toLowerCase()}`,
     latitude: input.latitude,
     longitude: input.longitude,
+    mapsUrl: input.mapsUrl,
     status: input.status,
     work: {
       id: input.workId,

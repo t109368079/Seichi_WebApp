@@ -19,8 +19,8 @@ export interface Location {
   id: string;
   name: string;
   areaName?: string;
-  latitude: number;
-  longitude: number;
+  latitude: number | null;
+  longitude: number | null;
   mapsUrl?: string;
 }
 
@@ -31,8 +31,8 @@ export interface Scene {
   episode?: string;
   animeImageDriveFileId: string;
   locationId: string;
-  latitude: number;
-  longitude: number;
+  latitude: number | null;
+  longitude: number | null;
   mapsUrl?: string;
   notes?: string;
   status: SceneStatus;
@@ -41,6 +41,12 @@ export interface Scene {
 export interface Coordinates {
   latitude: number;
   longitude: number;
+}
+
+export interface SceneNavigationReference {
+  latitude?: number | null;
+  longitude?: number | null;
+  mapsUrl?: string | null;
 }
 
 export function isSceneStatus(value: string): value is SceneStatus {
@@ -73,6 +79,31 @@ export function assertValidCoordinates(coordinates: Coordinates): Coordinates {
   }
 
   return coordinates;
+}
+
+export function assertSceneNavigationReference(
+  reference: SceneNavigationReference,
+): SceneNavigationReference {
+  const hasMapsUrl = (reference.mapsUrl ?? "").trim().length > 0;
+  const hasLatitude = typeof reference.latitude === "number";
+  const hasLongitude = typeof reference.longitude === "number";
+
+  if (hasLatitude !== hasLongitude) {
+    throw new Error("Scene latitude and longitude must be provided together.");
+  }
+
+  if (hasLatitude && hasLongitude) {
+    assertValidCoordinates({
+      latitude: reference.latitude as number,
+      longitude: reference.longitude as number,
+    });
+  }
+
+  if (!hasMapsUrl && !hasLatitude && !hasLongitude) {
+    throw new Error("Scene requires either coordinates or mapsUrl.");
+  }
+
+  return reference;
 }
 
 export function findDuplicateSceneCodes(
@@ -112,9 +143,10 @@ export function createScene(input: Scene): Scene {
   }
 
   assertSceneStatus(input.status);
-  assertValidCoordinates({
+  assertSceneNavigationReference({
     latitude: input.latitude,
     longitude: input.longitude,
+    mapsUrl: input.mapsUrl,
   });
 
   return input;

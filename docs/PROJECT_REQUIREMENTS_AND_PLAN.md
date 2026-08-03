@@ -170,8 +170,7 @@ Codex 在開始任何程式修改前，必須先閱讀：
 - 場景識別碼
 - 動畫圖片
 - 地點名稱
-- 經緯度
-- Google Maps 導航點
+- 經緯度或 Google Maps 導航點
 - 備註
 - 拍攝狀態
 
@@ -328,8 +327,8 @@ interface Location {
   id: string;
   name: string;
   areaName?: string;
-  latitude: number;
-  longitude: number;
+  latitude?: number;
+  longitude?: number;
   mapsUrl?: string;
 }
 ```
@@ -353,8 +352,8 @@ interface Scene {
   episode?: string;
   animeImageDriveFileId: string;
   locationId: string;
-  latitude: number;
-  longitude: number;
+  latitude?: number;
+  longitude?: number;
   mapsUrl?: string;
   notes?: string;
   status: SceneStatus;
@@ -368,6 +367,8 @@ interface Scene {
 - 不得使用資料夾是否存在表示狀態。
 - 不得刪除動畫圖表示完成。
 - 所有實景照片必須綁定一個有效的 Scene ID。
+- 每個 Scene 必須至少有一個導航參考：完整經緯度，或 Google Maps URL。
+- 若 `mapsUrl` 存在，導航優先使用 `mapsUrl`；座標只用於本機投影地圖。
 
 ## 7.4 Trip
 
@@ -915,6 +916,8 @@ notes
 - 缺少必填欄位時回報錯誤。
 - 重複 Scene Code 時回報錯誤。
 - 經緯度錯誤時指出行號。
+- `latitude + longitude` 或 `maps_url` 至少需提供一組；`maps_url` 存在時座標可空。
+- 如果只填座標，`latitude` 與 `longitude` 必須同時存在且有效。
 - 不接受 `status` 欄位，以免覆蓋現地與 Review 狀態。
 - 不允許靜默忽略錯誤。
 
@@ -1021,14 +1024,14 @@ Phase 3 採 no-external-API local projected map，不使用 Google Maps JavaScri
 功能：
 
 - 每個 Scene 提供「開啟導航」
-- 以該 Scene 座標作為 destination
+- 優先使用該 Scene 的 `maps_url`，沒有時才以座標產生 destination
 - 交由 Google Maps App 或網頁導航
 
 驗收條件：
 
 - URL 生成正確。
 - 手機、平板與桌面均可開啟。
-- 缺少座標時按鈕停用並顯示原因。
+- 缺少座標且沒有 `maps_url` 時按鈕停用並顯示原因。
 - 系統不自行改變行程順序。
 
 ### 主要單元測試

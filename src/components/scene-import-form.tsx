@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 import Link from "next/link";
 import {
-  requiredSceneImportCsvColumns,
+  getSceneImportColumnRequirementLabel,
   sceneImportCsvColumns,
   type SceneImportPreview,
 } from "@/application/scene-import";
@@ -40,11 +40,7 @@ export function SceneImportForm() {
                 <tr key={column} className="border-b border-rail last:border-0">
                   <td className="py-2 pr-4 font-mono text-xs">{column}</td>
                   <td className="py-2 pr-4">
-                    {requiredSceneImportCsvColumns.includes(
-                      column as (typeof requiredSceneImportCsvColumns)[number],
-                    )
-                      ? "是"
-                      : "否"}
+                    {getSceneImportColumnRequirementLabel(column)}
                   </td>
                 </tr>
               ))}
@@ -255,9 +251,7 @@ function SceneImportRows({ rows }: { rows: SceneImportPreview["rows"] }) {
                 <td className="py-2 pr-4">
                   {row.locationName}, {row.areaName}
                 </td>
-                <td className="py-2 pr-4">
-                  {row.latitude.toFixed(5)}, {row.longitude.toFixed(5)}
-                </td>
+                <td className="py-2 pr-4">{formatImportedCoordinates(row)}</td>
               </tr>
             ))}
           </tbody>
@@ -265,6 +259,16 @@ function SceneImportRows({ rows }: { rows: SceneImportPreview["rows"] }) {
       </div>
     </section>
   );
+}
+
+function formatImportedCoordinates(
+  row: SceneImportPreview["rows"][number],
+): string {
+  if (typeof row.latitude === "number" && typeof row.longitude === "number") {
+    return `${row.latitude.toFixed(5)}, ${row.longitude.toFixed(5)}`;
+  }
+
+  return "未設定";
 }
 
 function getImportActionLabel(

@@ -57,7 +57,7 @@ test("field mode walks a day in manual order and records reversible status", asy
 
   await expect(page.getByRole("link", { name: "開啟導航" })).toHaveAttribute(
     "href",
-    "https://www.google.com/maps/dir/?api=1&destination=35.73028,139.71145",
+    "https://maps.google.com/?q=35.73028,139.71145",
   );
 
   await page.getByRole("link", { name: "下一個場景" }).click();

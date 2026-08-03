@@ -1,4 +1,8 @@
-import { assertValidCoordinates, type SceneStatus } from "@/domain/scene";
+import {
+  assertSceneNavigationReference,
+  assertValidCoordinates,
+  type SceneStatus,
+} from "@/domain/scene";
 
 export const sceneImportCsvColumns = [
   "scene_code",
@@ -21,8 +25,12 @@ export const requiredSceneImportCsvColumns = [
   "anime_drive_file_id",
   "location_name",
   "area_name",
+] as const;
+
+const navigationReferenceSceneImportCsvColumns = [
   "latitude",
   "longitude",
+  "maps_url",
 ] as const;
 
 export type SceneImportCsvColumn = (typeof sceneImportCsvColumns)[number];
@@ -36,8 +44,8 @@ export interface SceneImportRow {
   animeImageDriveFileId: string;
   locationName: string;
   areaName: string;
-  latitude: number;
-  longitude: number;
+  latitude: number | null;
+  longitude: number | null;
   mapsUrl?: string;
   notes?: string;
 }
@@ -82,6 +90,28 @@ interface CsvRecord {
 }
 
 const allowedColumnSet = new Set<string>(sceneImportCsvColumns);
+
+export function getSceneImportColumnRequirementLabel(
+  column: SceneImportCsvColumn,
+): string {
+  if (
+    requiredSceneImportCsvColumns.includes(
+      column as (typeof requiredSceneImportCsvColumns)[number],
+    )
+  ) {
+    return "是";
+  }
+
+  if (
+    navigationReferenceSceneImportCsvColumns.includes(
+      column as (typeof navigationReferenceSceneImportCsvColumns)[number],
+    )
+  ) {
+    return "座標或 maps_url 擇一";
+  }
+
+  return "否";
+}
 
 export function parseSceneImportCsv(csvText: string): SceneImportParseResult {
   const csv = parseCsvRecords(csvText);
@@ -334,16 +364,33 @@ function normalizeDataRecord(
     requiredValues.set(column, value);
   }
 
-  const latitudeText = requiredValues.get("latitude") ?? "";
-  const longitudeText = requiredValues.get("longitude") ?? "";
-  const latitude = Number(latitudeText);
-  const longitude = Number(longitudeText);
+  const latitudeText = readOptionalValue(rawRow, "latitude") ?? "";
+  const longitudeText = readOptionalValue(rawRow, "longitude") ?? "";
+  const mapsUrl = readOptionalValue(rawRow, "maps_url");
+  const hasLatitude = latitudeText.length > 0;
+  const hasLongitude = longitudeText.length > 0;
+  let latitude: number | null = null;
+  let longitude: number | null = null;
 
-  if (latitudeText.length > 0 || longitudeText.length > 0) {
+  if (hasLatitude || hasLongitude) {
+    if (!hasLatitude || !hasLongitude) {
+      hasRowError = true;
+      errors.push({
+        rowNumber: record.rowNumber,
+        field: hasLatitude ? "longitude" : "latitude",
+        message: "latitude 與 longitude 需同時填寫，或只填 maps_url。",
+      });
+    }
+
+    latitude = hasLatitude ? Number(latitudeText) : null;
+    longitude = hasLongitude ? Number(longitudeText) : null;
+  }
+
+  if (hasLatitude && hasLongitude) {
     try {
       assertValidCoordinates({
-        latitude,
-        longitude,
+        latitude: latitude as number,
+        longitude: longitude as number,
       });
     } catch (error) {
       const rawMessage = error instanceof Error ? error.message : "";
@@ -355,6 +402,25 @@ function normalizeDataRecord(
         rowNumber: record.rowNumber,
         field: rawMessage.includes("longitude") ? "longitude" : "latitude",
         message,
+      });
+    }
+  }
+
+  try {
+    assertSceneNavigationReference({
+      latitude,
+      longitude,
+      mapsUrl,
+    });
+  } catch (error) {
+    const rawMessage = error instanceof Error ? error.message : "";
+
+    if (rawMessage.includes("requires either coordinates or mapsUrl")) {
+      hasRowError = true;
+      errors.push({
+        rowNumber: record.rowNumber,
+        field: "maps_url",
+        message: "latitude/longitude 或 maps_url 至少需填一組。",
       });
     }
   }
@@ -376,7 +442,7 @@ function normalizeDataRecord(
     areaName: requiredValues.get("area_name") ?? "",
     latitude,
     longitude,
-    mapsUrl: readOptionalValue(rawRow, "maps_url"),
+    mapsUrl,
     notes: readOptionalValue(rawRow, "notes"),
   };
 }

@@ -223,3 +223,15 @@ The review queue does not store bucket state. Buckets are derived from `Scene.st
 Status: Accepted
 
 Phase 6 deferred browser upload E2E coverage by explicit request. Phase 7 adds a review workflow E2E path that creates a trip, uploads multiple local PNG files through the real browser file input, selects the best take, marks the Scene reviewed, and verifies trip progress. This covers the missing upload browser path while keeping review completion as the primary assertion.
+
+## D-0038: Scene Navigation Can Be URL-Only
+
+Status: Accepted
+
+Manual test CSV preparation often starts from Google Maps share URLs, while precise latitude and longitude are harder to collect. Scene and Location coordinates are therefore nullable after Phase 7, and CSV import requires either a complete coordinate pair or `maps_url`. Navigation prefers `maps_url` when present. URL-only Scenes are omitted from the local projected map until coordinates are added, but they can still be planned, opened in Google Maps, photographed, and reviewed.
+
+## D-0039: Phase 7 Follow-Up Preserves Published History
+
+Status: Accepted
+
+The Phase 7 review workflow commit `b1c7063` had already been pushed before the URL-only navigation cleanup was finalized. To avoid rewriting published history, the cleanup is committed separately as `[Phase 7] allow url-only scene navigation` instead of amending the original Phase 7 commit.

@@ -5,8 +5,8 @@ export interface SceneCatalogItem {
   sceneCode: string;
   episode?: string;
   animeImageDriveFileId: string;
-  latitude: number;
-  longitude: number;
+  latitude: number | null;
+  longitude: number | null;
   mapsUrl?: string;
   notes?: string;
   status: SceneStatus;
@@ -103,4 +103,17 @@ export function getSceneStatusLabel(status: SceneStatus): string {
 
 export function getSceneStatusOptions(): readonly SceneStatus[] {
   return sceneStatuses;
+}
+
+export function formatSceneCoordinates(
+  scene: Pick<SceneCatalogItem, "latitude" | "longitude">,
+): string {
+  if (
+    typeof scene.latitude === "number" &&
+    typeof scene.longitude === "number"
+  ) {
+    return `${scene.latitude.toFixed(5)}, ${scene.longitude.toFixed(5)}`;
+  }
+
+  return "未設定";
 }

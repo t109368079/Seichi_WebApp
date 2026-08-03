@@ -81,7 +81,7 @@ Presentation Layer
 
 Phase 2 keeps CSV format concerns at the import adapter/parser boundary. The rest of the app uses a normalized import model so future Google Sheets import can reuse the same validation and commit path.
 
-Phase 3 keeps map behavior in application utilities. The presentation layer renders catalog, import, and local map data but does not call Google APIs or encode external integration rules. Google Maps is used only as a generated navigation URL handed off to the browser.
+Phase 3 keeps map behavior in application utilities. The presentation layer renders catalog, import, and local map data but does not call Google APIs or encode external integration rules. Google Maps is used only as a provided `mapsUrl` or generated navigation URL handed off to the browser. Scenes without coordinates are omitted from the projected local map, but they still remain available to catalog, trip planning, Field Mode, photo upload, and review.
 
 Phase 4 keeps itinerary ordering in domain/application logic and persists changes through repository transactions. The map can help users discover scenes, but it does not sort or optimize TripScene order.
 
@@ -121,7 +121,7 @@ Phase 2 does not add database tables. CSV import writes to the existing Work, Lo
 - Scene matches by `sceneCode`.
 - Existing Scene `status` is preserved.
 
-Phase 3 does not add database tables. It reads existing Scene coordinates and handles missing or invalid coordinates defensively in application logic.
+Phase 3 does not add database tables. It reads existing Scene coordinates and handles missing or invalid coordinates defensively in application logic. Navigation prefers `Scene.mapsUrl` when present and falls back to generated coordinate navigation.
 
 Phase 4 adds planning tables only. Hard deleting a Trip cascades planning rows but preserves catalog data.
 
@@ -130,3 +130,5 @@ Phase 5 does not add database tables or a migration. It writes only the existing
 Phase 6 adds `ScenePhoto`, holding the permanent binding between a real photo and exactly one Scene. Scene deletion cascades to its photos; Trip and TripDay deletion nulls the capture context but preserves the photo. Photo bytes are not stored in the database.
 
 Phase 7 adds no migration. It uses the existing `ScenePhoto.isBest` column and partial unique index, and stores review completion in the existing `Scene.status` enum.
+
+After Phase 7, the optional-coordinate migration makes Scene and Location latitude/longitude nullable so manual CSV imports can use `maps_url` as the primary navigation reference. This does not add a map provider: URL-only Scenes skip local marker projection and hand the saved URL to the browser.

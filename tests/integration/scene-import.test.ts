@@ -12,8 +12,8 @@ let originalBhc002: {
   episode: string | null;
   animeImageDriveFileId: string;
   locationId: string;
-  latitude: number;
-  longitude: number;
+  latitude: number | null;
+  longitude: number | null;
   mapsUrl: string | null;
   notes: string | null;
   status:
@@ -125,6 +125,31 @@ describe("scene import repository", () => {
     ]);
     expect(new Set(scenes.map((scene) => scene.workId)).size).toBe(1);
     expect(new Set(scenes.map((scene) => scene.locationId)).size).toBe(1);
+  });
+
+  it("imports a URL-only navigation row without coordinates", async () => {
+    const result = await commitSceneImportCsv(
+      csv([
+        "NRI-201,Night Rail Ikebukuro,NRI,03,demo-drive-nri-201,Mejiro Bridge,Mejiro,,,https://maps.app.goo.gl/example,URL only",
+      ]),
+    );
+
+    const scene = await prisma.scene.findUniqueOrThrow({
+      where: {
+        sceneCode: "NRI-201",
+      },
+      include: {
+        location: true,
+      },
+    });
+
+    expect(result.ok).toBe(true);
+    expect(scene.latitude).toBeNull();
+    expect(scene.longitude).toBeNull();
+    expect(scene.mapsUrl).toBe("https://maps.app.goo.gl/example");
+    expect(scene.location.latitude).toBeNull();
+    expect(scene.location.longitude).toBeNull();
+    expect(scene.location.mapsUrl).toBe("https://maps.app.goo.gl/example");
   });
 
   it("updates an existing Scene without changing its status", async () => {

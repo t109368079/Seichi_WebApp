@@ -33,6 +33,21 @@ describe("scene import CSV parsing", () => {
     ]);
   });
 
+  it("accepts a maps URL without latitude and longitude values", () => {
+    const result = parseSceneImportCsv(`${csvHeader}
+NRI-101,Night Rail Ikebukuro,NRI,03,demo-drive-nri-101,East Gate,Ikebukuro,,,"https://maps.app.goo.gl/example",URL only`);
+
+    expect(result.errors).toEqual([]);
+    expect(result.rows).toEqual([
+      expect.objectContaining({
+        sceneCode: "NRI-101",
+        latitude: null,
+        longitude: null,
+        mapsUrl: "https://maps.app.goo.gl/example",
+      }),
+    ]);
+  });
+
   it("reports missing, unknown, and duplicate headers", () => {
     const result = parseSceneImportCsv(
       "scene_code,work_name,work_short_code,episode,anime_drive_file_id,location_name,area_name,latitude,maps_url,notes,notes,status\nNRI-101,Night Rail,NRI,03,demo-drive,East Gate,Ikebukuro,35.73028,,note,note,NOT_SHOT",
@@ -72,6 +87,26 @@ describe("scene import CSV parsing", () => {
         rowNumber: 2,
         field: "scene_code",
         message: "scene_code 為必填欄位，不能空白。",
+      },
+    ]);
+  });
+
+  it("requires either a maps URL or a complete coordinate pair", () => {
+    const result = parseSceneImportCsv(`${csvHeader}
+NRI-101,Night Rail,NRI,03,demo-drive,East Gate,Ikebukuro,,,,Missing navigation
+NRI-102,Night Rail,NRI,03,demo-drive,East Gate,Ikebukuro,35.73028,,,Partial coordinate`);
+
+    expect(result.rows).toEqual([]);
+    expect(result.errors).toEqual([
+      {
+        rowNumber: 2,
+        field: "maps_url",
+        message: "latitude/longitude 或 maps_url 至少需填一組。",
+      },
+      {
+        rowNumber: 3,
+        field: "longitude",
+        message: "latitude 與 longitude 需同時填寫，或只填 maps_url。",
       },
     ]);
   });
