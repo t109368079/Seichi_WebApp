@@ -3,5 +3,8 @@
 ../coverage
 ../playwright-report
 ../test-results
+../.tmp
+../.codex
+../docs/client_secret*.json
 ../package-lock.json
 ../docs/PROJECT_REQUIREMENTS_AND_PLAN.md

@@ -1,9 +1,14 @@
 import { NextResponse } from "next/server";
 import { completeGoogleOAuthConnection } from "@/infrastructure/repositories/google-integration-repository";
 import {
+  googleOAuthStateCookieName,
+  googleSessionCookieName,
+} from "@/application/google-integration";
+import {
   consumeGoogleOAuthStateCookie,
-  setGoogleSessionCookie,
+  getGoogleSessionCookieOptions,
 } from "@/infrastructure/google/google-session-cookie";
+import { buildGoogleIntegrationRedirectUrl } from "@/infrastructure/google/google-request-url";
 
 export const dynamic = "force-dynamic";
 
@@ -24,9 +29,15 @@ export async function GET(request: Request): Promise<NextResponse> {
 
   try {
     const result = await completeGoogleOAuthConnection(code);
-    await setGoogleSessionCookie(result.sessionToken, result.sessionExpiresAt);
+    const response = redirectToIntegration(request, "connected");
+    response.cookies.set(
+      googleSessionCookieName,
+      result.sessionToken,
+      getGoogleSessionCookieOptions(result.sessionExpiresAt),
+    );
+    response.cookies.delete(googleOAuthStateCookieName);
 
-    return redirectToIntegration(request, "connected");
+    return response;
   } catch {
     return redirectToIntegration(request, "failed");
   }
@@ -37,6 +48,6 @@ function redirectToIntegration(
   message: string,
 ): NextResponse {
   return NextResponse.redirect(
-    new URL(`/integrations/google?googleMessage=${message}`, request.url),
+    buildGoogleIntegrationRedirectUrl(request, message),
   );
 }

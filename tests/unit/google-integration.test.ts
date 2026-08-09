@@ -12,6 +12,14 @@ import {
   googleFetchJson,
   setGoogleFetch,
 } from "@/infrastructure/google/google-http";
+import {
+  consumeGoogleLanPairingToken,
+  createGoogleLanPairingToken,
+} from "@/infrastructure/google/google-lan-pairing";
+import {
+  buildGoogleIntegrationRedirectUrl,
+  getAppRequestOrigin,
+} from "@/infrastructure/google/google-request-url";
 
 describe("google integration application helpers", () => {
   it("requests the Phase 8 OAuth scopes", () => {
@@ -64,6 +72,33 @@ describe("google token crypto", () => {
     expect(() => decryptGoogleToken(encrypted, "wrong-secret")).toThrow(
       "Unable to decrypt Google token.",
     );
+  });
+});
+
+describe("google LAN pairing", () => {
+  it("creates one-time LAN pairing tokens", () => {
+    const pairing = createGoogleLanPairingToken("google-account-1");
+
+    expect(pairing.token).toHaveLength(32);
+    expect(consumeGoogleLanPairingToken(pairing.token)).toBe(
+      "google-account-1",
+    );
+    expect(consumeGoogleLanPairingToken(pairing.token)).toBeUndefined();
+  });
+});
+
+describe("google request URL helpers", () => {
+  it("uses the browser host instead of the dev server bind address", () => {
+    const request = new Request("http://0.0.0.0:3000/auth/google/callback", {
+      headers: {
+        host: "127.0.0.1:3000",
+      },
+    });
+
+    expect(getAppRequestOrigin(request)).toBe("http://127.0.0.1:3000");
+    expect(
+      buildGoogleIntegrationRedirectUrl(request, "connected").toString(),
+    ).toBe("http://127.0.0.1:3000/integrations/google?googleMessage=connected");
   });
 });
 

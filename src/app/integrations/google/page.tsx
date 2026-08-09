@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { headers } from "next/headers";
 import {
   getGoogleAuthStartHref,
   getGoogleIntegrationLabel,
@@ -13,12 +14,15 @@ import {
   getGoogleIntegrationSettings,
   getGoogleIntegrationStatus,
 } from "@/infrastructure/repositories/google-integration-repository";
+import { isGoogleLanPairingEnabled } from "@/infrastructure/google/google-lan-pairing";
 
 export const dynamic = "force-dynamic";
 
 interface GoogleIntegrationPageProps {
   searchParams: Promise<{
     googleMessage?: string;
+    lanPairingToken?: string;
+    lanPairingExpiresAt?: string;
   }>;
 }
 
@@ -27,11 +31,15 @@ export default async function GoogleIntegrationPage({
 }: GoogleIntegrationPageProps) {
   const sessionToken = await readGoogleSessionCookie();
   const testMode = process.env.GOOGLE_INTEGRATION_TEST_MODE === "1";
+  const lanPairingEnabled = isGoogleLanPairingEnabled();
   const [status, settings, params] = await Promise.all([
     getGoogleIntegrationStatus(sessionToken),
     getGoogleIntegrationSettings(),
     searchParams,
   ]);
+  const lanPairingHref = params.lanPairingToken
+    ? buildLanPairingHref(params.lanPairingToken, await headers())
+    : undefined;
 
   return (
     <main className="min-h-screen bg-paper text-ink">
@@ -72,25 +80,39 @@ export default async function GoogleIntegrationPage({
             </div>
             {status.configured ? (
               <div className="flex flex-col gap-3 sm:flex-row">
-                <Link
+                <a
                   href={getGoogleAuthStartHref()}
                   className="flex min-h-11 w-fit items-center rounded bg-field px-5 text-sm font-semibold text-white"
                 >
                   {status.connected ? "重新連接" : "連接 Google"}
-                </Link>
+                </a>
                 {testMode ? (
-                  <Link
+                  <a
                     href="/auth/google/mock-connect"
                     className="flex min-h-11 w-fit items-center rounded border border-rail px-5 text-sm font-semibold"
                   >
                     建立測試連線
-                  </Link>
+                  </a>
+                ) : null}
+                {status.connected && lanPairingEnabled ? (
+                  <a
+                    href="/auth/google/lan-pairing/start"
+                    className="flex min-h-11 w-fit items-center rounded border border-rail px-5 text-sm font-semibold"
+                  >
+                    建立平板連線
+                  </a>
                 ) : null}
               </div>
             ) : null}
           </div>
 
           <GoogleMessage message={params.googleMessage} />
+          {lanPairingHref ? (
+            <LanPairingPanel
+              href={lanPairingHref}
+              expiresAt={params.lanPairingExpiresAt}
+            />
+          ) : null}
 
           {!status.configured ? (
             <div className="mt-4 rounded border border-[#f1c6bb] bg-[#fff2ef] p-4 text-sm leading-6 text-signal">
@@ -167,6 +189,24 @@ export default async function GoogleIntegrationPage({
   );
 }
 
+function LanPairingPanel({
+  href,
+  expiresAt,
+}: {
+  href: string;
+  expiresAt?: string;
+}) {
+  return (
+    <section className="mt-4 rounded border border-rail bg-paper p-4 text-sm leading-6 text-night">
+      <h2 className="font-semibold">平板連線 URL</h2>
+      <a className="mt-2 block break-all font-mono text-field" href={href}>
+        {href}
+      </a>
+      {expiresAt ? <p className="mt-2">有效期限：{expiresAt}</p> : null}
+    </section>
+  );
+}
+
 function GoogleMessage({ message }: { message?: string }) {
   const label = getMessageLabel(message);
 
@@ -220,6 +260,11 @@ function getMessageLabel(message?: string): string | undefined {
     denied: "Google 授權已取消。",
     failed: "Google 連接失敗。",
     invalid_state: "Google 授權狀態不一致，請重試。",
+    lan_connected: "平板已連接 Google session。",
+    lan_pairing_created: "平板連線 URL 已建立。",
+    lan_pairing_disabled: "平板連線只允許在開發環境使用。",
+    lan_pairing_invalid: "平板連線已過期或已使用，請重新建立。",
+    lan_pairing_missing_session: "請先在這台電腦連接 Google。",
     logged_out: "已登出 Google session。",
     missing_config: "Google OAuth 設定尚未完成。",
     revoked: "Google 授權已撤銷。",
@@ -227,4 +272,30 @@ function getMessageLabel(message?: string): string | undefined {
   };
 
   return message ? labels[message] : undefined;
+}
+
+function buildLanPairingHref(
+  token: string,
+  headerStore: { get(name: string): string | null },
+): string {
+  const origin = getLanPairingOrigin(headerStore);
+  const url = new URL("/auth/google/lan-connect", origin);
+  url.searchParams.set("token", token);
+
+  return url.toString();
+}
+
+function getLanPairingOrigin(headerStore: {
+  get(name: string): string | null;
+}): string {
+  const configured = process.env.GOOGLE_LAN_ORIGIN?.trim();
+
+  if (configured) {
+    return configured.replace(/\/$/, "");
+  }
+
+  const host = headerStore.get("host") ?? "localhost:3000";
+  const protocol = headerStore.get("x-forwarded-proto") ?? "http";
+
+  return `${protocol}://${host}`;
 }

@@ -67,7 +67,7 @@ export const googleIntegrationTestFetch: GoogleFetch = async (input, init) => {
           "Google Test Story",
           "GGL",
           "01",
-          "mock-anime-drive-file",
+          "https://drive.google.com/file/d/mock-anime-drive-file/view?usp=drive_link",
           "Mock Station",
           "Mock Area",
           "",

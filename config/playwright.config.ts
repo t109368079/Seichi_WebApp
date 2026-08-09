@@ -21,6 +21,7 @@ export default defineConfig({
       DATABASE_URL: testDatabaseUrl,
       PHOTO_STORAGE_DIR:
         process.env.PHOTO_STORAGE_DIR ?? "storage/e2e-scene-photos",
+      PHOTO_STORAGE_BACKEND: "local",
       GOOGLE_INTEGRATION_TEST_MODE: "1",
       GOOGLE_CLIENT_ID: "mock-google-client-id",
       GOOGLE_CLIENT_SECRET: "mock-google-client-secret",

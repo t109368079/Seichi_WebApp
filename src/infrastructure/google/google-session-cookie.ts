@@ -16,13 +16,21 @@ export async function setGoogleSessionCookie(
 ): Promise<void> {
   const cookieStore = await cookies();
 
-  cookieStore.set(googleSessionCookieName, sessionToken, {
+  cookieStore.set(
+    googleSessionCookieName,
+    sessionToken,
+    getGoogleSessionCookieOptions(expiresAt),
+  );
+}
+
+export function getGoogleSessionCookieOptions(expiresAt: Date) {
+  return {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
     expires: expiresAt,
-  });
+  } as const;
 }
 
 export async function clearGoogleSessionCookie(): Promise<void> {
@@ -34,13 +42,21 @@ export async function clearGoogleSessionCookie(): Promise<void> {
 export async function setGoogleOAuthStateCookie(state: string): Promise<void> {
   const cookieStore = await cookies();
 
-  cookieStore.set(googleOAuthStateCookieName, state, {
+  cookieStore.set(
+    googleOAuthStateCookieName,
+    state,
+    getGoogleOAuthStateCookieOptions(),
+  );
+}
+
+export function getGoogleOAuthStateCookieOptions() {
+  return {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
     maxAge: 10 * 60,
-  });
+  } as const;
 }
 
 export async function consumeGoogleOAuthStateCookie(): Promise<

@@ -161,6 +161,10 @@ docs/TEST_STRATEGY.md
 - AI 配對、評分、auto-best、照片壓縮與分享流程仍在範圍外。
 - Drive photo storage 需要使用者設定 OAuth 與 folder；測試環境只使用 mock。
 
+## Follow-Up Cleanup
+
+實測 Google Sheet 維護流程後，`anime_drive_file_id` 已放寬為可填 raw Drive file id 或常見 Drive share URL。Import parser 會在寫入資料庫前正規化成 Drive file id，因此 Sheet 端可以保留較好複製整理的連結格式，app 內仍維持穩定 file id。
+
 ## Commit
 
 - Commit message: `[Phase 8] add google integration`

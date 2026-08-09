@@ -13,11 +13,14 @@ dist/
 coverage/
 playwright-report/
 test-results/
+.tmp/
+.codex/
 
 # env
 .env
 .env*.local
 !.env.example
+docs/client_secret*.json
 
 # database and generated assets
 prisma/dev.db

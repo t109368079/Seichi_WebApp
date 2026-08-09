@@ -14,6 +14,12 @@ export interface GoogleDriveFileMetadata {
   name: string;
   mimeType: string;
   size?: string;
+  resourceKey?: string;
+  shortcutDetails?: {
+    targetId?: string;
+    targetMimeType?: string;
+    targetResourceKey?: string;
+  };
 }
 
 export interface GoogleDriveUploadInput {
@@ -27,35 +33,54 @@ export interface GoogleDriveUploadInput {
 export async function getGoogleDriveFileMetadata(
   fileId: string,
   accessToken: string,
+  resourceKey?: string,
 ): Promise<GoogleDriveFileMetadata> {
   const url = new URL(`${driveFilesEndpoint}/${encodeURIComponent(fileId)}`);
-  url.searchParams.set("fields", "id,name,mimeType,size");
+  url.searchParams.set(
+    "fields",
+    "id,name,mimeType,size,resourceKey,shortcutDetails(targetId,targetMimeType,targetResourceKey)",
+  );
+  url.searchParams.set("supportsAllDrives", "true");
 
   return googleFetchJson<GoogleDriveFileMetadata>(url, {
     method: "GET",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
+    headers: buildGoogleDriveHeaders(accessToken, fileId, resourceKey),
   });
 }
 
 export async function downloadGoogleDriveFile(
   fileId: string,
   accessToken: string,
+  resourceKey?: string,
 ): Promise<{ bytes: Uint8Array; mimeType: string }> {
   const url = new URL(`${driveFilesEndpoint}/${encodeURIComponent(fileId)}`);
   url.searchParams.set("alt", "media");
+  url.searchParams.set("supportsAllDrives", "true");
   const downloaded = await googleFetchBytes(url, {
     method: "GET",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
+    headers: buildGoogleDriveHeaders(accessToken, fileId, resourceKey),
   });
 
   return {
     bytes: downloaded.bytes,
     mimeType: downloaded.contentType,
   };
+}
+
+function buildGoogleDriveHeaders(
+  accessToken: string,
+  fileId: string,
+  resourceKey?: string,
+): HeadersInit {
+  const headers = new Headers({
+    Authorization: `Bearer ${accessToken}`,
+  });
+
+  if (resourceKey) {
+    headers.set("X-Goog-Drive-Resource-Keys", `${fileId}/${resourceKey}`);
+  }
+
+  return headers;
 }
 
 export async function uploadGoogleDriveFile(
@@ -87,6 +112,7 @@ export async function uploadGoogleDriveFile(
   const url = new URL(driveUploadEndpoint);
   url.searchParams.set("uploadType", "multipart");
   url.searchParams.set("fields", "id,name,mimeType,size");
+  url.searchParams.set("supportsAllDrives", "true");
 
   return googleFetchJson<GoogleDriveFileMetadata>(url, {
     method: "POST",

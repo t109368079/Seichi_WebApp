@@ -90,6 +90,16 @@ interface CsvRecord {
 }
 
 const allowedColumnSet = new Set<string>(sceneImportCsvColumns);
+const driveHostnames = new Set([
+  "drive.google.com",
+  "docs.google.com",
+  "drive.usercontent.google.com",
+]);
+
+export interface GoogleDriveFileReference {
+  fileId: string;
+  resourceKey?: string;
+}
 
 export function getSceneImportColumnRequirementLabel(
   column: SceneImportCsvColumn,
@@ -451,7 +461,9 @@ function normalizeDataRecord(
       requiredValues.get("work_short_code") ?? "",
     ),
     episode: readOptionalValue(rawRow, "episode"),
-    animeImageDriveFileId: requiredValues.get("anime_drive_file_id") ?? "",
+    animeImageDriveFileId: normalizeGoogleDriveFileReference(
+      requiredValues.get("anime_drive_file_id") ?? "",
+    ),
     locationName: requiredValues.get("location_name") ?? "",
     areaName: requiredValues.get("area_name") ?? "",
     latitude,
@@ -487,6 +499,57 @@ function escapeCsvValue(value: string): string {
 
 function normalizeIdentifier(value: string): string {
   return value.trim().toUpperCase();
+}
+
+export function normalizeGoogleDriveFileReference(value: string): string {
+  return parseGoogleDriveFileReference(value).fileId;
+}
+
+export function parseGoogleDriveFileReference(
+  value: string,
+): GoogleDriveFileReference {
+  const trimmed = value.trim();
+
+  if (!trimmed) {
+    return { fileId: "" };
+  }
+
+  let url: URL;
+
+  try {
+    url = new URL(trimmed);
+  } catch {
+    return { fileId: trimmed };
+  }
+
+  if (!driveHostnames.has(url.hostname.toLowerCase())) {
+    return { fileId: trimmed };
+  }
+
+  const resourceKey =
+    url.searchParams.get("resourcekey")?.trim() ||
+    url.searchParams.get("resourceKey")?.trim() ||
+    undefined;
+  const idFromQuery = url.searchParams.get("id")?.trim();
+
+  if (idFromQuery) {
+    return { fileId: idFromQuery, resourceKey };
+  }
+
+  const parts = url.pathname
+    .split("/")
+    .map((part) => part.trim())
+    .filter(Boolean);
+  const dIndex = parts.indexOf("d");
+
+  if (dIndex >= 0 && parts[dIndex + 1]) {
+    return {
+      fileId: decodeURIComponent(parts[dIndex + 1]),
+      resourceKey,
+    };
+  }
+
+  return { fileId: trimmed, resourceKey };
 }
 
 function translateCoordinateError(message: string): string {

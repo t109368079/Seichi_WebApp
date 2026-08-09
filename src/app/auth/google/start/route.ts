@@ -1,21 +1,42 @@
 import { randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
-import { buildGoogleAuthorizationUrl } from "@/infrastructure/google/google-auth-client";
-import { setGoogleOAuthStateCookie } from "@/infrastructure/google/google-session-cookie";
+import {
+  buildGoogleAuthorizationUrl,
+  getGoogleOAuthConfig,
+} from "@/infrastructure/google/google-auth-client";
+import { googleOAuthStateCookieName } from "@/application/google-integration";
+import { getGoogleOAuthStateCookieOptions } from "@/infrastructure/google/google-session-cookie";
+import { buildGoogleIntegrationRedirectUrl } from "@/infrastructure/google/google-request-url";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request): Promise<NextResponse> {
-  const state = randomBytes(24).toString("base64url");
-
   try {
-    const authorizationUrl = buildGoogleAuthorizationUrl(state);
-    await setGoogleOAuthStateCookie(state);
+    const config = getGoogleOAuthConfig();
+    const redirectOrigin = new URL(config.redirectUri).origin;
+    const redirectHost = new URL(redirectOrigin).host;
+    const requestHost = request.headers.get("host");
 
-    return NextResponse.redirect(authorizationUrl);
+    if (requestHost && requestHost !== redirectHost) {
+      const requestUrl = new URL(request.url);
+      return NextResponse.redirect(
+        new URL(`${requestUrl.pathname}${requestUrl.search}`, redirectOrigin),
+      );
+    }
+
+    const state = randomBytes(24).toString("base64url");
+    const authorizationUrl = buildGoogleAuthorizationUrl(state, config);
+    const response = NextResponse.redirect(authorizationUrl);
+    response.cookies.set(
+      googleOAuthStateCookieName,
+      state,
+      getGoogleOAuthStateCookieOptions(),
+    );
+
+    return response;
   } catch {
     return NextResponse.redirect(
-      new URL("/integrations/google?googleMessage=missing_config", request.url),
+      buildGoogleIntegrationRedirectUrl(request, "missing_config"),
     );
   }
 }

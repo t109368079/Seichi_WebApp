@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   buildSceneImportPreview,
+  normalizeGoogleDriveFileReference,
+  parseGoogleDriveFileReference,
   parseSceneImportCsv,
   parseSceneImportTable,
 } from "@/application/scene-import";
@@ -76,6 +78,47 @@ NRI-101,Night Rail Ikebukuro,NRI,03,demo-drive-nri-101,East Gate,Ikebukuro,,,"ht
         notes: 'Quoted "note", ok',
       }),
     ]);
+  });
+
+  it("normalizes Google Drive file links into stable file ids", () => {
+    const driveLink =
+      "https://drive.google.com/file/d/16rhaHCcKaz_gUq63LGvgfn0ppvXzsGju/view?usp=drive_link";
+    const result = parseSceneImportTable([
+      csvHeader.split(","),
+      [
+        "NRI-101",
+        "Night Rail Ikebukuro",
+        "NRI",
+        "03",
+        driveLink,
+        "East Gate",
+        "Ikebukuro",
+        "",
+        "",
+        "https://maps.app.goo.gl/example",
+        "Drive link pasted from Sheets",
+      ],
+    ]);
+
+    expect(result.errors).toEqual([]);
+    expect(result.rows).toEqual([
+      expect.objectContaining({
+        animeImageDriveFileId: "16rhaHCcKaz_gUq63LGvgfn0ppvXzsGju",
+      }),
+    ]);
+    expect(
+      normalizeGoogleDriveFileReference(
+        "https://drive.google.com/open?id=abc_123-XYZ",
+      ),
+    ).toBe("abc_123-XYZ");
+    expect(
+      parseGoogleDriveFileReference(
+        "https://drive.google.com/file/d/abc_123-XYZ/view?resourcekey=resource-key-1",
+      ),
+    ).toEqual({
+      fileId: "abc_123-XYZ",
+      resourceKey: "resource-key-1",
+    });
   });
 
   it("reports missing, unknown, and duplicate headers", () => {

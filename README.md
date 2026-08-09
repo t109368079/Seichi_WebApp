@@ -83,7 +83,7 @@ Scene Import CSV v1 uses:
 scene_code,work_name,work_short_code,episode,anime_drive_file_id,location_name,area_name,latitude,longitude,maps_url,notes
 ```
 
-`scene_code`, `work_name`, `work_short_code`, `anime_drive_file_id`, `location_name`, and `area_name` are always required. For navigation, provide either both `latitude` and `longitude`, or provide `maps_url`; `maps_url` is preferred when present. Values containing commas must be quoted as standard CSV.
+`scene_code`, `work_name`, `work_short_code`, `anime_drive_file_id`, `location_name`, and `area_name` are always required. `anime_drive_file_id` accepts either a raw Google Drive file id or a Drive file URL such as `https://drive.google.com/file/d/<file-id>/view`; imports normalize links to the stable file id before saving. For navigation, provide either both `latitude` and `longitude`, or provide `maps_url`; `maps_url` is preferred when present. Values containing commas must be quoted as standard CSV.
 
 The Phase 3 map uses local coordinate projection for scenes that have coordinates and generated Google Maps navigation URLs for coordinate-only scenes. URL-only scenes can still be planned, opened in Google Maps, photographed, and reviewed; they are omitted from the projected map until coordinates are added. It does not require Google Maps JavaScript, API keys, OAuth, or external map tiles.
 

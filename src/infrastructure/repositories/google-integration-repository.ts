@@ -107,24 +107,24 @@ export async function createGoogleSessionFromTokens(
       revokedAt: null,
     },
   });
-  const sessionToken = randomBytes(32).toString("base64url");
-  const sessionExpiresAt = new Date(
-    Date.now() + googleSessionTtlDays * 24 * 60 * 60 * 1000,
-  );
+  return createGoogleSessionForStoredAccount(account);
+}
 
-  await prisma.googleSession.create({
-    data: {
-      accountId: account.id,
-      sessionTokenHash: hashGoogleSessionToken(sessionToken),
-      expiresAt: sessionExpiresAt,
+export async function createGoogleSessionForAccount(
+  accountId: string,
+): Promise<GoogleConnectionResult> {
+  const account = await prisma.googleAccount.findFirst({
+    where: {
+      id: accountId,
+      revokedAt: null,
     },
   });
 
-  return {
-    sessionToken,
-    sessionExpiresAt,
-    account: mapGoogleAccountSummary(account),
-  };
+  if (!account) {
+    throw new GoogleSessionError("Google account is missing or revoked.");
+  }
+
+  return createGoogleSessionForStoredAccount(account);
 }
 
 export async function getGoogleIntegrationStatus(
@@ -311,6 +311,35 @@ async function findGoogleSession(sessionToken: string) {
     where: { sessionTokenHash: hashGoogleSessionToken(sessionToken) },
     include: { account: true },
   });
+}
+
+async function createGoogleSessionForStoredAccount(account: {
+  id: string;
+  email: string;
+  name: string | null;
+  pictureUrl: string | null;
+  scopes: string;
+  accessTokenExpiresAt: Date | null;
+  revokedAt: Date | null;
+}): Promise<GoogleConnectionResult> {
+  const sessionToken = randomBytes(32).toString("base64url");
+  const sessionExpiresAt = new Date(
+    Date.now() + googleSessionTtlDays * 24 * 60 * 60 * 1000,
+  );
+
+  await prisma.googleSession.create({
+    data: {
+      accountId: account.id,
+      sessionTokenHash: hashGoogleSessionToken(sessionToken),
+      expiresAt: sessionExpiresAt,
+    },
+  });
+
+  return {
+    sessionToken,
+    sessionExpiresAt,
+    account: mapGoogleAccountSummary(account),
+  };
 }
 
 function mapGoogleAccountSummary(account: {

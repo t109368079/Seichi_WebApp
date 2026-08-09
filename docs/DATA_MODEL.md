@@ -99,6 +99,7 @@ Import matching and write rules:
 - `scene_code` maps to unique `Scene.sceneCode`.
 - `work_short_code` maps to unique `Work.shortCode`; `work_name` updates `Work.name`.
 - `location_name + area_name` maps to the unique Location key.
+- `anime_drive_file_id` accepts either a raw Drive file id or a Google Drive file URL; imports normalize URLs to `Scene.animeImageDriveFileId` before saving.
 - `latitude + longitude` values are optional when `maps_url` is present. If one coordinate is provided, both must be provided and valid.
 - `maps_url` is optional only when both coordinates are present, and it is the preferred navigation target when present.
 - Existing Scene rows keep their existing `id` and `status`.

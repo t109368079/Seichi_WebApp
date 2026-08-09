@@ -277,3 +277,11 @@ Playwright runs with `GOOGLE_INTEGRATION_TEST_MODE=1`, mock OAuth config, and mo
 Status: Accepted
 
 Uploaded photo bytes remain personal data and are ignored under `/storage/`. The ignore rule is root-anchored so source files under `src/infrastructure/storage/` are tracked. This preserves the adapter boundary in clean clones while still preventing local uploaded photos from entering Git.
+
+## D-0047: Drive Image Import Accepts Share URLs
+
+Status: Accepted
+
+Google Sheet maintenance is easier when `anime_drive_file_id` can contain the copied Drive share link. CSV and Google Sheet imports therefore accept either a raw Drive file id or common Drive URL forms such as `/file/d/<id>/view` and `open?id=<id>`. The import parser normalizes those values before persistence so `Scene.animeImageDriveFileId` remains a stable Drive file id, not a URL.
+
+Downloaded OAuth client JSON files and local dev logs are ignored because they are local operational artifacts and may contain secrets.

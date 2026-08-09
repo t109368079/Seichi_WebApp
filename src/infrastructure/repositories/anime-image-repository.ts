@@ -1,7 +1,9 @@
 import {
+  type GoogleDriveFileMetadata,
   downloadGoogleDriveFile,
   getGoogleDriveFileMetadata,
 } from "@/infrastructure/google/google-drive";
+import { parseGoogleDriveFileReference } from "@/application/scene-import";
 import { GoogleApiError } from "@/infrastructure/google/google-http";
 import {
   getGoogleAccessTokenForSession,
@@ -16,6 +18,14 @@ export interface AnimeImageResult {
   sceneCode: string;
   driveFileId: string;
 }
+
+interface ResolvedAnimeImageReference {
+  metadata: GoogleDriveFileMetadata;
+  driveFileId: string;
+  resourceKey?: string;
+}
+
+const googleDriveShortcutMimeType = "application/vnd.google-apps.shortcut";
 
 export class AnimeImageError extends Error {
   constructor(
@@ -50,26 +60,31 @@ export async function readAnimeImageForScene(
   try {
     const accessToken =
       await getGoogleAccessTokenForSession(googleSessionToken);
-    const metadata = await getGoogleDriveFileMetadata(
+    const driveReference = parseGoogleDriveFileReference(
       scene.animeImageDriveFileId,
+    );
+    const imageReference = await resolveAnimeImageReference(
+      driveReference.fileId,
       accessToken,
+      driveReference.resourceKey,
     );
 
-    if (!metadata.mimeType.startsWith("image/")) {
+    if (!imageReference.metadata.mimeType.startsWith("image/")) {
       throw new AnimeImageError("Drive 檔案不是圖片。", 415);
     }
 
     const downloaded = await downloadGoogleDriveFile(
-      scene.animeImageDriveFileId,
+      imageReference.driveFileId,
       accessToken,
+      imageReference.resourceKey,
     );
 
     return {
       bytes: downloaded.bytes,
-      mimeType: metadata.mimeType,
-      fileName: metadata.name,
+      mimeType: imageReference.metadata.mimeType,
+      fileName: imageReference.metadata.name,
       sceneCode: scene.sceneCode,
-      driveFileId: scene.animeImageDriveFileId,
+      driveFileId: imageReference.driveFileId,
     };
   } catch (error) {
     if (error instanceof AnimeImageError) {
@@ -89,6 +104,46 @@ export async function readAnimeImageForScene(
 
     throw new AnimeImageError("讀取動畫參考圖失敗。", 500);
   }
+}
+
+async function resolveAnimeImageReference(
+  driveFileId: string,
+  accessToken: string,
+  resourceKey?: string,
+): Promise<ResolvedAnimeImageReference> {
+  const metadata = await getGoogleDriveFileMetadata(
+    driveFileId,
+    accessToken,
+    resourceKey,
+  );
+
+  if (metadata.mimeType !== googleDriveShortcutMimeType) {
+    return {
+      metadata,
+      driveFileId,
+      resourceKey: metadata.resourceKey ?? resourceKey,
+    };
+  }
+
+  const shortcutDetails = metadata.shortcutDetails;
+  const targetId = shortcutDetails?.targetId;
+
+  if (!targetId) {
+    throw new AnimeImageError("Drive 捷徑缺少目標檔案。", 404);
+  }
+
+  const targetResourceKey = shortcutDetails.targetResourceKey;
+  const targetMetadata = await getGoogleDriveFileMetadata(
+    targetId,
+    accessToken,
+    targetResourceKey,
+  );
+
+  return {
+    metadata: targetMetadata,
+    driveFileId: targetId,
+    resourceKey: targetMetadata.resourceKey ?? targetResourceKey,
+  };
 }
 
 function translateGoogleDriveImageError(error: GoogleApiError): string {

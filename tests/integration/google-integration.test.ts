@@ -13,6 +13,7 @@ import {
   type GoogleFetch,
 } from "@/infrastructure/google/google-http";
 import {
+  createGoogleSessionForAccount,
   createGoogleSessionFromTokens,
   getGoogleAccessTokenForSession,
   logoutGoogleSession,
@@ -69,9 +70,14 @@ afterEach(async () => {
   await prisma.scenePhoto.deleteMany();
   await prisma.scene.update({
     where: { id: "scene-bhc-001" },
-    data: { status: "NOT_SHOT" },
+    data: {
+      animeImageDriveFileId: "demo-drive-bhc-001",
+      status: "NOT_SHOT",
+    },
   });
-  await prisma.scene.deleteMany({ where: { sceneCode: "GGL-201" } });
+  await prisma.scene.deleteMany({
+    where: { work: { shortCode: "GGL" } },
+  });
   await prisma.location.deleteMany({
     where: { name: "Google Sheet Station", areaName: "Mock Area" },
   });
@@ -132,6 +138,17 @@ describe("google oauth session repository", () => {
       getGoogleAccessTokenForSession(second.sessionToken),
     ).rejects.toThrow("Google session is missing or expired.");
   });
+
+  it("creates another app session for an existing Google account", async () => {
+    const first = await createGoogleSession();
+    const paired = await createGoogleSessionForAccount(first.account.id);
+
+    expect(paired.account.email).toBe("google-user@example.test");
+    expect(paired.sessionToken).not.toBe(first.sessionToken);
+    await expect(
+      getGoogleAccessTokenForSession(paired.sessionToken),
+    ).resolves.toBe("access-token");
+  });
 });
 
 describe("google sheets scene import", () => {
@@ -165,6 +182,10 @@ describe("google sheets scene import", () => {
 describe("google drive adapters", () => {
   it("reads anime image bytes through the Drive adapter", async () => {
     const session = await createGoogleSession();
+    await prisma.scene.update({
+      where: { id: "scene-bhc-001" },
+      data: { animeImageDriveFileId: "mock-anime-drive-file" },
+    });
 
     const image = await readAnimeImageForScene(
       "scene-bhc-001",
@@ -173,6 +194,45 @@ describe("google drive adapters", () => {
 
     expect(image.mimeType).toBe("image/png");
     expect(Buffer.from(image.bytes)).toEqual(Buffer.from(pngBytes));
+  });
+
+  it("normalizes existing Drive links before reading anime image bytes", async () => {
+    const session = await createGoogleSession();
+    await prisma.scene.update({
+      where: { id: "scene-bhc-001" },
+      data: {
+        animeImageDriveFileId:
+          "https://drive.google.com/file/d/mock-anime-drive-file/view?usp=drive_link",
+      },
+    });
+
+    const image = await readAnimeImageForScene(
+      "scene-bhc-001",
+      session.sessionToken,
+    );
+
+    expect(image.driveFileId).toBe("mock-anime-drive-file");
+    expect(image.mimeType).toBe("image/png");
+    expect(Buffer.from(image.bytes)).toEqual(Buffer.from(pngBytes));
+  });
+
+  it("resolves Drive shortcuts before reading anime image bytes", async () => {
+    const session = await createGoogleSession();
+    await prisma.scene.update({
+      where: { id: "scene-bhc-001" },
+      data: {
+        animeImageDriveFileId: "mock-shortcut-file",
+      },
+    });
+
+    const image = await readAnimeImageForScene(
+      "scene-bhc-001",
+      session.sessionToken,
+    );
+
+    expect(image.driveFileId).toBe("mock-anime-drive-file");
+    expect(image.fileName).toBe("mock-anime.png");
+    expect(image.mimeType).toBe("image/png");
   });
 
   it("stores uploaded photos with the returned Drive file id", async () => {
@@ -286,7 +346,7 @@ function createGoogleFetchMock(
             "Google Sheet Story",
             "GGL",
             "01",
-            "mock-anime-drive-file",
+            "https://drive.google.com/file/d/mock-anime-drive-file/view?usp=drive_link",
             "Google Sheet Station",
             "Mock Area",
             "",
@@ -319,8 +379,46 @@ function createGoogleFetchMock(
       url.hostname === "www.googleapis.com" &&
       url.pathname.startsWith("/drive/v3/files/")
     ) {
+      const fileId = decodeURIComponent(url.pathname.split("/").pop() ?? "");
+
       if (init?.method === "DELETE") {
         return new Response(null, { status: 204 });
+      }
+
+      if (fileId.startsWith("drive-photo-")) {
+        if (url.searchParams.get("alt") === "media") {
+          return new Response(pngBytes, {
+            status: 200,
+            headers: { "Content-Type": "image/png" },
+          });
+        }
+
+        return jsonResponse({
+          id: fileId,
+          name: "drive-photo.png",
+          mimeType: "image/png",
+          size: `${pngBytes.byteLength}`,
+        });
+      }
+
+      if (fileId !== "mock-anime-drive-file") {
+        if (fileId === "mock-shortcut-file") {
+          return jsonResponse({
+            id: "mock-shortcut-file",
+            name: "mock-shortcut",
+            mimeType: "application/vnd.google-apps.shortcut",
+            shortcutDetails: {
+              targetId: "mock-anime-drive-file",
+              targetMimeType: "image/png",
+              targetResourceKey: "mock-target-resource-key",
+            },
+          });
+        }
+
+        return jsonResponse(
+          { error: { message: `Unexpected Drive file id: ${fileId}` } },
+          404,
+        );
       }
 
       if (url.searchParams.get("alt") === "media") {
