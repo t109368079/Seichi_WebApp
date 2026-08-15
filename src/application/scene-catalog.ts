@@ -1,4 +1,10 @@
-import { type SceneStatus, isSceneStatus, sceneStatuses } from "@/domain/scene";
+import {
+  assertSceneNavigationReference,
+  assertValidCoordinates,
+  type SceneStatus,
+  isSceneStatus,
+  sceneStatuses,
+} from "@/domain/scene";
 
 export interface SceneCatalogItem {
   id: string;
@@ -31,6 +37,70 @@ export interface SceneCatalogFilters {
 export interface SceneCatalogFilterOptions {
   workIds: readonly string[];
   locationIds: readonly string[];
+}
+
+export interface SceneEditableFieldsFormInput {
+  locationName: string;
+  areaName: string;
+  latitude: string;
+  longitude: string;
+  mapsUrl: string;
+}
+
+export interface SceneEditableFieldsUpdate {
+  locationName: string;
+  areaName?: string;
+  latitude: number | null;
+  longitude: number | null;
+  mapsUrl?: string;
+}
+
+export function normalizeSceneEditableFields(
+  input: SceneEditableFieldsFormInput,
+): SceneEditableFieldsUpdate {
+  const locationName = input.locationName.trim();
+
+  if (locationName.length === 0) {
+    throw new Error("Scene location name is required.");
+  }
+
+  const areaName = input.areaName.trim() || undefined;
+  const latitudeText = input.latitude.trim();
+  const longitudeText = input.longitude.trim();
+  const mapsUrl = input.mapsUrl.trim() || undefined;
+  const hasLatitude = latitudeText.length > 0;
+  const hasLongitude = longitudeText.length > 0;
+  let latitude: number | null = null;
+  let longitude: number | null = null;
+
+  if (hasLatitude || hasLongitude) {
+    if (!hasLatitude || !hasLongitude) {
+      throw new Error(
+        "Scene latitude and longitude must be provided together.",
+      );
+    }
+
+    latitude = Number(latitudeText);
+    longitude = Number(longitudeText);
+    assertValidCoordinates({
+      latitude,
+      longitude,
+    });
+  }
+
+  assertSceneNavigationReference({
+    latitude,
+    longitude,
+    mapsUrl,
+  });
+
+  return {
+    locationName,
+    areaName,
+    latitude,
+    longitude,
+    mapsUrl,
+  };
 }
 
 export function normalizeSceneCatalogFilters(

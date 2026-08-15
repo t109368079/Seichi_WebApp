@@ -122,6 +122,12 @@ Known Limitations:
 - Anime image thumbnails remain Drive file id placeholders until Google Drive integration.
 - Marker grouping uses a fixed `35m` radius and does not optimize routes.
 
+Follow-Up Changes:
+
+- After Phase 8, `/map` renders a Google Maps iframe instead of the original template background.
+- `mapsUrl` is now the preferred map display reference when both `mapsUrl` and coordinates exist.
+- URL-only and query-only Google Maps references are included as reference-backed marker groups.
+
 Commit:
 
 - Message format: `[Phase 3] add map navigation`

@@ -2,7 +2,7 @@
 
 Responsive web app for managing anime pilgrimage scenes, trips, field photo binding, review workflows, and Google-backed import/storage.
 
-Phase 8 currently provides CSV and Google Sheet scene import, Drive-backed anime reference images, a no-external-API projected scene map, a scene catalog, trip planning, tablet field mode, mobile photo binding, optional Google Drive photo storage, and the post-trip review workflow, all backed by Prisma and PostgreSQL.
+Phase 8 currently provides CSV and Google Sheet scene import, Drive-backed anime reference images, an embedded Google Maps scene map, a scene catalog, trip planning, tablet field mode, mobile photo binding, optional Google Drive photo storage, and the post-trip review workflow, all backed by Prisma and PostgreSQL.
 
 ## Requirements
 
@@ -85,7 +85,7 @@ scene_code,work_name,work_short_code,episode,anime_drive_file_id,location_name,a
 
 `scene_code`, `work_name`, `work_short_code`, `anime_drive_file_id`, `location_name`, and `area_name` are always required. `anime_drive_file_id` accepts either a raw Google Drive file id or a Drive file URL such as `https://drive.google.com/file/d/<file-id>/view`; imports normalize links to the stable file id before saving. For navigation, provide either both `latitude` and `longitude`, or provide `maps_url`; `maps_url` is preferred when present. Values containing commas must be quoted as standard CSV.
 
-The Phase 3 map uses local coordinate projection for scenes that have coordinates and generated Google Maps navigation URLs for coordinate-only scenes. URL-only scenes can still be planned, opened in Google Maps, photographed, and reviewed; they are omitted from the projected map until coordinates are added. It does not require Google Maps JavaScript, API keys, OAuth, or external map tiles.
+The map page renders a Google Maps iframe centered on the selected marker group, while local application logic still owns filtering, grouping, trip-day selection, and navigation URL generation. When `maps_url` and coordinates are both present, the map reads `maps_url` first; supported Google Maps URLs with embedded coordinates are grouped by those URL coordinates, and URL-only or query-only Google Maps references such as `Tokyo Station` still appear as selectable marker groups. Set `GOOGLE_MAPS_EMBED_API_KEY` to use the official Maps Embed API for coordinate-backed views; without it, local development falls back to keyless Google Maps iframe URLs.
 
 Phase 4 trip planning lets you create a trip, auto-generate daily itineraries from a date range, add scenes from catalog/map/location/detail pages, and save manual scene order. It does not optimize or auto-sort routes.
 
@@ -130,9 +130,10 @@ Optional settings:
 ```text
 PHOTO_STORAGE_BACKEND=google-drive
 GOOGLE_PHOTO_FOLDER_ID=<drive-folder-id>
+GOOGLE_MAPS_EMBED_API_KEY=<restricted-maps-embed-api-key>
 ```
 
-`GOOGLE_PHOTO_FOLDER_ID` is a fallback for the app settings page's Drive photo folder id. Automated tests use mocks and never connect to production Google data.
+`GOOGLE_PHOTO_FOLDER_ID` is a fallback for the app settings page's Drive photo folder id. `GOOGLE_MAPS_EMBED_API_KEY` is optional for local testing but recommended for a restricted, official Google Maps Embed API iframe. Automated tests use mocks and never connect to production Google data.
 
 ## Verification
 

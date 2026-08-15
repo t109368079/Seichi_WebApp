@@ -1,6 +1,5 @@
 "use client";
 
-import { useMemo, useState } from "react";
 import Link from "next/link";
 import { AddToTripDayForm } from "@/components/add-to-trip-day-form";
 import { TripDayContextBanner } from "@/components/trip-day-context-banner";
@@ -11,6 +10,7 @@ import {
   type SceneCatalogItem,
 } from "@/application/scene-catalog";
 import {
+  buildGoogleMapsEmbedUrl,
   getCoordinateIssue,
   getNavigationTarget,
   type SceneMapMarkerGroup,
@@ -38,6 +38,8 @@ interface SceneMapProps {
   filters: SceneCatalogFilters;
   tripDayContext?: TripDaySelectionContext;
   returnTo: string;
+  selectedMarkerGroupId?: string;
+  googleMapsEmbedApiKey?: string;
 }
 
 const statusTone = {
@@ -58,16 +60,12 @@ export function SceneMap({
   filters,
   tripDayContext,
   returnTo,
+  selectedMarkerGroupId,
+  googleMapsEmbedApiKey,
 }: SceneMapProps) {
-  const [selectedGroupId, setSelectedGroupId] = useState(
-    markerGroups[0]?.id ?? "",
-  );
-  const selectedGroup = useMemo(
-    () =>
-      markerGroups.find((group) => group.id === selectedGroupId) ??
-      markerGroups[0],
-    [markerGroups, selectedGroupId],
-  );
+  const selectedGroup =
+    markerGroups.find((group) => group.id === selectedMarkerGroupId) ??
+    markerGroups[0];
 
   return (
     <main className="min-h-screen bg-paper text-ink">
@@ -115,15 +113,19 @@ export function SceneMap({
           <TripDayContextBanner context={tripDayContext} />
           {omittedSceneCount > 0 ? (
             <div className="rounded border border-[#f1c6bb] bg-white p-4 text-sm text-signal">
-              {omittedSceneCount} 個場景因座標缺失或無效，無法放在地圖上。
+              {omittedSceneCount} 個場景缺少可顯示的 Google Maps 參照
+              或有效座標。
             </div>
           ) : null}
 
           <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(19rem,22rem)]">
-            <ProjectedMap
+            <GoogleSceneMap
               markerGroups={markerGroups}
+              selectedGroup={selectedGroup}
               selectedGroupId={selectedGroup?.id ?? ""}
-              onSelectGroup={setSelectedGroupId}
+              filters={filters}
+              tripDayId={tripDayContext?.tripDayId}
+              googleMapsEmbedApiKey={googleMapsEmbedApiKey}
             />
             <SelectedMarkerPanel
               group={selectedGroup}
@@ -241,23 +243,43 @@ function MapFilterForm({
   );
 }
 
-function ProjectedMap({
+function GoogleSceneMap({
   markerGroups,
+  selectedGroup,
   selectedGroupId,
-  onSelectGroup,
+  filters,
+  tripDayId,
+  googleMapsEmbedApiKey,
 }: {
   markerGroups: readonly SceneMapMarkerGroup[];
+  selectedGroup?: SceneMapMarkerGroup;
   selectedGroupId: string;
-  onSelectGroup: (groupId: string) => void;
+  filters: SceneCatalogFilters;
+  tripDayId?: string;
+  googleMapsEmbedApiKey?: string;
 }) {
+  const embedUrl = selectedGroup
+    ? buildGoogleMapsEmbedUrl(selectedGroup, {
+        apiKey: googleMapsEmbedApiKey,
+      })
+    : undefined;
+
   return (
     <section
-      aria-label="投影場景地圖"
-      className="relative min-h-[30rem] overflow-hidden rounded border border-rail bg-[#eef3ee]"
+      aria-label="Google Maps 場景地圖"
+      className="relative min-h-[30rem] overflow-hidden rounded border border-rail bg-white"
     >
-      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(43,58,50,0.12)_1px,transparent_1px),linear-gradient(0deg,rgba(43,58,50,0.12)_1px,transparent_1px)] bg-[size:12.5%_12.5%]" />
-      <div className="absolute inset-x-0 top-1/2 h-8 -translate-y-1/2 bg-[#d7e5dd]" />
-      <div className="absolute left-1/2 top-0 h-full w-8 -translate-x-1/2 bg-[#d7e5dd]" />
+      {embedUrl ? (
+        <iframe
+          key={selectedGroup?.id}
+          title={`Google Maps - ${selectedGroup?.label ?? "場景地圖"}`}
+          src={embedUrl}
+          loading="lazy"
+          allowFullScreen
+          referrerPolicy="strict-origin-when-cross-origin"
+          className="absolute inset-0 z-0 h-full w-full border-0"
+        />
+      ) : null}
 
       {markerGroups.length === 0 ? (
         <div className="absolute inset-0 grid place-items-center p-6 text-center text-sm text-night">
@@ -265,30 +287,34 @@ function ProjectedMap({
         </div>
       ) : null}
 
-      {markerGroups.map((group) => {
-        const selected = group.id === selectedGroupId;
+      <div
+        data-testid="map-marker-overlay"
+        className="pointer-events-none absolute inset-0 z-10"
+      >
+        {markerGroups.map((group) => {
+          const selected = group.id === selectedGroupId;
 
-        return (
-          <button
-            key={group.id}
-            type="button"
-            aria-label={`選取標記群組：${group.sceneCount} 個場景，地點 ${group.label}`}
-            aria-pressed={selected}
-            onClick={() => onSelectGroup(group.id)}
-            className={`absolute flex min-h-11 min-w-11 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border text-sm font-semibold shadow-sm transition ${
-              selected
-                ? "border-field bg-field text-white"
-                : "border-ink bg-white text-ink hover:border-field"
-            }`}
-            style={{
-              left: `${group.xPercent}%`,
-              top: `${group.yPercent}%`,
-            }}
-          >
-            {group.sceneCount}
-          </button>
-        );
-      })}
+          return (
+            <Link
+              key={group.id}
+              href={buildMapHref(filters, tripDayId, group.id)}
+              aria-label={`選取標記群組：${group.sceneCount} 個場景，地點 ${group.label}`}
+              aria-current={selected ? "true" : undefined}
+              className={`pointer-events-auto absolute flex min-h-11 min-w-11 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border text-sm font-semibold shadow-sm transition ${
+                selected
+                  ? "border-field bg-field text-white"
+                  : "border-ink bg-white text-ink hover:border-field"
+              }`}
+              style={{
+                left: `${group.xPercent}%`,
+                top: `${group.yPercent}%`,
+              }}
+            >
+              {group.sceneCount}
+            </Link>
+          );
+        })}
+      </div>
     </section>
   );
 }
@@ -324,8 +350,7 @@ function SelectedMarkerPanel({
       <div>
         <h2 className="text-lg font-semibold">{group.label}</h2>
         <p className="mt-2 text-sm text-night">
-          {group.sceneCount} 個場景，座標 {group.latitude.toFixed(5)},{" "}
-          {group.longitude.toFixed(5)}
+          {formatMarkerGroupSummary(group)}
         </p>
       </div>
 
@@ -341,6 +366,14 @@ function SelectedMarkerPanel({
       </div>
     </aside>
   );
+}
+
+function formatMarkerGroupSummary(group: SceneMapMarkerGroup): string {
+  if (group.latitude !== null && group.longitude !== null) {
+    return `${group.sceneCount} 個場景，座標 ${group.latitude.toFixed(5)}, ${group.longitude.toFixed(5)}`;
+  }
+
+  return `${group.sceneCount} 個場景，使用 Google Maps 參照`;
 }
 
 function SceneMapCard({
@@ -418,6 +451,28 @@ function buildCatalogHref(
   filters: SceneCatalogFilters,
   tripDayId?: string,
 ): string {
+  const params = buildMapSearchParams(filters, tripDayId);
+  const query = params.toString();
+
+  return query ? `/scenes?${query}` : "/scenes";
+}
+
+function buildMapHref(
+  filters: SceneCatalogFilters,
+  tripDayId: string | undefined,
+  markerGroupId: string,
+): string {
+  const params = buildMapSearchParams(filters, tripDayId);
+  params.set("markerGroupId", markerGroupId);
+  const query = params.toString();
+
+  return query ? `/map?${query}` : "/map";
+}
+
+function buildMapSearchParams(
+  filters: SceneCatalogFilters,
+  tripDayId?: string,
+): URLSearchParams {
   const params = new URLSearchParams();
 
   if (tripDayId) {
@@ -436,7 +491,5 @@ function buildCatalogHref(
     params.set("status", filters.status);
   }
 
-  const query = params.toString();
-
-  return query ? `/scenes?${query}` : "/scenes";
+  return params;
 }

@@ -2,6 +2,7 @@ import {
   filterSceneCatalogItems,
   type SceneCatalogFilters,
   type SceneCatalogItem,
+  type SceneEditableFieldsUpdate,
 } from "@/application/scene-catalog";
 import { assertSceneStatus } from "@/domain/scene";
 import { prisma } from "@/infrastructure/database/prisma";
@@ -40,27 +41,7 @@ export async function getSceneCatalogData(
     }),
   ]);
 
-  const allScenes = scenes.map<SceneCatalogItem>((scene) => ({
-    id: scene.id,
-    sceneCode: scene.sceneCode,
-    episode: scene.episode ?? undefined,
-    animeImageDriveFileId: scene.animeImageDriveFileId,
-    latitude: scene.latitude,
-    longitude: scene.longitude,
-    mapsUrl: scene.mapsUrl ?? undefined,
-    notes: scene.notes ?? undefined,
-    status: assertSceneStatus(scene.status),
-    work: {
-      id: scene.work.id,
-      name: scene.work.name,
-      shortCode: scene.work.shortCode,
-    },
-    location: {
-      id: scene.location.id,
-      name: scene.location.name,
-      areaName: scene.location.areaName ?? undefined,
-    },
-  }));
+  const allScenes = scenes.map(mapSceneCatalogItem);
 
   return {
     scenes: filterSceneCatalogItems(allScenes, filters),
@@ -89,6 +70,95 @@ export async function getSceneDetail(
     return null;
   }
 
+  return mapSceneCatalogItem(scene);
+}
+
+export async function updateSceneEditableFields(
+  sceneId: string,
+  input: SceneEditableFieldsUpdate,
+): Promise<SceneCatalogItem> {
+  if (sceneId.trim().length === 0) {
+    throw new Error("Scene id is required.");
+  }
+
+  const areaName = input.areaName ?? null;
+
+  return prisma.$transaction(async (transaction) => {
+    const existingScene = await transaction.scene.findUnique({
+      where: {
+        id: sceneId,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (!existingScene) {
+      throw new Error("Scene does not exist.");
+    }
+
+    const existingLocation = await transaction.location.findFirst({
+      where: {
+        name: input.locationName,
+        areaName,
+      },
+      orderBy: {
+        id: "asc",
+      },
+    });
+    const location =
+      existingLocation ??
+      (await transaction.location.create({
+        data: {
+          name: input.locationName,
+          areaName,
+          latitude: input.latitude,
+          longitude: input.longitude,
+          mapsUrl: input.mapsUrl ?? null,
+        },
+      }));
+
+    const updatedScene = await transaction.scene.update({
+      where: {
+        id: sceneId,
+      },
+      data: {
+        locationId: location.id,
+        latitude: input.latitude,
+        longitude: input.longitude,
+        mapsUrl: input.mapsUrl ?? null,
+      },
+      include: {
+        work: true,
+        location: true,
+      },
+    });
+
+    return mapSceneCatalogItem(updatedScene);
+  });
+}
+
+function mapSceneCatalogItem(scene: {
+  id: string;
+  sceneCode: string;
+  episode: string | null;
+  animeImageDriveFileId: string;
+  latitude: number | null;
+  longitude: number | null;
+  mapsUrl: string | null;
+  notes: string | null;
+  status: string;
+  work: {
+    id: string;
+    name: string;
+    shortCode: string;
+  };
+  location: {
+    id: string;
+    name: string;
+    areaName: string | null;
+  };
+}): SceneCatalogItem {
   return {
     id: scene.id,
     sceneCode: scene.sceneCode,

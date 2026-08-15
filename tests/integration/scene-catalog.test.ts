@@ -2,7 +2,10 @@ import { Prisma, PrismaClient } from "@prisma/client";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { countDistinctWorksAtLocation } from "@/application/scene-catalog";
 import { prisma as appPrisma } from "@/infrastructure/database/prisma";
-import { getSceneCatalogData } from "@/infrastructure/repositories/scene-catalog-repository";
+import {
+  getSceneCatalogData,
+  updateSceneEditableFields,
+} from "@/infrastructure/repositories/scene-catalog-repository";
 import { getDatabaseUrl } from "@/lib/env";
 
 const prisma = new PrismaClient({
@@ -125,5 +128,81 @@ describe("scene catalog repository", () => {
       "BHC-002",
       "ARS-003",
     ]);
+  });
+
+  it("updates one scene location and navigation fields without mutating the original shared location", async () => {
+    const original = await prisma.scene.findUniqueOrThrow({
+      where: {
+        id: "scene-bhc-001",
+      },
+      include: {
+        location: {
+          include: {
+            scenes: {
+              orderBy: {
+                sceneCode: "asc",
+              },
+            },
+          },
+        },
+      },
+    });
+    const editedLocationName = "Edited Station Gate";
+    const editedAreaName = "Edited Area";
+
+    try {
+      const updated = await updateSceneEditableFields("scene-bhc-001", {
+        locationName: editedLocationName,
+        areaName: editedAreaName,
+        latitude: 35.73123,
+        longitude: 139.71234,
+        mapsUrl: "https://maps.google.com/?q=35.73123,139.71234",
+      });
+
+      expect(updated.location).toMatchObject({
+        name: editedLocationName,
+        areaName: editedAreaName,
+      });
+      expect(updated.latitude).toBe(35.73123);
+      expect(updated.longitude).toBe(139.71234);
+      expect(updated.mapsUrl).toBe(
+        "https://maps.google.com/?q=35.73123,139.71234",
+      );
+
+      const originalLocation = await prisma.location.findUniqueOrThrow({
+        where: {
+          id: original.locationId,
+        },
+        include: {
+          scenes: {
+            orderBy: {
+              sceneCode: "asc",
+            },
+          },
+        },
+      });
+
+      expect(originalLocation.scenes.map((scene) => scene.sceneCode)).toEqual([
+        "ARS-001",
+        "SLC-001",
+      ]);
+    } finally {
+      await updateSceneEditableFields("scene-bhc-001", {
+        locationName: original.location.name,
+        areaName: original.location.areaName ?? undefined,
+        latitude: original.latitude,
+        longitude: original.longitude,
+        mapsUrl: original.mapsUrl ?? undefined,
+      });
+      await prisma.location.deleteMany({
+        where: {
+          name: editedLocationName,
+          areaName: editedAreaName,
+          scenes: {
+            none: {},
+          },
+        },
+      });
+    }
   });
 });

@@ -27,11 +27,11 @@ Phase 2 adds the CSV import slice:
 - Runtime-rendered `/imports/scenes` page using server actions.
 - Homepage and catalog navigation entry points for import and review of imported scenes.
 
-Phase 3 adds the map and navigation slice:
+Phase 3 adds the map and navigation slice, with a later Google Maps embed follow-up:
 
-- Application-layer map utilities for filtering, coordinate validation, marker grouping, coordinate projection, and navigation URL generation.
+- Application-layer map utilities for filtering, coordinate validation, Google Maps URL coordinate parsing, marker grouping, coordinate projection, Google Maps embed URL generation, and navigation URL generation.
 - Infrastructure repository functions that reuse Scene Catalog data for map rendering.
-- Runtime-rendered `/map` page with a client-side selected marker interaction.
+- Runtime-rendered `/map` page with a Google Maps iframe and client-side selected marker interaction.
 - Scene Detail, Scene Catalog, and homepage navigation entry points for map and navigation.
 
 Phase 4 adds the trip planning slice:
@@ -91,7 +91,7 @@ Presentation Layer
 
 Phase 2 keeps CSV format concerns at the import adapter/parser boundary. The rest of the app uses a normalized import model so future Google Sheets import can reuse the same validation and commit path.
 
-Phase 3 keeps map behavior in application utilities. The presentation layer renders catalog, import, and local map data but does not call Google APIs or encode external integration rules. Google Maps is used only as a provided `mapsUrl` or generated navigation URL handed off to the browser. Scenes without coordinates are omitted from the projected local map, but they still remain available to catalog, trip planning, Field Mode, photo upload, and review.
+Phase 3 keeps map behavior in application utilities. The presentation layer renders catalog, import, and map data but does not call Google APIs or encode external integration rules. The map page displays a Google Maps iframe centered on the selected marker group, while marker grouping, filtering, and itinerary actions remain app-owned. When `Scene.mapsUrl` exists, map display and navigation prefer that reference over stored coordinates; supported Google Maps URLs with embedded coordinates are parsed for grouping, and URL-only or query-only Google Maps references become reference-backed marker groups. Scenes without a supported Google Maps reference or valid coordinates are omitted from marker groups, but they still remain available to catalog, trip planning, Field Mode, photo upload, and review.
 
 Phase 4 keeps itinerary ordering in domain/application logic and persists changes through repository transactions. The map can help users discover scenes, but it does not sort or optimize TripScene order.
 
@@ -146,6 +146,6 @@ Phase 6 adds `ScenePhoto`, holding the permanent binding between a real photo an
 
 Phase 7 adds no migration. It uses the existing `ScenePhoto.isBest` column and partial unique index, and stores review completion in the existing `Scene.status` enum.
 
-After Phase 7, the optional-coordinate migration makes Scene and Location latitude/longitude nullable so manual CSV imports can use `maps_url` as the primary navigation reference. This does not add a map provider: URL-only Scenes skip local marker projection and hand the saved URL to the browser.
+After Phase 7, the optional-coordinate migration makes Scene and Location latitude/longitude nullable so manual CSV imports can use `maps_url` as the primary navigation and map reference. URL-only and query-only Google Maps references are included in marker groups; unsupported HTTP URLs still hand the saved URL to navigation but are not embedded in `/map`.
 
 Phase 8 adds Google integration persistence only. It does not alter Work, Location, Scene, Trip, TripDay, TripScene, or ScenePhoto identity. `Scene.animeImageDriveFileId` remains a Drive file id reference, and `ScenePhoto.storageFileId` remains the storage adapter key.

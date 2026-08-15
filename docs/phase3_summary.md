@@ -2,7 +2,7 @@
 
 ## 驗收成果
 
-Phase 3 已完成 no-external-API map and navigation workflow。系統現在可以透過 `/map` 以本地座標投影方式瀏覽場景 marker，依作品、地點與狀態篩選，點選 grouped marker 查看跨作品場景，並產生 Google Maps navigation link。
+Phase 3 已完成 no-external-API map and navigation workflow。後續在 Phase 8 Google 整合完成後，`/map` 已從本地 template 背景升級為 Google Maps iframe；`maps_url` 會優先於經緯度作為地圖顯示來源。若 Google Maps URL 內含座標，系統會解析該座標進行 marker 群組；若是無法本地解析的短連結或 `Tokyo Station` 這類查詢文字，仍會作為 reference-backed marker group 顯示。篩選、跨作品場景身份與 Google Maps navigation link 仍由 app 邏輯控制。
 
 ## 完成項目
 
@@ -15,7 +15,8 @@ Phase 3 已完成 no-external-API map and navigation workflow。系統現在可�
   - `35m` marker grouping。
   - local coordinate projection。
 - 建立 Prisma-backed map repository，重用既有 Scene Catalog 資料。
-- 建立 local projected map UI，不使用 Google Maps JS、API key、tile service 或外部 map dependency。
+- 原始 Phase 3 建立 local projected map UI；Phase 8 後續修正將地圖底圖改為 Google Maps iframe，並保留不使用 Google Maps JS SDK 的限制。
+- 地圖顯示優先使用 `maps_url`，再退回 stored latitude/longitude。
 - grouped marker 顯示 scene count，selected marker panel 保留個別 Scene/Work identity。
 - anime thumbnail 需求以 `animeImageDriveFileId` placeholder 呈現，Drive image loading 留到 Phase 8。
 - Scene Detail 新增 View on map 與 Open navigation。
@@ -37,8 +38,8 @@ Phase 3 已完成 no-external-API map and navigation workflow。系統現在可�
 
 ## 已知限制
 
-- Phase 3 是 coordinate-projected local map，不是真實街圖。
-- Google Maps 只產生導航 URL，不呼叫 Google API。
+- Marker 群組位置仍由本地座標投影或 reference-backed fallback 位置控制，不是 Google Maps JS marker。
+- 未設定 `GOOGLE_MAPS_EMBED_API_KEY` 時，開發環境使用 keyless Google Maps iframe URL；正式長期使用建議設定受限制的 Maps Embed API key。
 - 動畫縮圖仍為 Drive file id placeholder。
 - Marker grouping 使用固定 `35m` 半徑，不做路線最佳化或自動排序。
 - 完整驗證需要本機 Docker Desktop 或等效 PostgreSQL 服務。

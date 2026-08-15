@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { updateSceneDetailsAction } from "@/app/scenes/actions";
 import { AddToTripDayForm } from "@/components/add-to-trip-day-form";
 import { AnimeReferencePanel } from "@/components/anime-reference-panel";
 import { TripDayContextBanner } from "@/components/trip-day-context-banner";
@@ -26,7 +27,9 @@ export default async function SceneDetailPage({
   searchParams,
 }: SceneDetailPageProps) {
   const { sceneId } = await params;
-  const tripDayId = firstSearchParam((await searchParams).tripDayId);
+  const resolvedSearchParams = await searchParams;
+  const tripDayId = firstSearchParam(resolvedSearchParams.tripDayId);
+  const sceneMessage = firstSearchParam(resolvedSearchParams.sceneMessage);
   const [scene, tripDayContext] = await Promise.all([
     getSceneDetail(sceneId),
     getTripDaySelectionContext(tripDayId),
@@ -66,6 +69,7 @@ export default async function SceneDetailPage({
       >
         <TripDayContextBanner context={tripDayContext} />
         <AnimeReferencePanel scene={scene} />
+        {sceneMessage ? <SceneMessage message={sceneMessage} /> : null}
         <div className="rounded border border-rail bg-white p-5">
           <div className="flex flex-col gap-3 border-b border-rail pb-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
@@ -137,6 +141,8 @@ export default async function SceneDetailPage({
             <DetailRow label="地圖 URL" value={scene.mapsUrl ?? "未設定"} />
             <DetailRow label="備註" value={scene.notes ?? "未設定"} />
           </dl>
+
+          <SceneEditableFieldsForm scene={scene} returnTo={returnTo} />
         </div>
       </section>
     </main>
@@ -156,4 +162,98 @@ function DetailRow({ label, value }: { label: string; value: string }) {
       <dd className="mt-1 break-words text-night">{value}</dd>
     </div>
   );
+}
+
+function SceneMessage({ message }: { message: string }) {
+  const tone = message.includes("已更新")
+    ? "border-[#c8ded2] bg-[#edf8f1] text-field"
+    : "border-[#f1c6bb] bg-[#fff2ef] text-signal";
+
+  return (
+    <p aria-live="polite" className={`rounded border p-4 text-sm ${tone}`}>
+      {message}
+    </p>
+  );
+}
+
+function SceneEditableFieldsForm({
+  scene,
+  returnTo,
+}: {
+  scene: NonNullable<Awaited<ReturnType<typeof getSceneDetail>>>;
+  returnTo: string;
+}) {
+  return (
+    <section
+      aria-label="編輯場景資料"
+      className="mt-6 border-t border-rail pt-5"
+    >
+      <h2 className="text-lg font-semibold">編輯場景資料</h2>
+      <form action={updateSceneDetailsAction} className="mt-4 grid gap-4">
+        <input type="hidden" name="sceneId" value={scene.id} />
+        <input type="hidden" name="returnTo" value={returnTo} />
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <label className="grid gap-2 text-sm font-medium">
+            地點名稱
+            <input
+              name="locationName"
+              required
+              defaultValue={scene.location.name}
+              className="min-h-11 rounded border border-rail bg-paper px-3 text-sm"
+            />
+          </label>
+          <label className="grid gap-2 text-sm font-medium">
+            區域
+            <input
+              name="areaName"
+              defaultValue={scene.location.areaName ?? ""}
+              className="min-h-11 rounded border border-rail bg-paper px-3 text-sm"
+            />
+          </label>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <label className="grid gap-2 text-sm font-medium">
+            緯度
+            <input
+              name="latitude"
+              inputMode="decimal"
+              defaultValue={formatCoordinateInput(scene.latitude)}
+              className="min-h-11 rounded border border-rail bg-paper px-3 text-sm"
+            />
+          </label>
+          <label className="grid gap-2 text-sm font-medium">
+            經度
+            <input
+              name="longitude"
+              inputMode="decimal"
+              defaultValue={formatCoordinateInput(scene.longitude)}
+              className="min-h-11 rounded border border-rail bg-paper px-3 text-sm"
+            />
+          </label>
+        </div>
+
+        <label className="grid gap-2 text-sm font-medium">
+          地圖 URL
+          <input
+            name="mapsUrl"
+            defaultValue={scene.mapsUrl ?? ""}
+            className="min-h-11 rounded border border-rail bg-paper px-3 text-sm"
+          />
+        </label>
+
+        <button
+          type="submit"
+          className="min-h-11 w-fit rounded bg-field px-5 text-sm font-semibold text-white"
+        >
+          儲存變更
+        </button>
+      </form>
+    </section>
+  );
+}
+
+function formatCoordinateInput(coordinate: number | null): string {
+  return typeof coordinate === "number" ? coordinate.toString() : "";
 }

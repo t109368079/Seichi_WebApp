@@ -3,6 +3,7 @@ import {
   countDistinctWorksAtLocation,
   filterSceneCatalogItems,
   getSceneStatusLabel,
+  normalizeSceneEditableFields,
   normalizeSceneCatalogFilters,
   type SceneCatalogItem,
 } from "@/application/scene-catalog";
@@ -124,5 +125,85 @@ describe("scene catalog filtering", () => {
       countDistinctWorksAtLocation(scenes, "location-ikebukuro-east-gate"),
     ).toBe(2);
     expect(getSceneStatusLabel("PENDING_REVIEW")).toBe("待確認");
+  });
+});
+
+describe("scene catalog editable fields", () => {
+  it("normalizes location, coordinates, and map URL edits", () => {
+    expect(
+      normalizeSceneEditableFields({
+        locationName: "  New Station Gate  ",
+        areaName: "  Ikebukuro  ",
+        latitude: "35.73028",
+        longitude: "139.71145",
+        mapsUrl: " https://maps.google.com/?q=35.73028,139.71145 ",
+      }),
+    ).toEqual({
+      locationName: "New Station Gate",
+      areaName: "Ikebukuro",
+      latitude: 35.73028,
+      longitude: 139.71145,
+      mapsUrl: "https://maps.google.com/?q=35.73028,139.71145",
+    });
+  });
+
+  it("allows a map URL without coordinates", () => {
+    expect(
+      normalizeSceneEditableFields({
+        locationName: "URL Only Place",
+        areaName: "",
+        latitude: "",
+        longitude: "",
+        mapsUrl: "https://maps.app.goo.gl/example",
+      }),
+    ).toEqual({
+      locationName: "URL Only Place",
+      areaName: undefined,
+      latitude: null,
+      longitude: null,
+      mapsUrl: "https://maps.app.goo.gl/example",
+    });
+  });
+
+  it("rejects incomplete or missing navigation references", () => {
+    expect(() =>
+      normalizeSceneEditableFields({
+        locationName: "",
+        areaName: "",
+        latitude: "35.73028",
+        longitude: "139.71145",
+        mapsUrl: "",
+      }),
+    ).toThrow("Scene location name is required.");
+
+    expect(() =>
+      normalizeSceneEditableFields({
+        locationName: "Partial Coordinate Place",
+        areaName: "",
+        latitude: "35.73028",
+        longitude: "",
+        mapsUrl: "",
+      }),
+    ).toThrow("Scene latitude and longitude must be provided together.");
+
+    expect(() =>
+      normalizeSceneEditableFields({
+        locationName: "Invalid Latitude Place",
+        areaName: "",
+        latitude: "91",
+        longitude: "139.71145",
+        mapsUrl: "",
+      }),
+    ).toThrow("Invalid latitude: 91");
+
+    expect(() =>
+      normalizeSceneEditableFields({
+        locationName: "Missing Navigation Place",
+        areaName: "",
+        latitude: "",
+        longitude: "",
+        mapsUrl: "",
+      }),
+    ).toThrow("Scene requires either coordinates or mapsUrl.");
   });
 });

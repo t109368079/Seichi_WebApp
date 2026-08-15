@@ -1,12 +1,16 @@
 import { describe, expect, it } from "vitest";
 import {
+  buildGoogleMapsEmbedUrl,
   buildGoogleMapsNavigationUrl,
   distanceMeters,
   filterSceneMapItems,
   getCoordinateIssue,
   getNavigationTarget,
+  getPreferredMapCoordinates,
   groupSceneMapMarkers,
+  hasMappableMapReference,
   hasValidMapCoordinates,
+  parseGoogleMapsUrlCoordinates,
   projectCoordinate,
 } from "@/application/scene-map";
 import type { SceneCatalogItem } from "@/application/scene-catalog";
@@ -99,6 +103,137 @@ describe("scene map coordinates and navigation", () => {
     ).toEqual({
       href: "https://maps.app.goo.gl/example",
     });
+    expect(
+      getNavigationTarget({
+        latitude: null,
+        longitude: null,
+        mapsUrl: "Tokyo Station",
+      }),
+    ).toEqual({
+      href: "https://www.google.com/maps/search/?api=1&query=Tokyo%20Station",
+    });
+    expect(
+      buildGoogleMapsNavigationUrl({
+        latitude: 35,
+        longitude: 139,
+        mapsUrl: "https://maps.google.com/?q=35.73028,139.71145",
+      }),
+    ).toBe(
+      "https://www.google.com/maps/dir/?api=1&destination=35.73028,139.71145",
+    );
+  });
+
+  it("generates Google Maps embed URLs for map rendering", () => {
+    expect(
+      buildGoogleMapsEmbedUrl({
+        latitude: 35.73028,
+        longitude: 139.71145,
+      }),
+    ).toBe(
+      "https://www.google.com/maps?q=35.73028%2C139.71145&z=16&output=embed",
+    );
+
+    expect(
+      buildGoogleMapsEmbedUrl(
+        {
+          latitude: 35.73028,
+          longitude: 139.71145,
+        },
+        { apiKey: "mock-maps-key" },
+      ),
+    ).toBe(
+      "https://www.google.com/maps/embed/v1/view?key=mock-maps-key&center=35.73028%2C139.71145&zoom=16&maptype=roadmap&language=zh-TW",
+    );
+
+    expect(
+      buildGoogleMapsEmbedUrl({
+        latitude: 35,
+        longitude: 139,
+        mapsUrl: "https://maps.google.com/?q=35.73028,139.71145",
+      }),
+    ).toBe("https://maps.google.com/?q=35.73028%2C139.71145&output=embed");
+
+    expect(
+      buildGoogleMapsEmbedUrl(
+        {
+          latitude: 35,
+          longitude: 139,
+          mapsUrl: "https://maps.google.com/?q=35.73028,139.71145",
+        },
+        { apiKey: "mock-maps-key" },
+      ),
+    ).toBe(
+      "https://www.google.com/maps/embed/v1/view?key=mock-maps-key&center=35.73028%2C139.71145&zoom=16&maptype=roadmap&language=zh-TW",
+    );
+
+    expect(
+      buildGoogleMapsEmbedUrl({
+        latitude: null,
+        longitude: null,
+        mapsUrl: "https://maps.app.goo.gl/example",
+      }),
+    ).toBe("https://maps.app.goo.gl/example");
+
+    expect(
+      buildGoogleMapsEmbedUrl({
+        latitude: null,
+        longitude: null,
+        mapsUrl: "Tokyo Station",
+      }),
+    ).toBe("https://www.google.com/maps?q=Tokyo+Station&z=16&output=embed");
+
+    expect(
+      buildGoogleMapsEmbedUrl(
+        {
+          latitude: null,
+          longitude: null,
+          mapsUrl: "Tokyo Station",
+        },
+        { apiKey: "mock-maps-key" },
+      ),
+    ).toBe(
+      "https://www.google.com/maps/embed/v1/place?key=mock-maps-key&q=Tokyo+Station&language=zh-TW",
+    );
+
+    expect(
+      buildGoogleMapsEmbedUrl({
+        latitude: null,
+        longitude: 139.71145,
+      }),
+    ).toBeUndefined();
+  });
+
+  it("reads coordinates from common Google Maps URL formats", () => {
+    expect(
+      parseGoogleMapsUrlCoordinates(
+        "https://www.google.com/maps/place/Tokyo/@35.681236,139.767125,17z",
+      ),
+    ).toEqual({
+      latitude: 35.681236,
+      longitude: 139.767125,
+    });
+
+    expect(
+      parseGoogleMapsUrlCoordinates(
+        "https://www.google.com/maps/search/?api=1&query=35.73028%2C139.71145",
+      ),
+    ).toEqual({
+      latitude: 35.73028,
+      longitude: 139.71145,
+    });
+
+    expect(
+      parseGoogleMapsUrlCoordinates(
+        "https://www.google.com/maps/place/Test/data=!3d35.71987!4d139.72754",
+      ),
+    ).toEqual({
+      latitude: 35.71987,
+      longitude: 139.72754,
+    });
+
+    expect(
+      parseGoogleMapsUrlCoordinates("https://maps.app.goo.gl/example"),
+    ).toBeUndefined();
   });
 
   it("reports missing and invalid coordinates without generating URLs", () => {
@@ -170,6 +305,34 @@ describe("scene map grouping and projection", () => {
     expect(distanceMeters(firstScene, nearScene)).toBeLessThan(6);
     expect(distanceMeters(firstScene, farScene)).toBeGreaterThan(1500);
   });
+
+  it("uses mapsUrl coordinates before explicit coordinates when grouping", () => {
+    const groups = groupSceneMapMarkers([
+      scenes[0],
+      scene({
+        id: "scene-url-coordinate",
+        sceneCode: "URL-COORD-001",
+        latitude: 35,
+        longitude: 139,
+        mapsUrl: "https://maps.google.com/?q=35.73029,139.71146",
+        status: "NOT_SHOT",
+        workId: "work-blue-hour-crossing",
+        workName: "Blue Hour Crossing",
+        workShortCode: "BHC",
+        locationId: "location-url-coordinate",
+        locationName: "URL Coordinate Place",
+        areaName: "Ikebukuro",
+      }),
+    ]);
+
+    expect(groups).toHaveLength(1);
+    expect(groups[0]?.scenes.map((mapScene) => mapScene.sceneCode)).toEqual([
+      "BHC-001",
+      "URL-COORD-001",
+    ]);
+    expect(groups[0]?.latitude).toBeCloseTo(35.730285);
+    expect(groups[0]?.longitude).toBeCloseTo(139.711455);
+  });
 });
 
 describe("scene map filtering", () => {
@@ -193,7 +356,7 @@ describe("scene map filtering", () => {
     ).toEqual(["NEAR-001"]);
   });
 
-  it("omits URL-only scenes from marker groups", () => {
+  it("includes URL-only scenes with embeddable Google Maps URLs or queries", () => {
     const result = filterSceneMapItems(
       [
         ...scenes,
@@ -211,13 +374,67 @@ describe("scene map filtering", () => {
           locationName: "URL Only Place",
           areaName: "Ikebukuro",
         }),
+        scene({
+          id: "scene-non-google-url",
+          sceneCode: "URL-002",
+          latitude: null,
+          longitude: null,
+          mapsUrl: "https://example.com/not-google-maps",
+          status: "NOT_SHOT",
+          workId: "work-blue-hour-crossing",
+          workName: "Blue Hour Crossing",
+          workShortCode: "BHC",
+          locationId: "location-non-google-url",
+          locationName: "Non Google URL Place",
+          areaName: "Ikebukuro",
+        }),
+        scene({
+          id: "scene-map-query",
+          sceneCode: "QUERY-001",
+          latitude: null,
+          longitude: null,
+          mapsUrl: "Tokyo Station",
+          status: "NOT_SHOT",
+          workId: "work-blue-hour-crossing",
+          workName: "Blue Hour Crossing",
+          workShortCode: "BHC",
+          locationId: "location-map-query",
+          locationName: "Map Query Place",
+          areaName: "Ikebukuro",
+        }),
       ],
       {},
     );
 
+    expect(result.map((mapScene) => mapScene.sceneCode)).toContain("URL-001");
+    expect(result.map((mapScene) => mapScene.sceneCode)).toContain("QUERY-001");
     expect(result.map((mapScene) => mapScene.sceneCode)).not.toContain(
-      "URL-001",
+      "URL-002",
     );
+    expect(
+      hasMappableMapReference({
+        latitude: null,
+        longitude: null,
+        mapsUrl: "https://maps.app.goo.gl/example",
+      }),
+    ).toBe(true);
+    expect(
+      hasMappableMapReference({
+        latitude: null,
+        longitude: null,
+        mapsUrl: "Tokyo Station",
+      }),
+    ).toBe(true);
+    expect(
+      getPreferredMapCoordinates({
+        latitude: 35,
+        longitude: 139,
+        mapsUrl: "https://maps.google.com/?q=35.73028,139.71145",
+      }),
+    ).toEqual({
+      latitude: 35.73028,
+      longitude: 139.71145,
+    });
   });
 });
 

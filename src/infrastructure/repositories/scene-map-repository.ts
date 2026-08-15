@@ -1,7 +1,7 @@
 import {
   filterSceneMapItems,
   groupSceneMapMarkers,
-  hasValidMapCoordinates,
+  hasMappableMapReference,
   type SceneMapMarkerGroup,
 } from "@/application/scene-map";
 import type {
@@ -30,7 +30,7 @@ export async function getSceneMapData(
     mapScenes,
     markerGroups: groupSceneMapMarkers(mapScenes),
     omittedSceneCount: catalog.scenes.filter(
-      (scene) => !hasValidMapCoordinates(scene),
+      (scene) => !hasMappableMapReference(scene),
     ).length,
   };
 }

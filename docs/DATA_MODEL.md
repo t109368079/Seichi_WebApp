@@ -109,12 +109,14 @@ Import matching and write rules:
 
 ## Phase 3 Map View Model
 
-Phase 3 does not add database tables. Map markers are derived from existing Scene coordinates at read time.
+Phase 3 does not add database tables. Map markers are derived from existing Scene coordinates and Google Maps URLs at read time.
 
 Derived map behavior:
 
-- Scene coordinates are validated before map placement.
-- Scenes without coordinates are omitted from the projected map but remain usable in catalog, trip planning, Field Mode, photo upload, and review.
+- `Scene.mapsUrl` is read before stored coordinates when both are present.
+- Supported Google Maps URLs with embedded coordinates are parsed before map placement.
+- URL-only and query-only Google Maps references are included as selectable marker groups even when they cannot be locally expanded into coordinates.
+- Scenes without a supported Google Maps reference or valid coordinates are omitted from marker groups but remain usable in catalog, trip planning, Field Mode, photo upload, and review.
 - Scenes within `35m` are grouped into one marker.
 - Marker groups preserve each individual `Scene.id`, `sceneCode`, Work identity, status, and anime image file id reference.
 - Google Maps navigation uses `Scene.mapsUrl` when present, falling back to a generated URL from Scene latitude and longitude.
@@ -265,8 +267,8 @@ Current navigation input rules:
 
 - A Scene must have either a complete latitude/longitude pair or `mapsUrl`.
 - If one coordinate is provided, both latitude and longitude must be provided and valid.
-- `mapsUrl` is preferred for navigation when present.
-- URL-only Scenes are omitted from the projected local map until coordinates are added.
+- `mapsUrl` is preferred for map display and navigation when present.
+- URL-only and query-only Google Maps references are included in the map as reference-backed marker groups.
 - URL-only Scenes can still be imported, planned into trips, opened in Field Mode, photographed, reviewed, and opened in Google Maps.
 
 ## Phase 8 Google Integration Model

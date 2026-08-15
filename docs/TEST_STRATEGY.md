@@ -33,9 +33,9 @@ Current unit coverage includes:
 - Scene catalog filter logic.
 - Cross-work same-location catalog behavior.
 - Scene Import CSV v1 parsing, required columns, duplicate scene codes, coordinate errors, normalization, and diff calculation.
-- Google Maps navigation URL generation.
+- Google Maps URL parsing, embed URL generation, and navigation URL generation.
 - Missing and invalid map coordinate handling.
-- Marker grouping, projected marker bounds, and map filter behavior.
+- Marker grouping, URL/query-only marker handling, projected marker bounds, and map filter behavior.
 - Trip date validation and inclusive TripDay generation.
 - TripScene append, move, reorder, removal order normalization, and duplicate prevention.
 - Trip progress aggregation by SceneStatus and missing coordinate count.
@@ -88,7 +88,7 @@ Current E2E coverage includes:
 - Scene import reports invalid CSV errors and withholds the commit action.
 - Scene map loads demo marker groups and grouped scene identities.
 - Scene map filters through URL query parameters.
-- Scene map exposes generated Google Maps navigation hrefs without opening external navigation during tests.
+- Scene map exposes a Google Maps iframe URL, reference-backed marker groups, and generated Google Maps navigation hrefs without opening external navigation during tests.
 - Trip planning creates a multi-day trip, adds scenes from catalog and map, reorders with fallback controls, persists order after reload, and removes scenes.
 - Mock Google connection and Google Sheet import smoke path.
 
@@ -96,7 +96,7 @@ Playwright runs the Next.js dev server on port `3100` by default with `DATABASE_
 
 ## External Services
 
-Google Maps navigation still appears only as generated or saved navigation URLs handed to the browser.
+Google Maps iframe requests are stubbed in E2E tests, and navigation still appears only as generated or saved navigation URLs handed to the browser.
 
 Phase 8 Google OAuth, Sheets, and Drive integrations are tested through mocks:
 

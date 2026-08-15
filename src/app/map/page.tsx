@@ -35,6 +35,7 @@ export default async function SceneMapPage({
   const params = await searchParams;
   const filters = readFilters(params);
   const tripDayId = firstSearchParam(params.tripDayId);
+  const selectedMarkerGroupId = firstSearchParam(params.markerGroupId);
   const [mapData, tripDayContext] = await Promise.all([
     getSceneMapData(filters),
     getTripDaySelectionContext(tripDayId),
@@ -51,6 +52,8 @@ export default async function SceneMapPage({
       filters={filters}
       tripDayContext={tripDayContext}
       returnTo={buildCurrentHref("/map", params)}
+      selectedMarkerGroupId={selectedMarkerGroupId}
+      googleMapsEmbedApiKey={process.env.GOOGLE_MAPS_EMBED_API_KEY}
     />
   );
 }

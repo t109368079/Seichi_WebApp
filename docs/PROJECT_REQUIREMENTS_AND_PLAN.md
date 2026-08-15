@@ -1,4 +1,5 @@
 # 聖地巡禮照片管理系統
+
 ## Product Requirements and Harness Engineering Development Plan
 
 ---
@@ -339,11 +340,7 @@ Scene 是整個系統最重要的核心實體。
 
 ```typescript
 type SceneStatus =
-  | "NOT_SHOT"
-  | "PENDING_REVIEW"
-  | "REVIEWED"
-  | "RETAKE_REQUIRED"
-  | "SKIPPED";
+  "NOT_SHOT" | "PENDING_REVIEW" | "REVIEWED" | "RETAKE_REQUIRED" | "SKIPPED";
 
 interface Scene {
   id: string;
@@ -368,7 +365,7 @@ interface Scene {
 - 不得刪除動畫圖表示完成。
 - 所有實景照片必須綁定一個有效的 Scene ID。
 - 每個 Scene 必須至少有一個導航參考：完整經緯度，或 Google Maps URL。
-- 若 `mapsUrl` 存在，導航優先使用 `mapsUrl`；座標只用於本機投影地圖。
+- 若 `mapsUrl` 存在，地圖顯示與導航優先使用 `mapsUrl`；座標作為沒有 `mapsUrl` 時的 fallback。
 
 ## 7.4 Trip
 

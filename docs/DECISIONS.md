@@ -228,7 +228,7 @@ Phase 6 deferred browser upload E2E coverage by explicit request. Phase 7 adds a
 
 Status: Accepted
 
-Manual test CSV preparation often starts from Google Maps share URLs, while precise latitude and longitude are harder to collect. Scene and Location coordinates are therefore nullable after Phase 7, and CSV import requires either a complete coordinate pair or `maps_url`. Navigation prefers `maps_url` when present. URL-only Scenes are omitted from the local projected map until coordinates are added, but they can still be planned, opened in Google Maps, photographed, and reviewed.
+Manual test CSV preparation often starts from Google Maps share URLs, while precise latitude and longitude are harder to collect. Scene and Location coordinates are therefore nullable after Phase 7, and CSV import requires either a complete coordinate pair or `maps_url`. Navigation prefers `maps_url` when present. URL-only Scenes can still be planned, opened in Google Maps, photographed, and reviewed.
 
 ## D-0039: Phase 7 Follow-Up Preserves Published History
 
@@ -285,3 +285,15 @@ Status: Accepted
 Google Sheet maintenance is easier when `anime_drive_file_id` can contain the copied Drive share link. CSV and Google Sheet imports therefore accept either a raw Drive file id or common Drive URL forms such as `/file/d/<id>/view` and `open?id=<id>`. The import parser normalizes those values before persistence so `Scene.animeImageDriveFileId` remains a stable Drive file id, not a URL.
 
 Downloaded OAuth client JSON files and local dev logs are ignored because they are local operational artifacts and may contain secrets.
+
+## D-0048: Scene Map Uses Google Maps Embed
+
+Status: Accepted
+
+After Phase 8 connected real Google services, `/map` now renders a Google Maps iframe instead of the original visual template background. Application-layer utilities still own coordinate validation, marker grouping, map filtering, and navigation URL generation; UI code does not call Google REST APIs or use OAuth tokens. If `GOOGLE_MAPS_EMBED_API_KEY` is configured, the iframe uses the official Maps Embed API. Local development can fall back to a keyless Google Maps iframe URL so the app remains usable before a restricted API key is created.
+
+## D-0049: Map URLs Take Priority Over Stored Coordinates
+
+Status: Accepted
+
+`Scene.mapsUrl` is now the primary map display reference. If both `mapsUrl` and latitude/longitude are present, the map attempts to parse and use coordinates embedded in the Google Maps URL before falling back to stored coordinates. URL-only Google Maps links and query-only references such as `Tokyo Station` are still included in `/map` as reference-backed marker groups; short links that cannot be expanded locally are selectable and use the saved reference for the iframe and navigation. This keeps manual Google Sheet preparation useful without requiring precise coordinates for every row.
