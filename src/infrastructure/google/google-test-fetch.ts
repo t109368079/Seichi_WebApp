@@ -133,6 +133,69 @@ export const googleIntegrationTestFetch: GoogleFetch = async (input, init) => {
     });
   }
 
+  if (
+    url.hostname === "photospicker.googleapis.com" &&
+    url.pathname === "/v1/sessions" &&
+    init?.method === "POST"
+  ) {
+    return jsonResponse({
+      id: "mock-picker-session",
+      pickerUri: "https://photos.google.com/picker/mock-session",
+      mediaItemsSet: false,
+      pollingConfig: {
+        pollInterval: "1s",
+        timeoutIn: "60s",
+      },
+    });
+  }
+
+  if (
+    url.hostname === "photospicker.googleapis.com" &&
+    url.pathname === "/v1/sessions/mock-picker-session"
+  ) {
+    if (init?.method === "DELETE") {
+      return new Response(null, { status: 204 });
+    }
+
+    return jsonResponse({
+      id: "mock-picker-session",
+      pickerUri: "https://photos.google.com/picker/mock-session",
+      mediaItemsSet: true,
+    });
+  }
+
+  if (
+    url.hostname === "photospicker.googleapis.com" &&
+    url.pathname === "/v1/mediaItems"
+  ) {
+    return jsonResponse({
+      mediaItems: [
+        {
+          id: "mock-google-photo",
+          createTime: "2026-10-10T09:15:00Z",
+          type: "PHOTO",
+          mediaFile: {
+            baseUrl: "https://lh3.googleusercontent.com/p/mock-google-photo",
+            mimeType: "image/png",
+            filename: "mock-google-photo.png",
+          },
+        },
+      ],
+    });
+  }
+
+  if (
+    url.hostname === "lh3.googleusercontent.com" &&
+    url.pathname === "/p/mock-google-photo=d"
+  ) {
+    return new Response(toArrayBuffer(pngBytes), {
+      status: 200,
+      headers: {
+        "Content-Type": "image/png",
+      },
+    });
+  }
+
   return jsonResponse(
     {
       error: {

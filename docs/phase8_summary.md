@@ -6,6 +6,8 @@ Phase 8 已將核心閉環接上 Google OAuth、Google Sheets 與 Google Drive�
 
 本階段也讓動畫參考圖透過 app route 從 Google Drive 讀取，並新增可選的 Google Drive 實景照片儲存 adapter。Local photo storage 仍是預設值；只有設定 `PHOTO_STORAGE_BACKEND=google-drive` 時才會切到 Drive。
 
+後續擴充已新增 Google Photos Picker 作為現地照片來源。Google Photos 不作為永久 storage：匯入流程只在 server memory 短暫下載 Picker 選中的照片，接著立刻透過 Google Drive photo storage adapter 保存，資料庫仍只保存 Drive file id。
+
 ## 完成項目
 
 - 新增 Google OAuth web-server flow：
@@ -25,7 +27,12 @@ Phase 8 已將核心閉環接上 Google OAuth、Google Sheets 與 Google Drive�
   - file media download
   - multipart upload
   - delete
+- 新增 Google Photos Picker adapter：
+  - create/get/delete picker session
+  - list picked media items
+  - download selected image bytes with the `=d` download parameter
 - 新增 `/api/scenes/[sceneId]/anime-image`，讓 UI 只讀 app image route，不直接讀 Drive。
+- 新增 `/api/google-photos-picker/sessions` 與 `/api/scene-photos/google-photos`，讓現地上傳頁可從 Google 相簿匯入照片。
 - 將 `AnimeReferencePanel` 從 placeholder 改為 app route 圖片，錯誤時由 route 回傳穩定 fallback SVG。
 - 擴充 `PhotoStorageAdapter.save` 回傳最終 storage descriptor。
 - 新增 `GoogleDrivePhotoStorage`，Drive backend 會把 Drive file id 寫入 `ScenePhoto.storageFileId`。
@@ -50,6 +57,10 @@ Google access/refresh tokens 以 `GOOGLE_TOKEN_ENCRYPTION_KEY` 加密後存入 `
 
 `PHOTO_STORAGE_BACKEND=google-drive` 才會啟用 Drive photo storage。Repository 仍透過 `PhotoStorageAdapter` 操作照片，因此 storage failure rollback、DB failure cleanup、ScenePhoto relation 都維持 Phase 6/7 的語意。
 
+### Google Photos 只作為來源
+
+Google Photos Picker 匯入要求 `PHOTO_STORAGE_BACKEND=google-drive`。系統不保存 Google Photos temporary `baseUrl`，也不將 Picker 下載的照片寫入本機 storage。刪除 Take 時只刪除 WebApp 上傳到 Drive 的那份，不碰 Google Photos 原始備份。
+
 ## 變更檔案
 
 ### 新增 - Source
@@ -59,14 +70,19 @@ src/application/google-integration.ts
 src/infrastructure/google/google-auth-client.ts
 src/infrastructure/google/google-drive.ts
 src/infrastructure/google/google-http.ts
+src/infrastructure/google/google-photos-picker.ts
 src/infrastructure/google/google-session-cookie.ts
 src/infrastructure/google/google-sheets.ts
 src/infrastructure/google/google-test-fetch.ts
 src/infrastructure/google/token-crypto.ts
 src/infrastructure/repositories/anime-image-repository.ts
+src/infrastructure/repositories/google-photos-picker-repository.ts
 src/infrastructure/repositories/google-integration-repository.ts
 src/infrastructure/storage/google-drive-photo-storage.ts
 src/app/api/scenes/[sceneId]/anime-image/route.ts
+src/app/api/google-photos-picker/sessions/route.ts
+src/app/api/google-photos-picker/sessions/[sessionId]/route.ts
+src/app/api/scene-photos/google-photos/route.ts
 src/app/auth/google/start/route.ts
 src/app/auth/google/callback/route.ts
 src/app/auth/google/mock-connect/route.ts
@@ -81,7 +97,9 @@ src/app/integrations/google/page.tsx
 config/playwright.config.ts
 prisma/schema.prisma
 src/application/scene-import.ts
+src/application/scene-photo.ts
 src/components/anime-reference-panel.tsx
+src/components/scene-photo-upload-form.tsx
 src/components/scene-import-form.tsx
 src/infrastructure/repositories/scene-import-repository.ts
 src/infrastructure/repositories/scene-photo-repository.ts
@@ -155,9 +173,9 @@ docs/TEST_STRATEGY.md
 
 ## 已知限制
 
-- Google Picker 未實作。
 - Google Sheet write-back / bidirectional sync 未實作。
-- Google Photos 未使用。
+- Google Photos 全相簿掃描未實作；只支援使用者透過 Picker 選取照片後匯入。
+- Google Photos 匯入需要 Drive photo storage backend，local storage backend 會拒絕此來源以避免本機永久副本。
 - AI 配對、評分、auto-best、照片壓縮與分享流程仍在範圍外。
 - Drive photo storage 需要使用者設定 OAuth 與 folder；測試環境只使用 mock。
 

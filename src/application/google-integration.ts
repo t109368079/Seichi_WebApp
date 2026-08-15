@@ -1,3 +1,6 @@
+export const googlePhotosPickerScope =
+  "https://www.googleapis.com/auth/photospicker.mediaitems.readonly";
+
 export const googleOAuthScopes = [
   "openid",
   "email",
@@ -5,6 +8,7 @@ export const googleOAuthScopes = [
   "https://www.googleapis.com/auth/spreadsheets.readonly",
   "https://www.googleapis.com/auth/drive.readonly",
   "https://www.googleapis.com/auth/drive.file",
+  googlePhotosPickerScope,
 ] as const;
 
 export const defaultGoogleSheetRange = "Sheet1!A:K";
@@ -49,6 +53,10 @@ export function splitGoogleScopes(scopes: string): string[] {
     .split(/\s+/)
     .map((scope) => scope.trim())
     .filter((scope) => scope.length > 0);
+}
+
+export function hasGooglePhotosPickerScope(scopes: readonly string[]): boolean {
+  return scopes.includes(googlePhotosPickerScope);
 }
 
 export function getGoogleIntegrationLabel(

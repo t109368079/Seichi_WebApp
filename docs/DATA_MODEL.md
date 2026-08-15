@@ -314,6 +314,7 @@ Google integration rules:
 - `GoogleIntegrationSettings` is a singleton row for default Sheet ID/range and Drive photo folder ID.
 - `Scene.animeImageDriveFileId` remains the stable Drive file id for anime references and is resolved through an app route.
 - With `PHOTO_STORAGE_BACKEND=google-drive`, `ScenePhoto.storageFileId` stores the Drive file id returned by upload. The ScenePhoto relation remains bound to `sceneId`, so Drive file moves or renames do not affect Scene identity.
+- Google Photos Picker import does not add a table or column. Picker media ids and `baseUrl` values are source-only and are not persisted; the imported photo is saved through Google Drive storage and represented by the existing `ScenePhoto` row.
 
 ## Future Product Models
 

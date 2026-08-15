@@ -69,6 +69,20 @@ export function getPhotoUploadEndpoint(): string {
   return "/api/scene-photos";
 }
 
+export function getGooglePhotosPickerSessionsEndpoint(): string {
+  return "/api/google-photos-picker/sessions";
+}
+
+export function getGooglePhotosPickerSessionEndpoint(
+  sessionId: string,
+): string {
+  return `/api/google-photos-picker/sessions/${encodeURIComponent(sessionId)}`;
+}
+
+export function getGooglePhotosImportEndpoint(): string {
+  return "/api/scene-photos/google-photos";
+}
+
 export function getFieldUploadHref(
   tripDayId: string,
   tripSceneId: string,

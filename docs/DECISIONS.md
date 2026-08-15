@@ -297,3 +297,9 @@ After Phase 8 connected real Google services, `/map` now renders a Google Maps i
 Status: Accepted
 
 `Scene.mapsUrl` is now the primary map display reference. If both `mapsUrl` and latitude/longitude are present, the map attempts to parse and use coordinates embedded in the Google Maps URL before falling back to stored coordinates. URL-only Google Maps links and query-only references such as `Tokyo Station` are still included in `/map` as reference-backed marker groups; short links that cannot be expanded locally are selectable and use the saved reference for the iframe and navigation. This keeps manual Google Sheet preparation useful without requiring precise coordinates for every row.
+
+## D-0050: Google Photos Import Streams Into Drive Storage
+
+Status: Accepted
+
+Google Photos Picker is treated as a field-photo source, not permanent storage. Picker `baseUrl` values are temporary and require OAuth, so the app never stores them in the database. A picked photo is downloaded in server memory and immediately handed to the `PhotoStorageAdapter`; this import path is enabled only when `PHOTO_STORAGE_BACKEND=google-drive` so Google Photos import cannot create a permanent local storage copy. The resulting `ScenePhoto.storageFileId` remains the Drive file id returned by the storage adapter, and deleting the take affects only the Drive copy managed by the app, not the user's original Google Photos backup.

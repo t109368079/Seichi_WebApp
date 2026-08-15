@@ -1,8 +1,15 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ScenePhotoUploadForm } from "@/components/scene-photo-upload-form";
+import {
+  getGoogleIntegrationHref,
+  hasGooglePhotosPickerScope,
+} from "@/application/google-integration";
 import { getFieldSceneHref } from "@/application/field-mode";
+import { readGoogleSessionCookie } from "@/infrastructure/google/google-session-cookie";
 import { getFieldModeScene } from "@/infrastructure/repositories/field-mode-repository";
+import { getGoogleIntegrationStatus } from "@/infrastructure/repositories/google-integration-repository";
+import { isGoogleDrivePhotoStorageEnabled } from "@/infrastructure/storage/local-photo-storage";
 
 export const dynamic = "force-dynamic";
 
@@ -24,6 +31,8 @@ export default async function ScenePhotoUploadPage({
   }
 
   const scene = view.cursor.current.scene;
+  const googleSessionToken = await readGoogleSessionCookie();
+  const googleStatus = await getGoogleIntegrationStatus(googleSessionToken);
 
   return (
     <main className="min-h-screen bg-paper text-ink">
@@ -51,6 +60,12 @@ export default async function ScenePhotoUploadPage({
           tripId={view.day.tripId}
           tripDayId={tripDayId}
           tripSceneId={tripSceneId}
+          googlePhotosImportEnabled={isGoogleDrivePhotoStorageEnabled()}
+          googleConnected={googleStatus.connected}
+          googlePhotosScopeGranted={hasGooglePhotosPickerScope(
+            googleStatus.scopes,
+          )}
+          googleIntegrationHref={getGoogleIntegrationHref()}
         />
       </div>
     </main>

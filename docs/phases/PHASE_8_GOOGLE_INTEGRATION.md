@@ -17,9 +17,9 @@ Connect the stable Phase 7 workflow to real Google OAuth, Google Sheets scene im
 
 ## Out Of Scope
 
-- Google Photos album scanning.
 - Google Sheet write-back or bidirectional sync.
-- Google Picker and per-file authorization UI.
+- Google Photos full-library or album scanning. A post-phase extension adds
+  Google Photos Picker import only for user-selected field photos.
 - AI matching, scoring, auto-best selection, or image compression.
 - Public sharing, multi-user collaboration, route optimization, or automatic itinerary reordering.
 - Committing OAuth secrets, access tokens, refresh tokens, or real private Google data.
@@ -104,7 +104,7 @@ Acceptance Criteria:
 - File move or rename does not break the ScenePhoto relation.
 - Storage failure leaves no database row or scene status change.
 - Database failure after Drive upload triggers best-effort Drive cleanup.
-- The app never depends on Google Photos temporary URLs.
+- The app never depends on Google Photos temporary URLs as permanent storage.
 
 ## Required Tests
 
@@ -131,7 +131,7 @@ git status --short
 
 ## Completion Status
 
-Status: Completed
+Status: Completed, with post-phase Google Photos Picker import extension
 
 Completed Blocks:
 
@@ -139,12 +139,20 @@ Completed Blocks:
 - Block 8.2: Google Sheets Adapter.
 - Block 8.3: Google Drive Anime Image Adapter.
 - Block 8.4: Photo Storage Integration.
+- Post-phase extension: Google Photos Picker import for Field Mode photo upload.
+
+Post-Phase Extension:
+
+- Field Mode upload now supports Google Photos Picker as a second source beside local photos.
+- Google Photos is source-only. The app downloads the picked image in server memory and immediately stores it through the active Google Drive photo storage adapter.
+- Google Photos import is disabled unless `PHOTO_STORAGE_BACKEND=google-drive`, so this source does not create a permanent local storage copy.
+- The database continues to store `ScenePhoto.storageFileId` as the Drive file id returned by the storage adapter. Google Photos `baseUrl` values are never stored.
+- Existing Google connections must be reconnected once to grant `photospicker.mediaitems.readonly`.
 
 Known Limitations:
 
-- Google Picker is intentionally not implemented.
 - Sheet write-back is intentionally not implemented.
-- Google Photos is intentionally not used.
+- Google Photos album/full-library scanning is intentionally not implemented.
 - Google Drive photo storage is opt-in with `PHOTO_STORAGE_BACKEND=google-drive`; local storage remains the default.
 
 Commit:

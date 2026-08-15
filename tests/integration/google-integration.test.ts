@@ -9,6 +9,10 @@ import {
 } from "vitest";
 import { decryptGoogleToken } from "@/infrastructure/google/token-crypto";
 import {
+  googleOAuthScopes,
+  joinGoogleScopes,
+} from "@/application/google-integration";
+import {
   setGoogleFetch,
   type GoogleFetch,
 } from "@/infrastructure/google/google-http";
@@ -19,6 +23,11 @@ import {
   logoutGoogleSession,
   revokeGoogleAccountForSession,
 } from "@/infrastructure/repositories/google-integration-repository";
+import {
+  createGooglePhotosPickerSessionForAccount,
+  getGooglePhotosPickerSessionForAccount,
+  importGooglePhotosPickedMediaItem,
+} from "@/infrastructure/repositories/google-photos-picker-repository";
 import {
   commitSceneImportGoogleSheet,
   previewSceneImportGoogleSheet,
@@ -286,14 +295,79 @@ describe("google drive adapters", () => {
   });
 });
 
+describe("google photos picker import", () => {
+  it("imports a picked Google Photos image into Drive-backed ScenePhoto storage", async () => {
+    process.env.PHOTO_STORAGE_BACKEND = "google-drive";
+    setPhotoStorage(undefined);
+    const session = await createGoogleSession();
+
+    const picker = await createGooglePhotosPickerSessionForAccount(
+      session.sessionToken,
+    );
+    const picked = await getGooglePhotosPickerSessionForAccount(
+      session.sessionToken,
+      picker.sessionId,
+    );
+
+    expect(picker.pickerUri).toBe(
+      "https://photos.google.com/picker/mock-session/autoclose",
+    );
+    expect(picked.mediaItems).toEqual([
+      {
+        id: "google-photo-1",
+        fileName: "google-photo.png",
+        mimeType: "image/png",
+        type: "PHOTO",
+        createTime: "2026-10-10T09:15:00Z",
+      },
+    ]);
+
+    const imported = await importGooglePhotosPickedMediaItem({
+      googleSessionToken: session.sessionToken,
+      sceneId: "scene-bhc-001",
+      pickerSessionId: picker.sessionId,
+    });
+    const row = await prisma.scenePhoto.findUniqueOrThrow({
+      where: { id: imported.photo.id },
+    });
+
+    expect(imported.photo.fileName).toBe("google-photo.png");
+    expect(imported.photo.capturedAt).toBe("2026-10-10T09:15:00.000Z");
+    expect(imported.status).toBe("PENDING_REVIEW");
+    expect(row.storageFileId).toBe("drive-photo-1");
+    await expect(
+      readScenePhotoBytes(imported.photo.id, session.sessionToken),
+    ).resolves.toMatchObject({
+      mimeType: "image/png",
+      fileName: "google-photo.png",
+    });
+  });
+
+  it("rejects Google Photos import when storage would fall back to local disk", async () => {
+    const session = await createGoogleSession();
+
+    await expect(
+      importGooglePhotosPickedMediaItem({
+        googleSessionToken: session.sessionToken,
+        sceneId: "scene-bhc-001",
+        pickerSessionId: "picker-session-1",
+      }),
+    ).rejects.toMatchObject({
+      name: "GooglePhotosImportError",
+      code: "storage_backend",
+    });
+
+    await expect(prisma.scenePhoto.count()).resolves.toBe(0);
+  });
+});
+
 async function createGoogleSession(input: { expiresIn?: number } = {}) {
   return createGoogleSessionFromTokens(
     {
       accessToken: "access-token",
       refreshToken: "refresh-token",
       expiresIn: input.expiresIn ?? 3600,
-      scope:
-        "openid email profile https://www.googleapis.com/auth/spreadsheets.readonly https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/drive.file",
+      scope: joinGoogleScopes(googleOAuthScopes),
     },
     {
       sub: "google-user-1",
@@ -433,6 +507,67 @@ function createGoogleFetchMock(
         name: "mock-anime.png",
         mimeType: "image/png",
         size: `${pngBytes.byteLength}`,
+      });
+    }
+
+    if (
+      url.hostname === "photospicker.googleapis.com" &&
+      url.pathname === "/v1/sessions" &&
+      init?.method === "POST"
+    ) {
+      return jsonResponse({
+        id: "picker-session-1",
+        pickerUri: "https://photos.google.com/picker/mock-session",
+        mediaItemsSet: false,
+        pollingConfig: {
+          pollInterval: "0.1s",
+          timeoutIn: "30s",
+        },
+      });
+    }
+
+    if (
+      url.hostname === "photospicker.googleapis.com" &&
+      url.pathname === "/v1/sessions/picker-session-1"
+    ) {
+      if (init?.method === "DELETE") {
+        return new Response(null, { status: 204 });
+      }
+
+      return jsonResponse({
+        id: "picker-session-1",
+        pickerUri: "https://photos.google.com/picker/mock-session",
+        mediaItemsSet: true,
+      });
+    }
+
+    if (
+      url.hostname === "photospicker.googleapis.com" &&
+      url.pathname === "/v1/mediaItems"
+    ) {
+      return jsonResponse({
+        mediaItems: [
+          {
+            id: "google-photo-1",
+            createTime: "2026-10-10T09:15:00Z",
+            type: "PHOTO",
+            mediaFile: {
+              baseUrl: "https://lh3.googleusercontent.com/p/mock-google-photo",
+              mimeType: "image/png",
+              filename: "google-photo.png",
+            },
+          },
+        ],
+      });
+    }
+
+    if (
+      url.hostname === "lh3.googleusercontent.com" &&
+      url.pathname === "/p/mock-google-photo=d"
+    ) {
+      return new Response(pngBytes, {
+        status: 200,
+        headers: { "Content-Type": "image/png" },
       });
     }
 

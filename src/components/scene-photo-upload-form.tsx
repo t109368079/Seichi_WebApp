@@ -4,6 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   formatPhotoFileSize,
+  getGooglePhotosImportEndpoint,
+  getGooglePhotosPickerSessionEndpoint,
+  getGooglePhotosPickerSessionsEndpoint,
   getMaxPhotoFileSizeLabel,
   getPhotoAcceptAttribute,
   getPhotoUploadEndpoint,
@@ -13,25 +16,68 @@ import {
   maxPhotoFileSizeBytes,
 } from "@/domain/scene-photo";
 
+type PhotoSource = "local" | "google";
+
+interface GooglePickerMediaItem {
+  id: string;
+  fileName: string;
+  mimeType: string;
+  type?: string;
+  createTime?: string;
+}
+
+interface GooglePickerSessionResponse {
+  sessionId: string;
+  pickerUri: string;
+  mediaItemsSet: boolean;
+  pollIntervalMs: number;
+  timeoutMs: number;
+  expireTime?: string;
+  mediaItems?: GooglePickerMediaItem[];
+}
+
 export function ScenePhotoUploadForm({
   sceneId,
   sceneCode,
   tripId,
   tripDayId,
   tripSceneId,
+  googlePhotosImportEnabled,
+  googleConnected,
+  googlePhotosScopeGranted,
+  googleIntegrationHref,
 }: {
   sceneId: string;
   sceneCode: string;
   tripId: string;
   tripDayId: string;
   tripSceneId: string;
+  googlePhotosImportEnabled: boolean;
+  googleConnected: boolean;
+  googlePhotosScopeGranted: boolean;
+  googleIntegrationHref: string;
 }) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
+  const pollTimeoutRef = useRef<number | undefined>(undefined);
+  const [source, setSource] = useState<PhotoSource>("local");
   const [file, setFile] = useState<File | undefined>();
   const [previewUrl, setPreviewUrl] = useState<string | undefined>();
   const [message, setMessage] = useState<string | undefined>();
   const [uploading, setUploading] = useState(false);
+  const [googleSession, setGoogleSession] = useState<
+    GooglePickerSessionResponse | undefined
+  >();
+  const [googleItems, setGoogleItems] = useState<GooglePickerMediaItem[]>([]);
+  const [googlePolling, setGooglePolling] = useState(false);
+  const [googleImporting, setGoogleImporting] = useState(false);
+
+  const googleDisabledReason = getGooglePhotosDisabledReason({
+    googlePhotosImportEnabled,
+    googleConnected,
+    googlePhotosScopeGranted,
+  });
+  const selectedGoogleItem = googleItems[0];
 
   useEffect(() => {
     if (!file) {
@@ -45,6 +91,15 @@ export function ScenePhotoUploadForm({
 
     return () => URL.revokeObjectURL(url);
   }, [file]);
+
+  useEffect(() => {
+    return () => clearGooglePolling();
+  }, []);
+
+  function selectSource(nextSource: PhotoSource) {
+    setSource(nextSource);
+    setMessage(undefined);
+  }
 
   function selectFile(selected: File | undefined) {
     setMessage(undefined);
@@ -122,6 +177,191 @@ export function ScenePhotoUploadForm({
     }
   }
 
+  async function startGooglePicker() {
+    if (googleDisabledReason || googlePolling || googleImporting) {
+      if (googleDisabledReason) {
+        setMessage(googleDisabledReason);
+      }
+
+      return;
+    }
+
+    setMessage(undefined);
+    setGoogleItems([]);
+    setGoogleSession(undefined);
+    clearGooglePolling();
+
+    try {
+      const response = await fetch(getGooglePhotosPickerSessionsEndpoint(), {
+        method: "POST",
+      });
+
+      if (!response.ok) {
+        const body = (await response.json().catch(() => ({}))) as {
+          message?: string;
+        };
+        setMessage(body.message ?? "無法建立 Google 相簿選取工作階段。");
+
+        return;
+      }
+
+      const session = (await response.json()) as GooglePickerSessionResponse;
+      setGoogleSession(session);
+
+      const pickerWindow = window.open(
+        session.pickerUri,
+        "_blank",
+        "noopener,noreferrer",
+      );
+
+      setMessage(
+        pickerWindow
+          ? "已開啟 Google 相簿選取視窗。"
+          : "Google 相簿視窗沒有自動開啟，請點下方連結。",
+      );
+      startGooglePolling(
+        session.sessionId,
+        session.pollIntervalMs,
+        Date.now(),
+        session.timeoutMs,
+      );
+    } catch {
+      setMessage("無法建立 Google 相簿選取工作階段，請確認網路後重試。");
+    }
+  }
+
+  async function importGooglePhoto() {
+    if (!googleSession || !selectedGoogleItem || googleImporting) {
+      return;
+    }
+
+    setGoogleImporting(true);
+    setMessage(undefined);
+
+    try {
+      const response = await fetch(getGooglePhotosImportEndpoint(), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          sceneId,
+          tripId,
+          tripDayId,
+          pickerSessionId: googleSession.sessionId,
+          mediaItemId: selectedGoogleItem.id,
+        }),
+      });
+
+      if (!response.ok) {
+        const body = (await response.json().catch(() => ({}))) as {
+          message?: string;
+        };
+        setMessage(body.message ?? "Google 相簿照片匯入失敗。");
+        setGoogleImporting(false);
+
+        return;
+      }
+
+      router.push(`/field/${tripDayId}/${tripSceneId}`);
+      router.refresh();
+    } catch {
+      setMessage("Google 相簿照片匯入失敗，請確認網路後重試。");
+      setGoogleImporting(false);
+    }
+  }
+
+  async function cancelGoogleSession() {
+    const sessionId = googleSession?.sessionId;
+
+    clearGooglePolling();
+    setGooglePolling(false);
+    setGoogleSession(undefined);
+    setGoogleItems([]);
+    setMessage(undefined);
+
+    if (sessionId) {
+      await fetch(getGooglePhotosPickerSessionEndpoint(sessionId), {
+        method: "DELETE",
+      }).catch(() => undefined);
+    }
+  }
+
+  function startGooglePolling(
+    sessionId: string,
+    delayMs: number,
+    startedAt: number,
+    timeoutMs: number,
+  ) {
+    clearGooglePolling();
+    setGooglePolling(true);
+
+    pollTimeoutRef.current = window.setTimeout(
+      async () => {
+        try {
+          const response = await fetch(
+            getGooglePhotosPickerSessionEndpoint(sessionId),
+          );
+
+          if (!response.ok) {
+            const body = (await response.json().catch(() => ({}))) as {
+              message?: string;
+            };
+            setMessage(body.message ?? "無法讀取 Google 相簿選取狀態。");
+            setGooglePolling(false);
+
+            return;
+          }
+
+          const session =
+            (await response.json()) as GooglePickerSessionResponse;
+
+          setGoogleSession((current) =>
+            current?.sessionId === sessionId ? session : current,
+          );
+
+          if (session.mediaItemsSet) {
+            const mediaItems = session.mediaItems ?? [];
+            setGoogleItems(mediaItems);
+            setGooglePolling(false);
+            setMessage(
+              mediaItems.length > 0
+                ? "已取得 Google 相簿選取照片。"
+                : "Google 相簿沒有回傳照片，請重新選取。",
+            );
+
+            return;
+          }
+
+          if (Date.now() - startedAt >= timeoutMs) {
+            setGooglePolling(false);
+            setMessage("Google 相簿選取逾時，請重新開啟選取。");
+
+            return;
+          }
+
+          startGooglePolling(
+            sessionId,
+            session.pollIntervalMs,
+            startedAt,
+            timeoutMs,
+          );
+        } catch {
+          setGooglePolling(false);
+          setMessage("無法讀取 Google 相簿選取狀態，請確認網路後重試。");
+        }
+      },
+      Math.max(1000, delayMs),
+    );
+  }
+
+  function clearGooglePolling() {
+    if (pollTimeoutRef.current !== undefined) {
+      window.clearTimeout(pollTimeoutRef.current);
+      pollTimeoutRef.current = undefined;
+    }
+  }
+
   return (
     <div className="grid gap-5">
       <div className="rounded border border-field bg-white p-5">
@@ -144,25 +384,100 @@ export function ScenePhotoUploadForm({
       ) : null}
 
       <div className="rounded border border-rail bg-white p-5">
-        <label htmlFor="scene-photo-input" className="text-base font-semibold">
-          從本機相簿選取照片
-        </label>
-        <input
-          ref={inputRef}
-          id="scene-photo-input"
-          type="file"
-          name="photo"
-          accept={getPhotoAcceptAttribute()}
-          disabled={uploading}
-          onChange={(event) => selectFile(event.target.files?.[0])}
-          className="mt-3 block w-full text-base"
-        />
-        <p className="mt-3 text-sm leading-6 text-night">
-          支援 JPEG、PNG、WebP，單張上限 {getMaxPhotoFileSizeLabel()}。
-        </p>
+        <div
+          role="tablist"
+          aria-label="照片來源"
+          className="grid grid-cols-2 gap-2"
+        >
+          <SourceTab
+            active={source === "local"}
+            label="本地照片"
+            onClick={() => selectSource("local")}
+          />
+          <SourceTab
+            active={source === "google"}
+            label="Google 相簿"
+            onClick={() => selectSource("google")}
+          />
+        </div>
       </div>
 
-      {file && previewUrl ? (
+      {source === "local" ? (
+        <div className="rounded border border-rail bg-white p-5">
+          <label
+            htmlFor="scene-photo-input"
+            className="text-base font-semibold"
+          >
+            從本機相簿選取照片
+          </label>
+          <input
+            ref={inputRef}
+            id="scene-photo-input"
+            type="file"
+            name="photo"
+            accept={getPhotoAcceptAttribute()}
+            disabled={uploading}
+            onChange={(event) => selectFile(event.target.files?.[0])}
+            className="mt-3 block w-full text-base"
+          />
+          <p className="mt-3 text-sm leading-6 text-night">
+            支援 JPEG、PNG、WebP，單張上限 {getMaxPhotoFileSizeLabel()}。
+          </p>
+        </div>
+      ) : (
+        <div className="rounded border border-rail bg-white p-5">
+          <h2 className="text-base font-semibold">從 Google 相簿選取照片</h2>
+          <p className="mt-3 text-sm leading-6 text-night">
+            匯入時會直接存到 Google Drive 照片資料夾，不會在本機建立永久副本。
+          </p>
+
+          {googleDisabledReason ? (
+            <div className="mt-4 rounded border border-[#f1c6bb] bg-[#fff2ef] p-4 text-sm leading-6 text-signal">
+              <p>{googleDisabledReason}</p>
+              <a
+                href={googleIntegrationHref}
+                className="mt-3 inline-flex min-h-11 items-center rounded border border-[#f1c6bb] bg-white px-4 font-semibold"
+              >
+                開啟 Google 整合設定
+              </a>
+            </div>
+          ) : (
+            <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+              <button
+                type="button"
+                onClick={startGooglePicker}
+                disabled={googlePolling || googleImporting}
+                className="min-h-11 w-full rounded bg-field px-5 text-base font-semibold text-white disabled:opacity-50 sm:w-auto"
+              >
+                {googlePolling ? "等待選取…" : "開啟 Google 相簿"}
+              </button>
+              {googleSession ? (
+                <button
+                  type="button"
+                  onClick={cancelGoogleSession}
+                  disabled={googleImporting}
+                  className="min-h-11 w-full rounded border border-rail px-5 text-base font-semibold disabled:opacity-50 sm:w-auto"
+                >
+                  取消 Google 選取
+                </button>
+              ) : null}
+            </div>
+          )}
+
+          {googleSession ? (
+            <a
+              href={googleSession.pickerUri}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-4 inline-flex min-h-11 items-center rounded border border-rail px-4 text-sm font-semibold"
+            >
+              重新開啟 Google 相簿視窗
+            </a>
+          ) : null}
+        </div>
+      )}
+
+      {source === "local" && file && previewUrl ? (
         <div className="rounded border border-rail bg-white p-5">
           <h2 className="text-lg font-semibold">確認照片</h2>
           {/* Plain img: the preview source is a local object URL. */}
@@ -194,6 +509,90 @@ export function ScenePhotoUploadForm({
           </div>
         </div>
       ) : null}
+
+      {source === "google" && selectedGoogleItem ? (
+        <div className="rounded border border-rail bg-white p-5">
+          <h2 className="text-lg font-semibold">確認 Google 相簿照片</h2>
+          <p className="mt-3 break-all text-sm text-night">
+            {selectedGoogleItem.fileName} · {selectedGoogleItem.mimeType}
+            {selectedGoogleItem.createTime
+              ? ` · 拍攝於 ${formatTimestamp(selectedGoogleItem.createTime)}`
+              : ""}
+          </p>
+          <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+            <button
+              type="button"
+              onClick={importGooglePhoto}
+              disabled={googleImporting}
+              className="min-h-11 w-full rounded bg-field px-5 text-base font-semibold text-white disabled:opacity-50 sm:w-auto"
+            >
+              {googleImporting ? "匯入中…" : `匯入到 ${sceneCode}`}
+            </button>
+            <button
+              type="button"
+              onClick={cancelGoogleSession}
+              disabled={googleImporting}
+              className="min-h-11 w-full rounded border border-rail px-5 text-base font-semibold disabled:opacity-50 sm:w-auto"
+            >
+              取消選取
+            </button>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
+}
+
+function SourceTab({
+  active,
+  label,
+  onClick,
+}: {
+  active: boolean;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      role="tab"
+      aria-selected={active}
+      onClick={onClick}
+      className={`min-h-11 rounded border px-4 text-sm font-semibold ${
+        active
+          ? "border-field bg-field text-white"
+          : "border-rail bg-paper text-night"
+      }`}
+    >
+      {label}
+    </button>
+  );
+}
+
+function getGooglePhotosDisabledReason({
+  googlePhotosImportEnabled,
+  googleConnected,
+  googlePhotosScopeGranted,
+}: {
+  googlePhotosImportEnabled: boolean;
+  googleConnected: boolean;
+  googlePhotosScopeGranted: boolean;
+}): string | undefined {
+  if (!googlePhotosImportEnabled) {
+    return "Google 相簿匯入需先啟用 Google Drive 照片儲存，避免在本機留下永久副本。";
+  }
+
+  if (!googleConnected) {
+    return "請先連接 Google，才能從 Google 相簿選取照片。";
+  }
+
+  if (!googlePhotosScopeGranted) {
+    return "目前 Google 連線缺少 Photos Picker 權限，請重新連接 Google。";
+  }
+
+  return undefined;
+}
+
+function formatTimestamp(value: string): string {
+  return value.slice(0, 16).replace("T", " ");
 }

@@ -1,7 +1,9 @@
 import { afterEach, describe, expect, it } from "vitest";
 import {
   getGoogleIntegrationLabel,
+  googlePhotosPickerScope,
   googleOAuthScopes,
+  hasGooglePhotosPickerScope,
   normalizeGoogleIntegrationSettings,
 } from "@/application/google-integration";
 import {
@@ -12,6 +14,10 @@ import {
   googleFetchJson,
   setGoogleFetch,
 } from "@/infrastructure/google/google-http";
+import {
+  createGooglePhotosPickerSession,
+  downloadGooglePhotosPickedImage,
+} from "@/infrastructure/google/google-photos-picker";
 import {
   consumeGoogleLanPairingToken,
   createGoogleLanPairingToken,
@@ -34,6 +40,8 @@ describe("google integration application helpers", () => {
     expect(googleOAuthScopes).toContain(
       "https://www.googleapis.com/auth/drive.file",
     );
+    expect(googleOAuthScopes).toContain(googlePhotosPickerScope);
+    expect(hasGooglePhotosPickerScope(googleOAuthScopes)).toBe(true);
   });
 
   it("normalizes saved integration settings", () => {
@@ -60,6 +68,98 @@ describe("google integration application helpers", () => {
     expect(
       getGoogleIntegrationLabel({ configured: true, connected: true }),
     ).toBe("已連接");
+  });
+});
+
+describe("google photos picker adapter", () => {
+  afterEach(() => {
+    setGoogleFetch(undefined);
+  });
+
+  it("creates one-item picker sessions and appends autoclose", async () => {
+    let requestBody: unknown;
+    let requestUrl: URL | undefined;
+
+    setGoogleFetch(async (input, init) => {
+      requestUrl = new URL(String(input));
+      requestBody = JSON.parse(String(init?.body ?? "{}")) as unknown;
+
+      return new Response(
+        JSON.stringify({
+          id: "picker-session-1",
+          pickerUri: "https://photos.google.com/picker/session-1",
+          mediaItemsSet: false,
+          pollingConfig: {
+            pollInterval: "1.5s",
+            timeoutIn: "30s",
+          },
+        }),
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+    });
+
+    const session = await createGooglePhotosPickerSession({
+      accessToken: "access-token",
+      maxItemCount: 1,
+    });
+
+    expect(requestUrl?.origin).toBe("https://photospicker.googleapis.com");
+    expect(requestUrl?.pathname).toBe("/v1/sessions");
+    expect(requestUrl?.searchParams.get("requestId")).toMatch(
+      /^[0-9a-f-]{36}$/,
+    );
+    expect(requestBody).toEqual({
+      pickingConfig: {
+        maxItemCount: "1",
+      },
+    });
+    expect(session.pickerUri).toBe(
+      "https://photos.google.com/picker/session-1/autoclose",
+    );
+  });
+
+  it("downloads picked images with the Photos download parameter", async () => {
+    let requestedUrl = "";
+    let requestedAuthorization = "";
+
+    setGoogleFetch(async (input, init) => {
+      requestedUrl = String(input);
+      requestedAuthorization =
+        new Headers(init?.headers).get("Authorization") ?? "";
+
+      return new Response(Uint8Array.from([1, 2, 3]), {
+        status: 200,
+        headers: { "Content-Type": "image/jpeg" },
+      });
+    });
+
+    const downloaded = await downloadGooglePhotosPickedImage(
+      {
+        id: "media-1",
+        createTime: "2026-10-10T09:30:00Z",
+        type: "PHOTO",
+        mediaFile: {
+          baseUrl: "https://lh3.googleusercontent.com/p/mock-media",
+          mimeType: "image/jpeg",
+          filename: "IMG_0001.jpg",
+        },
+      },
+      "access-token",
+    );
+
+    expect(requestedUrl).toBe(
+      "https://lh3.googleusercontent.com/p/mock-media=d",
+    );
+    expect(requestedAuthorization).toBe("Bearer access-token");
+    expect(downloaded).toMatchObject({
+      bytes: Uint8Array.from([1, 2, 3]),
+      mimeType: "image/jpeg",
+      fileName: "IMG_0001.jpg",
+      capturedAt: new Date("2026-10-10T09:30:00Z"),
+    });
   });
 });
 

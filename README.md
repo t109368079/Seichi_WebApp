@@ -2,7 +2,7 @@
 
 Responsive web app for managing anime pilgrimage scenes, trips, field photo binding, review workflows, and Google-backed import/storage.
 
-Phase 8 currently provides CSV and Google Sheet scene import, Drive-backed anime reference images, an embedded Google Maps scene map, a scene catalog, trip planning, tablet field mode, mobile photo binding, optional Google Drive photo storage, and the post-trip review workflow, all backed by Prisma and PostgreSQL.
+Phase 8 currently provides CSV and Google Sheet scene import, Drive-backed anime reference images, an embedded Google Maps scene map, a scene catalog, trip planning, tablet field mode, mobile photo binding, optional Google Drive photo storage, Google Photos Picker import for field photos, and the post-trip review workflow, all backed by Prisma and PostgreSQL.
 
 ## Requirements
 
@@ -101,6 +101,8 @@ Accepted formats are JPEG, PNG, and WebP, up to 15 MB per file. The first succes
 
 Photo bytes are written through a storage adapter. The default local adapter writes to `PHOTO_STORAGE_DIR` (default `storage/scene-photos`), which is gitignored. Set `PHOTO_STORAGE_BACKEND=google-drive` to store uploaded real-world photos in Google Drive through the Phase 8 adapter; `ScenePhoto.storageFileId` stores the returned Drive file id. Uploaded photos are personal data and must never be committed.
 
+When `PHOTO_STORAGE_BACKEND=google-drive` and Google is connected with the Photos Picker scope, the field upload page can also import one selected image from Google Photos. The app uses Google Photos only as a source: it downloads the picked image in server memory, immediately stores it through the Google Drive photo storage adapter, and never persists the temporary Google Photos `baseUrl` or a local copy.
+
 Phase 7 review starts from the review queue:
 
 ```text
@@ -123,7 +125,7 @@ GOOGLE_TOKEN_ENCRYPTION_KEY
 
 `GOOGLE_TOKEN_ENCRYPTION_KEY` protects stored access and refresh tokens. It can be any strong local secret string; changing it invalidates previously stored encrypted tokens.
 
-The requested Google scopes are `openid`, `email`, `profile`, `spreadsheets.readonly`, `drive.readonly`, and `drive.file`. UI code never calls Google APIs directly: OAuth, Sheets, Drive image reads, and Drive photo storage all go through infrastructure adapters.
+The requested Google scopes are `openid`, `email`, `profile`, `spreadsheets.readonly`, `drive.readonly`, `drive.file`, and `photospicker.mediaitems.readonly`. UI code never calls Google APIs directly: OAuth, Sheets, Drive image reads, Drive photo storage, and Google Photos Picker imports all go through infrastructure adapters.
 
 Optional settings:
 
@@ -134,6 +136,8 @@ GOOGLE_MAPS_EMBED_API_KEY=<restricted-maps-embed-api-key>
 ```
 
 `GOOGLE_PHOTO_FOLDER_ID` is a fallback for the app settings page's Drive photo folder id. `GOOGLE_MAPS_EMBED_API_KEY` is optional for local testing but recommended for a restricted, official Google Maps Embed API iframe. Automated tests use mocks and never connect to production Google data.
+
+Google Photos import requires the Google Photos Picker API to be enabled in the same Google Cloud project. Existing Google connections created before the Photos Picker scope was added must be reconnected once so Google grants the new scope.
 
 ## Verification
 

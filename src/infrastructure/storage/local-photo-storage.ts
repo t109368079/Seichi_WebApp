@@ -107,12 +107,22 @@ function isNotFound(error: unknown): boolean {
 
 let defaultAdapter: PhotoStorageAdapter | undefined;
 
+export function getPhotoStorageBackend(): "google-drive" | "local" {
+  return process.env.PHOTO_STORAGE_BACKEND === "google-drive"
+    ? "google-drive"
+    : "local";
+}
+
+export function isGoogleDrivePhotoStorageEnabled(): boolean {
+  return getPhotoStorageBackend() === "google-drive";
+}
+
 export function getPhotoStorage(sessionToken?: string): PhotoStorageAdapter {
   if (defaultAdapter) {
     return defaultAdapter;
   }
 
-  if (process.env.PHOTO_STORAGE_BACKEND === "google-drive") {
+  if (isGoogleDrivePhotoStorageEnabled()) {
     return new GoogleDrivePhotoStorage(sessionToken);
   }
 
