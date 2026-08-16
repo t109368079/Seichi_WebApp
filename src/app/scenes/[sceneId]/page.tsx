@@ -243,6 +243,15 @@ function SceneEditableFieldsForm({
           />
         </label>
 
+        <label className="grid gap-2 text-sm font-medium">
+          備註
+          <textarea
+            name="notes"
+            defaultValue={scene.notes ?? ""}
+            className="min-h-24 rounded border border-rail bg-paper px-3 py-3 text-sm"
+          />
+        </label>
+
         <button
           type="submit"
           className="min-h-11 w-fit rounded bg-field px-5 text-sm font-semibold text-white"

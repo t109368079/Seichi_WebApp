@@ -45,6 +45,7 @@ export interface SceneEditableFieldsFormInput {
   latitude: string;
   longitude: string;
   mapsUrl: string;
+  notes: string;
 }
 
 export interface SceneCreateFormInput {
@@ -67,6 +68,7 @@ export interface SceneEditableFieldsUpdate {
   latitude: number | null;
   longitude: number | null;
   mapsUrl?: string;
+  notes: string | null;
 }
 
 export interface SceneCreateInput {
@@ -93,12 +95,14 @@ export function normalizeSceneEditableFields(
   }
 
   const areaName = input.areaName.trim() || undefined;
+  const notes = input.notes.trim() || null;
   const navigation = normalizeSceneNavigationFields(input);
 
   return {
     locationName,
     areaName,
     ...navigation,
+    notes,
   };
 }
 

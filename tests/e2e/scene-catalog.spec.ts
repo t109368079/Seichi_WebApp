@@ -119,6 +119,7 @@ test("scene detail edits location, coordinates, and map URL", async ({
   await page
     .getByLabel("地圖 URL")
     .fill("https://maps.google.com/?q=35.73263,139.72862");
+  await page.getByLabel("備註").fill("Updated E2E framing note.");
   await page.getByRole("button", { name: "儲存變更" }).click();
 
   await expect(page.getByText("場景資料已更新。")).toBeVisible();
@@ -134,12 +135,20 @@ test("scene detail edits location, coordinates, and map URL", async ({
     "href",
     "https://maps.google.com/?q=35.73263,139.72862",
   );
+  await expect(
+    page
+      .getByRole("definition")
+      .filter({ hasText: "Updated E2E framing note." }),
+  ).toBeVisible();
 
   await page.getByLabel("地點名稱").fill("Toden Otsuka Platform");
   await page.getByLabel("區域").fill("Otsuka");
   await page.getByLabel("緯度").fill("35.73192");
   await page.getByLabel("經度").fill("139.72831");
   await page.getByLabel("地圖 URL").fill("");
+  await page
+    .getByLabel("備註")
+    .fill("Tram platform cut with static demo Drive reference.");
   await page.getByRole("button", { name: "儲存變更" }).click();
 
   await expect(page.getByText("場景資料已更新。")).toBeVisible();
@@ -152,4 +161,9 @@ test("scene detail edits location, coordinates, and map URL", async ({
     "href",
     "https://www.google.com/maps/dir/?api=1&destination=35.73192,139.72831",
   );
+  await expect(
+    page.getByRole("definition").filter({
+      hasText: "Tram platform cut with static demo Drive reference.",
+    }),
+  ).toBeVisible();
 });

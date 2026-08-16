@@ -250,6 +250,7 @@ export async function updateSceneEditableFields(
         latitude: input.latitude,
         longitude: input.longitude,
         mapsUrl: input.mapsUrl ?? null,
+        notes: input.notes,
       },
       include: {
         work: true,

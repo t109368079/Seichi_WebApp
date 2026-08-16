@@ -57,6 +57,7 @@ export async function updateSceneDetailsAction(
       latitude: readFormValue(formData, "latitude"),
       longitude: readFormValue(formData, "longitude"),
       mapsUrl: readFormValue(formData, "mapsUrl"),
+      notes: readFormValue(formData, "notes"),
     });
 
     await updateSceneEditableFields(sceneId, input);

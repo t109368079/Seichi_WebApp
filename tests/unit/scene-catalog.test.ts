@@ -138,6 +138,7 @@ describe("scene catalog editable fields", () => {
         latitude: "35.73028",
         longitude: "139.71145",
         mapsUrl: " https://maps.google.com/?q=35.73028,139.71145 ",
+        notes: "  Bring a wider lens.  ",
       }),
     ).toEqual({
       locationName: "New Station Gate",
@@ -145,6 +146,7 @@ describe("scene catalog editable fields", () => {
       latitude: 35.73028,
       longitude: 139.71145,
       mapsUrl: "https://maps.google.com/?q=35.73028,139.71145",
+      notes: "Bring a wider lens.",
     });
   });
 
@@ -156,6 +158,7 @@ describe("scene catalog editable fields", () => {
         latitude: "",
         longitude: "",
         mapsUrl: "https://maps.app.goo.gl/example",
+        notes: "",
       }),
     ).toEqual({
       locationName: "URL Only Place",
@@ -163,6 +166,7 @@ describe("scene catalog editable fields", () => {
       latitude: null,
       longitude: null,
       mapsUrl: "https://maps.app.goo.gl/example",
+      notes: null,
     });
   });
 
@@ -174,6 +178,7 @@ describe("scene catalog editable fields", () => {
         latitude: "35.73028",
         longitude: "139.71145",
         mapsUrl: "",
+        notes: "",
       }),
     ).toThrow("Scene location name is required.");
 
@@ -184,6 +189,7 @@ describe("scene catalog editable fields", () => {
         latitude: "35.73028",
         longitude: "",
         mapsUrl: "",
+        notes: "",
       }),
     ).toThrow("Scene latitude and longitude must be provided together.");
 
@@ -194,6 +200,7 @@ describe("scene catalog editable fields", () => {
         latitude: "91",
         longitude: "139.71145",
         mapsUrl: "",
+        notes: "",
       }),
     ).toThrow("Invalid latitude: 91");
 
@@ -204,6 +211,7 @@ describe("scene catalog editable fields", () => {
         latitude: "",
         longitude: "",
         mapsUrl: "",
+        notes: "",
       }),
     ).toThrow("Scene requires either coordinates or mapsUrl.");
   });

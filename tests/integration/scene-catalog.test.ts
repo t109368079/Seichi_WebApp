@@ -310,6 +310,7 @@ describe("scene catalog repository", () => {
         latitude: 35.73123,
         longitude: 139.71234,
         mapsUrl: "https://maps.google.com/?q=35.73123,139.71234",
+        notes: "Edited note for integration coverage.",
       });
 
       expect(updated.location).toMatchObject({
@@ -321,6 +322,7 @@ describe("scene catalog repository", () => {
       expect(updated.mapsUrl).toBe(
         "https://maps.google.com/?q=35.73123,139.71234",
       );
+      expect(updated.notes).toBe("Edited note for integration coverage.");
 
       const originalLocation = await prisma.location.findUniqueOrThrow({
         where: {
@@ -346,6 +348,7 @@ describe("scene catalog repository", () => {
         latitude: original.latitude,
         longitude: original.longitude,
         mapsUrl: original.mapsUrl ?? undefined,
+        notes: original.notes,
       });
       await prisma.location.deleteMany({
         where: {
