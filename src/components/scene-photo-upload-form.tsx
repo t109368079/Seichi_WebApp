@@ -364,10 +364,8 @@ export function ScenePhotoUploadForm({
 
   return (
     <div className="grid gap-5">
-      <div className="rounded border border-field bg-white p-5">
-        <p className="text-sm font-semibold uppercase tracking-wide text-field">
-          上傳目標場景
-        </p>
+      <div className="rounded border border-field bg-white/95 p-5 shadow-sm">
+        <p className="text-sm font-semibold text-field">上傳目標場景</p>
         <p className="mt-2 text-2xl font-semibold">{sceneCode}</p>
         <p className="mt-2 text-sm leading-6 text-night">
           照片會永久綁定這個場景，且不會覆蓋任何既有 Take。
@@ -377,13 +375,13 @@ export function ScenePhotoUploadForm({
       {message ? (
         <p
           role="alert"
-          className="rounded border border-rail bg-white p-4 text-sm font-semibold text-night"
+          className="rounded border border-rail bg-white/95 p-4 shadow-sm text-sm font-semibold text-night"
         >
           {message}
         </p>
       ) : null}
 
-      <div className="rounded border border-rail bg-white p-5">
+      <div className="rounded border border-rail bg-white/95 p-5 shadow-sm">
         <div
           role="tablist"
           aria-label="照片來源"
@@ -403,7 +401,7 @@ export function ScenePhotoUploadForm({
       </div>
 
       {source === "local" ? (
-        <div className="rounded border border-rail bg-white p-5">
+        <div className="rounded border border-rail bg-white/95 p-5 shadow-sm">
           <label
             htmlFor="scene-photo-input"
             className="text-base font-semibold"
@@ -425,7 +423,7 @@ export function ScenePhotoUploadForm({
           </p>
         </div>
       ) : (
-        <div className="rounded border border-rail bg-white p-5">
+        <div className="rounded border border-rail bg-white/95 p-5 shadow-sm">
           <h2 className="text-base font-semibold">從 Google 相簿選取照片</h2>
           <p className="mt-3 text-sm leading-6 text-night">
             匯入時會直接存到 Google Drive 照片資料夾，不會在本機建立永久副本。
@@ -478,7 +476,7 @@ export function ScenePhotoUploadForm({
       )}
 
       {source === "local" && file && previewUrl ? (
-        <div className="rounded border border-rail bg-white p-5">
+        <div className="rounded border border-rail bg-white/95 p-5 shadow-sm">
           <h2 className="text-lg font-semibold">確認照片</h2>
           {/* Plain img: the preview source is a local object URL. */}
           <img
@@ -511,7 +509,7 @@ export function ScenePhotoUploadForm({
       ) : null}
 
       {source === "google" && selectedGoogleItem ? (
-        <div className="rounded border border-rail bg-white p-5">
+        <div className="rounded border border-rail bg-white/95 p-5 shadow-sm">
           <h2 className="text-lg font-semibold">確認 Google 相簿照片</h2>
           <p className="mt-3 break-all text-sm text-night">
             {selectedGoogleItem.fileName} · {selectedGoogleItem.mimeType}

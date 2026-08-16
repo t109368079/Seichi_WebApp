@@ -35,12 +35,12 @@ export function SceneImportForm({
 
   return (
     <div className="grid gap-5">
-      <section className="rounded border border-rail bg-white p-5">
-        <h2 className="text-lg font-semibold">CSV 格式 v1</h2>
+      <section className="rounded border border-rail bg-white/95 p-5 shadow-sm">
+        <h2 className="text-lg font-semibold">場景資料欄位</h2>
         <div className="mt-4 overflow-x-auto">
           <table className="w-full min-w-[42rem] border-collapse text-left text-sm">
             <thead>
-              <tr className="border-b border-rail text-xs uppercase tracking-wide text-night">
+              <tr className="border-b border-rail text-xs text-night">
                 <th className="py-2 pr-4 font-semibold">欄位</th>
                 <th className="py-2 pr-4 font-semibold">必填</th>
               </tr>
@@ -59,7 +59,7 @@ export function SceneImportForm({
         </div>
       </section>
 
-      <section className="rounded border border-rail bg-white p-5">
+      <section className="rounded border border-rail bg-white/95 p-5 shadow-sm">
         <form action={formAction} className="grid gap-4">
           <input type="hidden" name="intent" value="preview-csv" />
           <label className="grid gap-2 text-sm font-medium">
@@ -81,7 +81,7 @@ export function SceneImportForm({
         </form>
       </section>
 
-      <section className="rounded border border-rail bg-white p-5">
+      <section className="rounded border border-rail bg-white/95 p-5 shadow-sm">
         <div className="flex flex-col gap-3 border-b border-rail pb-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h2 className="text-lg font-semibold">Google Sheet</h2>
@@ -196,7 +196,7 @@ function SceneImportPreviewPanel({
       {preview.rows.length > 0 ? <SceneImportRows rows={preview.rows} /> : null}
 
       {committed ? (
-        <div className="rounded border border-rail bg-white p-5">
+        <div className="rounded border border-rail bg-white/95 p-5 shadow-sm">
           <h2 className="text-lg font-semibold">匯入完成</h2>
           <Link
             href="/scenes"
@@ -208,7 +208,7 @@ function SceneImportPreviewPanel({
       ) : preview.canCommit ? (
         <form
           action={formAction}
-          className="rounded border border-rail bg-white p-5"
+          className="rounded border border-rail bg-white/95 p-5 shadow-sm"
         >
           <input
             type="hidden"
@@ -251,10 +251,8 @@ function SceneImportPreviewPanel({
 
 function ImportStat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded border border-rail bg-white p-4">
-      <p className="text-xs font-semibold uppercase tracking-wide text-night">
-        {label}
-      </p>
+    <div className="rounded border border-rail bg-white/95 p-4 shadow-sm">
+      <p className="text-xs font-semibold text-night">{label}</p>
       <p className="mt-1 text-2xl font-semibold">{value}</p>
     </div>
   );
@@ -268,13 +266,13 @@ function SceneImportErrors({
   return (
     <section
       aria-label="匯入錯誤"
-      className="rounded border border-[#f1c6bb] bg-white p-5"
+      className="rounded border border-[#f1c6bb] bg-white/95 p-5 shadow-sm"
     >
       <h2 className="text-lg font-semibold text-signal">錯誤</h2>
       <div className="mt-4 overflow-x-auto">
         <table className="w-full min-w-[42rem] border-collapse text-left text-sm">
           <thead>
-            <tr className="border-b border-rail text-xs uppercase tracking-wide text-night">
+            <tr className="border-b border-rail text-xs text-night">
               <th className="py-2 pr-4 font-semibold">列</th>
               <th className="py-2 pr-4 font-semibold">欄位</th>
               <th className="py-2 pr-4 font-semibold">訊息</th>
@@ -302,13 +300,13 @@ function SceneImportRows({ rows }: { rows: SceneImportPreview["rows"] }) {
   return (
     <section
       aria-label="匯入資料列"
-      className="rounded border border-rail bg-white p-5"
+      className="rounded border border-rail bg-white/95 p-5 shadow-sm"
     >
       <h2 className="text-lg font-semibold">資料列</h2>
       <div className="mt-4 overflow-x-auto">
         <table className="w-full min-w-[58rem] border-collapse text-left text-sm">
           <thead>
-            <tr className="border-b border-rail text-xs uppercase tracking-wide text-night">
+            <tr className="border-b border-rail text-xs text-night">
               <th className="py-2 pr-4 font-semibold">動作</th>
               <th className="py-2 pr-4 font-semibold">場景</th>
               <th className="py-2 pr-4 font-semibold">作品</th>

@@ -46,11 +46,11 @@ export default async function SceneDetailPage({
 
   return (
     <main className="min-h-screen bg-paper text-ink">
-      <header className="border-b border-rail bg-white">
+      <header className="border-b border-rail bg-[#fff8ed]">
         <div className="mx-auto w-full max-w-4xl px-5 py-7">
           <Link
             href={tripDayContext ? `/scenes?tripDayId=${tripDayId}` : "/scenes"}
-            className="text-sm font-semibold uppercase tracking-wide text-field"
+            className="text-sm font-semibold text-field"
           >
             返回場景目錄
           </Link>
@@ -58,7 +58,7 @@ export default async function SceneDetailPage({
             {scene.sceneCode}
           </h1>
           <p className="mt-3 text-sm leading-6 text-night">
-            {scene.work.name} 的永久場景身份。
+            {scene.work.name} 的這一幕，包含地點、導航、備註與動畫參考。
           </p>
         </div>
       </header>
@@ -70,7 +70,7 @@ export default async function SceneDetailPage({
         <TripDayContextBanner context={tripDayContext} />
         <AnimeReferencePanel scene={scene} />
         {sceneMessage ? <SceneMessage message={sceneMessage} /> : null}
-        <div className="rounded border border-rail bg-white p-5">
+        <div className="rounded border border-rail bg-white/95 p-5 shadow-sm">
           <div className="flex flex-col gap-3 border-b border-rail pb-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <h2 className="text-xl font-semibold">{scene.work.name}</h2>
@@ -78,7 +78,7 @@ export default async function SceneDetailPage({
                 {scene.episode ? `第 ${scene.episode} 集` : "未設定集數"}
               </p>
             </div>
-            <span className="w-fit rounded border border-rail bg-paper px-3 py-1 text-xs font-semibold uppercase tracking-wide text-night">
+            <span className="w-fit rounded border border-rail bg-paper px-3 py-1 text-xs font-semibold text-night">
               {getSceneStatusLabel(scene.status)}
             </span>
           </div>

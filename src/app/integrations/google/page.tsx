@@ -43,20 +43,18 @@ export default async function GoogleIntegrationPage({
 
   return (
     <main className="min-h-screen bg-paper text-ink">
-      <header className="border-b border-rail bg-white">
+      <header className="border-b border-rail bg-[#fff8ed]">
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-5 py-7 md:flex-row md:items-end md:justify-between">
           <div>
-            <Link
-              href="/"
-              className="text-sm font-semibold uppercase tracking-wide text-field"
-            >
+            <Link href="/" className="text-sm font-semibold text-field">
               聖地巡禮
             </Link>
             <h1 className="mt-3 text-3xl font-semibold md:text-4xl">
               Google 整合
             </h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-night">
-              管理 Google Sheet 匯入與 Drive 圖片、照片儲存的連線設定。
+              連上你的 Sheet 與
+              Drive，讓動畫截圖、場景資料和現地照片接回同一本手帳。
             </p>
           </div>
           <Link
@@ -69,7 +67,7 @@ export default async function GoogleIntegrationPage({
       </header>
 
       <div className="mx-auto grid w-full max-w-6xl gap-5 px-5 py-6 lg:grid-cols-[minmax(0,2fr)_minmax(18rem,1fr)]">
-        <section className="rounded border border-rail bg-white p-5">
+        <section className="rounded border border-rail bg-white/95 p-5 shadow-sm">
           <div className="flex flex-col gap-4 border-b border-rail pb-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <h2 className="text-lg font-semibold">連線狀態</h2>
@@ -158,7 +156,7 @@ export default async function GoogleIntegrationPage({
           ) : null}
         </section>
 
-        <section className="rounded border border-rail bg-white p-5">
+        <section className="rounded border border-rail bg-white/95 p-5 shadow-sm">
           <h2 className="text-lg font-semibold">整合設定</h2>
           <form action={saveGoogleSettingsAction} className="mt-4 grid gap-4">
             <TextInput

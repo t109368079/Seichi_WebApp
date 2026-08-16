@@ -11,20 +11,17 @@ export default async function TripsPage() {
 
   return (
     <main className="min-h-screen bg-paper text-ink">
-      <header className="border-b border-rail bg-white">
+      <header className="border-b border-rail bg-[#fff8ed]">
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-5 py-7 md:flex-row md:items-end md:justify-between">
           <div>
-            <Link
-              href="/"
-              className="text-sm font-semibold uppercase tracking-wide text-field"
-            >
+            <Link href="/" className="text-sm font-semibold text-field">
               聖地巡禮
             </Link>
             <h1 className="mt-3 text-3xl font-semibold md:text-4xl">
               旅行規劃
             </h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-night">
-              建立旅行、安排每日場景，並保留你手動決定的拍攝順序。
+              把一天拆成一格格分鏡，手動排好順序，現地就照著節奏往前走。
             </p>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row">
@@ -45,7 +42,7 @@ export default async function TripsPage() {
       </header>
 
       <div className="mx-auto grid w-full max-w-6xl gap-5 px-5 py-6 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
-        <section className="h-fit rounded border border-rail bg-white p-5">
+        <section className="h-fit rounded border border-rail bg-white/95 p-5 shadow-sm">
           <h2 className="text-lg font-semibold">建立旅行</h2>
           <div className="mt-4">
             <TripCreateForm />
@@ -54,7 +51,7 @@ export default async function TripsPage() {
 
         <section aria-label="旅行列表" className="grid min-w-0 gap-4">
           {trips.length === 0 ? (
-            <div className="rounded border border-rail bg-white p-6">
+            <div className="rounded border border-rail bg-white/95 p-6 shadow-sm">
               <h2 className="text-lg font-semibold">尚未建立旅行</h2>
               <p className="mt-2 text-sm leading-6 text-night">
                 建立第一趟旅行後，就可以把場景加入指定日期並手動排序。
@@ -64,7 +61,7 @@ export default async function TripsPage() {
             trips.map((trip) => (
               <article
                 key={trip.id}
-                className="rounded border border-rail bg-white p-5"
+                className="rounded border border-rail bg-white/95 p-5 shadow-sm"
               >
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                   <div>

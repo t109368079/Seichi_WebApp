@@ -36,20 +36,18 @@ export default async function LocationPage({
 
   return (
     <main className="min-h-screen bg-paper text-ink">
-      <header className="border-b border-rail bg-white">
+      <header className="border-b border-rail bg-[#fff8ed]">
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-5 py-7 md:flex-row md:items-end md:justify-between">
           <div>
-            <Link
-              href="/scenes"
-              className="text-sm font-semibold uppercase tracking-wide text-field"
-            >
+            <Link href="/scenes" className="text-sm font-semibold text-field">
               返回場景目錄
             </Link>
             <h1 className="mt-3 text-3xl font-semibold md:text-4xl">
               {data.location.name}
             </h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-night">
-              {data.location.areaName ?? "未設定地區"} 的場景清單。
+              {data.location.areaName ?? "未設定地區"}{" "}
+              這一帶可以順路收下的場景。
             </p>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row">
@@ -75,7 +73,7 @@ export default async function LocationPage({
           {data.scenes.map((scene) => (
             <article
               key={scene.id}
-              className="rounded border border-rail bg-white p-5"
+              className="rounded border border-rail bg-white/95 p-5 shadow-sm"
             >
               <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                 <div>
@@ -96,7 +94,7 @@ export default async function LocationPage({
                   </p>
                 </div>
                 <div className="flex flex-col gap-2 sm:flex-row md:flex-col">
-                  <span className="flex min-h-10 w-fit items-center rounded border border-rail bg-paper px-3 text-xs font-semibold uppercase tracking-wide text-night">
+                  <span className="flex min-h-10 w-fit items-center rounded border border-rail bg-paper px-3 text-xs font-semibold text-night">
                     {getSceneStatusLabel(scene.status)}
                   </span>
                   {data.tripDayContext ? (

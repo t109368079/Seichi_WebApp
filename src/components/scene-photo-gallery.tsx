@@ -24,7 +24,7 @@ export function ScenePhotoGallery({
   return (
     <section
       aria-label={`${sceneCode} 實景照片`}
-      className="rounded border border-rail bg-white p-5"
+      className="rounded border border-rail bg-white/95 p-5 shadow-sm"
     >
       <div className="flex flex-col gap-3 border-b border-rail pb-4 sm:flex-row sm:items-center sm:justify-between">
         <div>

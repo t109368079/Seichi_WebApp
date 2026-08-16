@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { AppSidebar } from "@/components/app-sidebar";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -13,7 +14,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh-Hant">
-      <body>{children}</body>
+      <body>
+        <div className="min-h-screen bg-paper text-ink md:grid md:grid-cols-[14rem_minmax(0,1fr)]">
+          <AppSidebar />
+          <div className="min-w-0">{children}</div>
+        </div>
+      </body>
     </html>
   );
 }

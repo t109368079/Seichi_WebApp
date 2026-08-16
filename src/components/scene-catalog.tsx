@@ -54,12 +54,12 @@ export function SceneCatalog({
 }: SceneCatalogProps) {
   return (
     <main className="min-h-screen bg-paper text-ink">
-      <header className="border-b border-rail bg-white">
+      <header className="border-b border-rail bg-[#fff8ed]">
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-5 py-7 md:flex-row md:items-end md:justify-between">
           <div>
             <Link
               href="/"
-              className="text-sm font-semibold uppercase tracking-wide text-field"
+              className="text-sm font-semibold text-field"
             >
               聖地巡禮
             </Link>
@@ -67,7 +67,7 @@ export function SceneCatalog({
               場景目錄
             </h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-night">
-              依作品與地點瀏覽永久場景身份。
+              像翻分鏡卡一樣整理作品、地點與拍攝狀態，出門前先把每一幕放好。
             </p>
           </div>
           <div className="grid gap-3">
@@ -76,30 +76,32 @@ export function SceneCatalog({
               <CatalogStat label="總數" value={totalSceneCount.toString()} />
               <CatalogStat label="作品" value={works.length.toString()} />
             </div>
-            <Link
-              href="/scenes/new"
-              className="flex min-h-10 w-fit items-center rounded bg-field px-4 text-sm font-semibold text-white"
-            >
-              新增場景
-            </Link>
-            <Link
-              href="/imports/scenes"
-              className="flex min-h-10 w-fit items-center rounded border border-rail px-4 text-sm font-semibold"
-            >
-              匯入場景
-            </Link>
-            <Link
-              href={buildMapHref(filters, tripDayContext?.tripDayId)}
-              className="flex min-h-10 w-fit items-center rounded border border-rail px-4 text-sm font-semibold"
-            >
-              地圖檢視
-            </Link>
-            <Link
-              href="/trips"
-              className="flex min-h-10 w-fit items-center rounded border border-rail px-4 text-sm font-semibold"
-            >
-              旅行規劃
-            </Link>
+            <div className="flex flex-wrap gap-2">
+              <Link
+                href="/scenes/new"
+                className="flex min-h-10 w-fit items-center rounded bg-field px-4 text-sm font-semibold text-white"
+              >
+                新增場景
+              </Link>
+              <Link
+                href="/imports/scenes"
+                className="flex min-h-10 w-fit items-center rounded border border-rail px-4 text-sm font-semibold"
+              >
+                匯入場景
+              </Link>
+              <Link
+                href={buildMapHref(filters, tripDayContext?.tripDayId)}
+                className="flex min-h-10 w-fit items-center rounded border border-rail px-4 text-sm font-semibold"
+              >
+                地圖檢視
+              </Link>
+              <Link
+                href="/trips"
+                className="flex min-h-10 w-fit items-center rounded border border-rail px-4 text-sm font-semibold"
+              >
+                旅行規劃
+              </Link>
+            </div>
           </div>
         </div>
       </header>
@@ -116,7 +118,7 @@ export function SceneCatalog({
           <TripDayContextBanner context={tripDayContext} />
           {sceneMessage ? <SceneCatalogMessage message={sceneMessage} /> : null}
           {scenes.length === 0 ? (
-            <div className="rounded border border-rail bg-white p-6">
+            <div className="rounded border border-rail bg-white/95 p-6 shadow-sm">
               <h2 className="text-lg font-semibold">沒有符合的場景</h2>
               <p className="mt-2 text-sm leading-6 text-night">
                 請清除篩選，或改用其他作品、地點與狀態組合。
@@ -141,7 +143,7 @@ export function SceneCatalog({
 function CatalogStat({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded border border-rail bg-paper px-4 py-3">
-      <p className="text-xs font-semibold uppercase tracking-wide text-night">
+      <p className="text-xs font-semibold text-night">
         {label}
       </p>
       <p className="mt-1 text-xl font-semibold">{value}</p>
@@ -180,7 +182,7 @@ function SceneFilterForm({
     >
       <form
         action="/scenes"
-        className="grid min-w-0 gap-4 rounded border border-rail bg-white p-4"
+        className="grid min-w-0 gap-4 rounded border border-rail bg-white/95 p-4 shadow-sm"
       >
         {tripDayId ? (
           <input type="hidden" name="tripDayId" value={tripDayId} />
@@ -268,7 +270,7 @@ function SceneCard({
   returnTo: string;
 }) {
   return (
-    <article className="rounded border border-rail bg-white p-4">
+    <article className="rounded border border-rail bg-white/95 p-4 shadow-sm">
       <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div className="min-w-0">
           <Link
@@ -286,7 +288,7 @@ function SceneCard({
         </div>
         <div className="flex flex-col gap-2 sm:items-end">
           <span
-            className={`w-fit rounded border px-3 py-1 text-xs font-semibold uppercase tracking-wide ${statusTone[scene.status]}`}
+            className={`w-fit rounded border px-3 py-1 text-xs font-semibold ${statusTone[scene.status]}`}
           >
             {getSceneStatusLabel(scene.status)}
           </span>

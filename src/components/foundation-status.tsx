@@ -9,7 +9,7 @@ export function FoundationStatus({ checks, summary }: FoundationStatusProps) {
   return (
     <section
       aria-label="基礎工程狀態"
-      className="rounded border border-rail bg-white p-5"
+      className="rounded border border-rail bg-white/95 p-5 shadow-sm"
     >
       <div className="flex flex-col gap-3 border-b border-rail pb-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -30,7 +30,7 @@ export function FoundationStatus({ checks, summary }: FoundationStatusProps) {
             className="flex items-center justify-between gap-4 rounded border border-rail px-4 py-3"
           >
             <span className="text-sm font-medium">{check.label}</span>
-            <span className="text-xs font-semibold uppercase tracking-wide text-field">
+            <span className="text-xs font-semibold text-field">
               {getFoundationStatusLabel(check.status)}
             </span>
           </li>

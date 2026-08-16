@@ -9,7 +9,7 @@ export function FieldDayItinerary({ day }: { day: FieldDayView }) {
     <div className="mx-auto grid w-full max-w-5xl gap-5 px-5 py-6">
       <section
         aria-label="今日進度"
-        className="rounded border border-rail bg-white p-5"
+        className="rounded border border-rail bg-white/95 p-5 shadow-sm"
       >
         <h2 className="text-lg font-semibold">今日進度</h2>
         <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-5">
@@ -26,7 +26,7 @@ export function FieldDayItinerary({ day }: { day: FieldDayView }) {
           {day.scenes.map((item, index) => (
             <li
               key={item.id}
-              className="rounded border border-rail bg-white p-5"
+              className="rounded border border-rail bg-white/95 p-5 shadow-sm"
             >
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div className="min-w-0">
@@ -66,7 +66,7 @@ export function FieldDayItinerary({ day }: { day: FieldDayView }) {
           ))}
         </ol>
       ) : (
-        <div className="rounded border border-rail bg-white p-6 text-base leading-7 text-night">
+        <div className="rounded border border-rail bg-white/95 p-6 shadow-sm text-base leading-7 text-night">
           這一天還沒有場景。請先回到旅行規劃，從場景目錄或地圖加入場景。
         </div>
       )}
@@ -83,9 +83,7 @@ function FieldStat({
 }) {
   return (
     <div className="rounded border border-rail bg-paper p-4">
-      <dt className="text-xs font-semibold uppercase tracking-wide text-night">
-        {label}
-      </dt>
+      <dt className="text-xs font-semibold text-night">{label}</dt>
       <dd className="mt-1 text-xl font-semibold">{value}</dd>
     </div>
   );

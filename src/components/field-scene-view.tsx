@@ -32,7 +32,7 @@ export function FieldSceneView({
       {message ? (
         <p
           role="status"
-          className="rounded border border-rail bg-white p-4 text-sm font-semibold text-night"
+          className="rounded border border-rail bg-white/95 p-4 shadow-sm text-sm font-semibold text-night"
         >
           {message}
         </p>
@@ -42,7 +42,7 @@ export function FieldSceneView({
         <AnimeReferencePanel scene={scene} />
 
         <div className="grid content-start gap-5">
-          <section className="rounded border border-rail bg-white p-5">
+          <section className="rounded border border-rail bg-white/95 p-5 shadow-sm">
             <div className="flex flex-col gap-3 border-b border-rail pb-4 sm:flex-row sm:items-start sm:justify-between">
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-night">
@@ -94,7 +94,7 @@ export function FieldSceneView({
             </div>
           </section>
 
-          <section className="rounded border border-rail bg-white p-5">
+          <section className="rounded border border-rail bg-white/95 p-5 shadow-sm">
             <h2 className="text-lg font-semibold">現地狀態</h2>
             <div className="mt-4">
               <FieldStatusActions

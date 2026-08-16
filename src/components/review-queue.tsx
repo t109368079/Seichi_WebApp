@@ -41,20 +41,17 @@ export function ReviewQueue({
 }) {
   return (
     <main className="min-h-screen bg-paper text-ink">
-      <header className="border-b border-rail bg-white">
+      <header className="border-b border-rail bg-[#fff8ed]">
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-5 py-7 md:flex-row md:items-end md:justify-between">
           <div>
-            <Link
-              href="/"
-              className="text-sm font-semibold uppercase tracking-wide text-field"
-            >
+            <Link href="/" className="text-sm font-semibold text-field">
               聖地巡禮
             </Link>
             <h1 className="mt-3 text-3xl font-semibold md:text-4xl">
               審核佇列
             </h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-night">
-              依既有 Scene 綁定檢查 Take、選出最佳照片，並完成 Review 狀態。
+              回來後把每張 Take 和分鏡放在一起看，選出最接近那一幕的照片。
             </p>
           </div>
           <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-3">
@@ -77,7 +74,7 @@ export function ReviewQueue({
           <ReviewBucketStats summary={summary} />
 
           {items.length === 0 ? (
-            <div className="rounded border border-rail bg-white p-6">
+            <div className="rounded border border-rail bg-white/95 p-6 shadow-sm">
               <h2 className="text-lg font-semibold">沒有符合的場景</h2>
               <p className="mt-2 text-sm leading-6 text-night">
                 請清除篩選，或改用其他作品、地點、行程與審核分類。
@@ -111,10 +108,8 @@ function ReviewBucketStats({ summary }: { summary: ReviewQueueSummary }) {
 
 function ReviewStat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded border border-rail bg-white px-4 py-3">
-      <p className="text-xs font-semibold uppercase tracking-wide text-night">
-        {label}
-      </p>
+    <div className="rounded border border-rail bg-[#fff8ed] px-4 py-3 shadow-sm">
+      <p className="text-xs font-semibold text-night">{label}</p>
       <p className="mt-1 text-xl font-semibold">{value}</p>
     </div>
   );
@@ -149,7 +144,7 @@ function ReviewFilterForm({
     >
       <form
         action="/reviews"
-        className="grid min-w-0 gap-4 rounded border border-rail bg-white p-4"
+        className="grid min-w-0 gap-4 rounded border border-rail bg-white/95 p-4 shadow-sm"
       >
         <h2 className="text-base font-semibold">篩選條件</h2>
 
@@ -262,7 +257,7 @@ function ReviewQueueCard({ item }: { item: ReviewQueueItem }) {
   const scene = item.scene;
 
   return (
-    <article className="rounded border border-rail bg-white p-4">
+    <article className="rounded border border-rail bg-white/95 p-4 shadow-sm">
       <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div className="min-w-0">
           <Link
@@ -277,7 +272,7 @@ function ReviewQueueCard({ item }: { item: ReviewQueueItem }) {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <span className="w-fit rounded border border-rail bg-paper px-3 py-1 text-xs font-semibold uppercase tracking-wide text-night">
+          <span className="w-fit rounded border border-rail bg-paper px-3 py-1 text-xs font-semibold text-night">
             {getSceneStatusReviewLabel(scene.status)}
           </span>
           {item.photoCount > 0 && !item.hasBestPhoto ? (

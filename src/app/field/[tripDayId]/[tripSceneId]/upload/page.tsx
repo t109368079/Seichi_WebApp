@@ -36,11 +36,11 @@ export default async function ScenePhotoUploadPage({
 
   return (
     <main className="min-h-screen bg-paper text-ink">
-      <header className="border-b border-rail bg-white">
+      <header className="border-b border-rail bg-[#fff8ed]">
         <div className="mx-auto w-full max-w-3xl px-5 py-6">
           <Link
             href={getFieldSceneHref(tripDayId, tripSceneId)}
-            className="inline-flex min-h-11 items-center text-sm font-semibold uppercase tracking-wide text-field"
+            className="inline-flex min-h-11 items-center text-sm font-semibold text-field"
           >
             返回場景
           </Link>
@@ -48,7 +48,7 @@ export default async function ScenePhotoUploadPage({
             上傳實景照片
           </h1>
           <p className="mt-2 text-base leading-7 text-night">
-            {view.day.tripName} · {view.day.date}
+            {view.day.tripName} · {view.day.date} · 把剛拍好的照片綁回這一幕。
           </p>
         </div>
       </header>

@@ -21,12 +21,12 @@ export default async function FieldDayPage({ params }: FieldDayPageProps) {
 
   return (
     <main className="min-h-screen bg-paper text-ink">
-      <header className="border-b border-rail bg-white">
+      <header className="border-b border-rail bg-[#fff8ed]">
         <div className="mx-auto flex w-full max-w-5xl flex-col gap-5 px-5 py-7 md:flex-row md:items-end md:justify-between">
           <div>
             <Link
               href={`/trips/${day.tripId}`}
-              className="inline-flex min-h-11 items-center text-sm font-semibold uppercase tracking-wide text-field"
+              className="inline-flex min-h-11 items-center text-sm font-semibold text-field"
             >
               返回旅行規劃
             </Link>
@@ -36,6 +36,7 @@ export default async function FieldDayPage({ params }: FieldDayPageProps) {
             <p className="mt-3 max-w-2xl text-base leading-7 text-night">
               {day.tripName} · {day.date}
               {day.title ? ` · ${day.title}` : ""}
+              {" · "}照著排好的順序，一幕一幕拍回來。
             </p>
           </div>
           <Link

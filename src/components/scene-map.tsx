@@ -69,20 +69,17 @@ export function SceneMap({
 
   return (
     <main className="min-h-screen bg-paper text-ink">
-      <header className="border-b border-rail bg-white">
+      <header className="border-b border-rail bg-[#fff8ed]">
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-5 py-7 md:flex-row md:items-end md:justify-between">
           <div>
-            <Link
-              href="/"
-              className="text-sm font-semibold uppercase tracking-wide text-field"
-            >
+            <Link href="/" className="text-sm font-semibold text-field">
               聖地巡禮
             </Link>
             <h1 className="mt-3 text-3xl font-semibold md:text-4xl">
               場景地圖
             </h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-night">
-              依座標群組瀏覽場景，並開啟導航點。
+              把同一帶的分鏡釘在地圖上，先看路線，再決定今天要走哪一幕。
             </p>
           </div>
           <div className="grid gap-3">
@@ -112,7 +109,7 @@ export function SceneMap({
         <section className="grid min-w-0 gap-5" aria-label="地圖結果">
           <TripDayContextBanner context={tripDayContext} />
           {omittedSceneCount > 0 ? (
-            <div className="rounded border border-[#f1c6bb] bg-white p-4 text-sm text-signal">
+            <div className="rounded border border-[#f1c6bb] bg-white/95 p-4 text-sm text-signal shadow-sm">
               {omittedSceneCount} 個場景缺少可顯示的 Google Maps 參照
               或有效座標。
             </div>
@@ -142,9 +139,7 @@ export function SceneMap({
 function MapStat({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded border border-rail bg-paper px-4 py-3">
-      <p className="text-xs font-semibold uppercase tracking-wide text-night">
-        {label}
-      </p>
+      <p className="text-xs font-semibold text-night">{label}</p>
       <p className="mt-1 text-xl font-semibold">{value}</p>
     </div>
   );
@@ -165,7 +160,7 @@ function MapFilterForm({
     >
       <form
         action="/map"
-        className="grid min-w-0 gap-4 rounded border border-rail bg-white p-4"
+        className="grid min-w-0 gap-4 rounded border border-rail bg-white/95 p-4 shadow-sm"
       >
         {tripDayId ? (
           <input type="hidden" name="tripDayId" value={tripDayId} />
@@ -332,7 +327,7 @@ function SelectedMarkerPanel({
     return (
       <aside
         aria-label="選取的標記"
-        className="rounded border border-rail bg-white p-5"
+        className="rounded border border-rail bg-white/95 p-5 shadow-sm"
       >
         <h2 className="text-lg font-semibold">選取的標記</h2>
         <p className="mt-3 text-sm leading-6 text-night">
@@ -345,7 +340,7 @@ function SelectedMarkerPanel({
   return (
     <aside
       aria-label="選取的標記"
-      className="grid h-fit gap-4 rounded border border-rail bg-white p-5"
+      className="grid h-fit gap-4 rounded border border-rail bg-white/95 p-5 shadow-sm"
     >
       <div>
         <h2 className="text-lg font-semibold">{group.label}</h2>
@@ -411,7 +406,7 @@ function SceneMapCard({
             {scene.episode ? ` · 第 ${scene.episode} 集` : ""}
           </p>
           <span
-            className={`mt-2 inline-flex w-fit rounded border px-2 py-1 text-xs font-semibold uppercase tracking-wide ${statusTone[scene.status]}`}
+            className={`mt-2 inline-flex w-fit rounded border px-2 py-1 text-xs font-semibold ${statusTone[scene.status]}`}
           >
             {getSceneStatusLabel(scene.status)}
           </span>

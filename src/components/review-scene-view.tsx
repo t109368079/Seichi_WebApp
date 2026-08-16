@@ -28,12 +28,9 @@ export function ReviewSceneView({
 
   return (
     <main className="min-h-screen bg-paper text-ink">
-      <header className="border-b border-rail bg-white">
+      <header className="border-b border-rail bg-[#fff8ed]">
         <div className="mx-auto w-full max-w-6xl px-5 py-7">
-          <Link
-            href="/reviews"
-            className="text-sm font-semibold uppercase tracking-wide text-field"
-          >
+          <Link href="/reviews" className="text-sm font-semibold text-field">
             返回審核佇列
           </Link>
           <div className="mt-3 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
@@ -58,7 +55,7 @@ export function ReviewSceneView({
         {message ? (
           <p
             role="status"
-            className="rounded border border-rail bg-white p-4 text-sm font-semibold text-night"
+            className="rounded border border-rail bg-white/95 p-4 shadow-sm text-sm font-semibold text-night"
           >
             {message}
           </p>
@@ -74,7 +71,7 @@ export function ReviewSceneView({
 
         <section
           aria-label="Take 切換"
-          className="rounded border border-rail bg-white p-5"
+          className="rounded border border-rail bg-white/95 p-5 shadow-sm"
         >
           <div className="flex flex-col gap-3 border-b border-rail pb-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -157,7 +154,7 @@ export function ReviewSceneView({
 
         <section
           aria-label="審核狀態"
-          className="rounded border border-rail bg-white p-5"
+          className="rounded border border-rail bg-white/95 p-5 shadow-sm"
         >
           <h2 className="text-lg font-semibold">審核狀態</h2>
           <p className="mt-2 text-sm leading-6 text-night">
@@ -205,7 +202,7 @@ function RealPhotoPanel({
 }) {
   if (!photo) {
     return (
-      <section className="flex min-h-[28rem] flex-col justify-center rounded border border-rail bg-white p-6 text-center">
+      <section className="flex min-h-[28rem] flex-col justify-center rounded border border-rail bg-white/95 p-6 shadow-sm text-center">
         <h2 className="text-2xl font-semibold">尚無實景照片</h2>
         <p className="mt-3 text-sm leading-6 text-night">
           上傳 Take 後會在這裡與動畫參考並排比較。
@@ -215,7 +212,7 @@ function RealPhotoPanel({
   }
 
   return (
-    <section className="rounded border border-rail bg-white p-5">
+    <section className="rounded border border-rail bg-white/95 p-5 shadow-sm">
       <div className="flex flex-col gap-3 border-b border-rail pb-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h2 className="text-2xl font-semibold">

@@ -21,20 +21,18 @@ export default async function TripDetailPage({ params }: TripDetailPageProps) {
 
   return (
     <main className="min-h-screen bg-paper text-ink">
-      <header className="border-b border-rail bg-white">
+      <header className="border-b border-rail bg-[#fff8ed]">
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-5 py-7 md:flex-row md:items-end md:justify-between">
           <div>
-            <Link
-              href="/trips"
-              className="text-sm font-semibold uppercase tracking-wide text-field"
-            >
+            <Link href="/trips" className="text-sm font-semibold text-field">
               返回旅行列表
             </Link>
             <h1 className="mt-3 text-3xl font-semibold md:text-4xl">
               {trip.name}
             </h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-night">
-              {trip.startDate} 至 {trip.endDate}，手動安排每日場景順序。
+              {trip.startDate} 至 {trip.endDate}
+              ，把每天要走的分鏡排成自己的路線。
             </p>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row">

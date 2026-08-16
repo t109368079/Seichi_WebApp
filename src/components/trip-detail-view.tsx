@@ -18,7 +18,7 @@ import {
 export function TripDetailView({ trip }: { trip: TripDetailItem }) {
   return (
     <div className="mx-auto grid w-full max-w-6xl gap-5 px-5 py-6">
-      <section className="rounded border border-rail bg-white p-5">
+      <section className="rounded border border-rail bg-white/95 p-5 shadow-sm">
         <h2 className="text-lg font-semibold">行程進度</h2>
         <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-3 lg:grid-cols-7">
           <TripStat label="總場景" value={trip.summary.totalScenes} />
@@ -46,9 +46,7 @@ export function TripDetailView({ trip }: { trip: TripDetailItem }) {
 function TripStat({ label, value }: { label: string; value: string | number }) {
   return (
     <div className="rounded border border-rail bg-paper p-4">
-      <dt className="text-xs font-semibold uppercase tracking-wide text-night">
-        {label}
-      </dt>
+      <dt className="text-xs font-semibold text-night">{label}</dt>
       <dd className="mt-1 text-xl font-semibold">{value}</dd>
     </div>
   );
@@ -71,7 +69,7 @@ function TripDayPlanner({ day }: { day: TripDayPlanningItem }) {
   return (
     <article
       id={`day-${day.id}`}
-      className="scroll-mt-4 rounded border border-rail bg-white p-5"
+      className="scroll-mt-4 rounded border border-rail bg-white/95 p-5 shadow-sm"
     >
       <div className="flex flex-col gap-4 border-b border-rail pb-4 md:flex-row md:items-start md:justify-between">
         <div>
@@ -209,7 +207,7 @@ function TripSceneRow({
           </p>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row lg:flex-col">
-          <span className="flex min-h-10 w-fit items-center rounded border border-rail bg-white px-3 text-xs font-semibold uppercase tracking-wide text-night">
+          <span className="flex min-h-10 w-fit items-center rounded border border-rail bg-white px-3 text-xs font-semibold text-night">
             {getSceneStatusLabel(item.scene.status)}
           </span>
           <div className="flex gap-2">

@@ -10,7 +10,7 @@ export function AnimeReferencePanel({ scene }: { scene: SceneCatalogItem }) {
   return (
     <figure
       aria-label={`${scene.sceneCode} 動畫參考圖`}
-      className="flex min-h-[18rem] flex-col justify-between rounded border border-rail bg-white p-6 md:min-h-[24rem] lg:min-h-[28rem]"
+      className="flex min-h-[18rem] flex-col justify-between rounded border border-rail bg-white/95 p-6 shadow-sm md:min-h-[24rem] lg:min-h-[28rem]"
     >
       <img
         src={getAnimeImageHref(scene.id)}

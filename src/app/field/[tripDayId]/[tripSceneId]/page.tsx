@@ -31,11 +31,11 @@ export default async function FieldScenePage({
 
   return (
     <main className="min-h-screen bg-paper text-ink">
-      <header className="border-b border-rail bg-white">
+      <header className="border-b border-rail bg-[#fff8ed]">
         <div className="mx-auto w-full max-w-6xl px-5 py-6">
           <Link
             href={getFieldDayHref(view.day.tripDayId)}
-            className="inline-flex min-h-11 items-center text-sm font-semibold uppercase tracking-wide text-field"
+            className="inline-flex min-h-11 items-center text-sm font-semibold text-field"
           >
             返回今日行程
           </Link>
@@ -43,7 +43,7 @@ export default async function FieldScenePage({
             {view.cursor.current.scene.sceneCode}
           </h1>
           <p className="mt-2 text-base leading-7 text-night">
-            {view.day.tripName} · {view.day.date}
+            {view.day.tripName} · {view.day.date} · 對照動畫畫面，拍下這一幕。
           </p>
         </div>
       </header>
