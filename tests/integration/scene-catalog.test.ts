@@ -1,11 +1,18 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { countDistinctWorksAtLocation } from "@/application/scene-catalog";
 import { prisma as appPrisma } from "@/infrastructure/database/prisma";
 import {
+  createSceneCatalogItem,
+  deleteSceneCatalogItem,
   getSceneCatalogData,
   updateSceneEditableFields,
 } from "@/infrastructure/repositories/scene-catalog-repository";
+import {
+  addSceneToTripDay,
+  createTrip,
+  getTripDetail,
+} from "@/infrastructure/repositories/trip-planning-repository";
 import { getDatabaseUrl } from "@/lib/env";
 
 const prisma = new PrismaClient({
@@ -19,6 +26,50 @@ const prisma = new PrismaClient({
 beforeAll(async () => {
   await prisma.$connect();
   await appPrisma.$connect();
+});
+
+afterEach(async () => {
+  await prisma.scenePhoto.deleteMany({
+    where: {
+      storageFileId: {
+        startsWith: "manual-scene-catalog-",
+      },
+    },
+  });
+  await prisma.trip.deleteMany({
+    where: {
+      name: {
+        startsWith: "Integration Scene Catalog Manual",
+      },
+    },
+  });
+  await prisma.scene.deleteMany({
+    where: {
+      sceneCode: {
+        startsWith: "MANUAL-CATALOG-",
+      },
+    },
+  });
+  await prisma.location.deleteMany({
+    where: {
+      areaName: {
+        startsWith: "Manual Catalog Area",
+      },
+      scenes: {
+        none: {},
+      },
+    },
+  });
+  await prisma.work.deleteMany({
+    where: {
+      shortCode: {
+        startsWith: "MSC",
+      },
+      scenes: {
+        none: {},
+      },
+    },
+  });
 });
 
 afterAll(async () => {
@@ -128,6 +179,108 @@ describe("scene catalog repository", () => {
       "BHC-002",
       "ARS-003",
     ]);
+  });
+
+  it("creates and deletes a manually entered scene", async () => {
+    const created = await createSceneCatalogItem({
+      sceneCode: "MANUAL-CATALOG-001",
+      workName: "Manual Catalog Work",
+      workShortCode: "MSC",
+      episode: "05",
+      animeImageDriveFileId: "manual-scene-catalog-drive-001",
+      locationName: "Manual Catalog Station",
+      areaName: "Manual Catalog Area",
+      latitude: null,
+      longitude: null,
+      mapsUrl: "https://maps.google.com/?q=35.1,139.2",
+      notes: "Manual catalog create test.",
+    });
+
+    expect(created).toMatchObject({
+      sceneCode: "MANUAL-CATALOG-001",
+      episode: "05",
+      animeImageDriveFileId: "manual-scene-catalog-drive-001",
+      status: "NOT_SHOT",
+      work: {
+        name: "Manual Catalog Work",
+        shortCode: "MSC",
+      },
+      location: {
+        name: "Manual Catalog Station",
+        areaName: "Manual Catalog Area",
+      },
+    });
+
+    const catalog = await getSceneCatalogData({
+      workId: created.work.id,
+    });
+    expect(catalog.scenes.map((scene) => scene.sceneCode)).toContain(
+      "MANUAL-CATALOG-001",
+    );
+
+    const deleted = await deleteSceneCatalogItem(created.id);
+    expect(deleted.sceneCode).toBe("MANUAL-CATALOG-001");
+    await expect(
+      prisma.scene.findUnique({ where: { id: created.id } }),
+    ).resolves.toBeNull();
+  });
+
+  it("rejects deleting a scene that is already used by a trip day", async () => {
+    const created = await createSceneCatalogItem({
+      sceneCode: "MANUAL-CATALOG-TRIP",
+      workName: "Manual Catalog Work",
+      workShortCode: "MSC",
+      episode: undefined,
+      animeImageDriveFileId: "manual-scene-catalog-drive-trip",
+      locationName: "Manual Catalog Station",
+      areaName: "Manual Catalog Area",
+      latitude: 35.1,
+      longitude: 139.2,
+      mapsUrl: undefined,
+      notes: undefined,
+    });
+    const trip = await createTrip({
+      name: "Integration Scene Catalog Manual Trip",
+      startDate: "2026-10-10",
+      endDate: "2026-10-10",
+    });
+    const detail = await getTripDetail(trip.tripId);
+    const tripDayId = detail?.days[0]?.id ?? "";
+    await addSceneToTripDay(tripDayId, created.id);
+
+    await expect(deleteSceneCatalogItem(created.id)).rejects.toThrow(
+      "Scene is used in trip planning.",
+    );
+  });
+
+  it("rejects deleting a scene that already has photos", async () => {
+    const created = await createSceneCatalogItem({
+      sceneCode: "MANUAL-CATALOG-PHOTO",
+      workName: "Manual Catalog Work",
+      workShortCode: "MSC",
+      episode: undefined,
+      animeImageDriveFileId: "manual-scene-catalog-drive-photo",
+      locationName: "Manual Catalog Station",
+      areaName: "Manual Catalog Area",
+      latitude: 35.1,
+      longitude: 139.2,
+      mapsUrl: undefined,
+      notes: undefined,
+    });
+    await prisma.scenePhoto.create({
+      data: {
+        sceneId: created.id,
+        fileName: "manual-scene-catalog.png",
+        mimeType: "image/png",
+        fileSize: 1,
+        storageFileId: "manual-scene-catalog-photo-001",
+        takeNumber: 1,
+      },
+    });
+
+    await expect(deleteSceneCatalogItem(created.id)).rejects.toThrow(
+      "Scene has photos.",
+    );
   });
 
   it("updates one scene location and navigation fields without mutating the original shared location", async () => {

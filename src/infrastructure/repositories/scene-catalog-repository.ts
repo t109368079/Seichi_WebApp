@@ -1,6 +1,7 @@
 import {
   filterSceneCatalogItems,
   type SceneCatalogFilters,
+  type SceneCreateInput,
   type SceneCatalogItem,
   type SceneEditableFieldsUpdate,
 } from "@/application/scene-catalog";
@@ -71,6 +72,128 @@ export async function getSceneDetail(
   }
 
   return mapSceneCatalogItem(scene);
+}
+
+export async function createSceneCatalogItem(
+  input: SceneCreateInput,
+): Promise<SceneCatalogItem> {
+  return prisma.$transaction(async (transaction) => {
+    const existingScene = await transaction.scene.findUnique({
+      where: {
+        sceneCode: input.sceneCode,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (existingScene) {
+      throw new Error("Scene sceneCode already exists.");
+    }
+
+    const work = await transaction.work.upsert({
+      where: {
+        shortCode: input.workShortCode,
+      },
+      create: {
+        name: input.workName,
+        shortCode: input.workShortCode,
+      },
+      update: {
+        name: input.workName,
+      },
+    });
+
+    const location = await transaction.location.upsert({
+      where: {
+        name_areaName: {
+          name: input.locationName,
+          areaName: input.areaName,
+        },
+      },
+      create: {
+        name: input.locationName,
+        areaName: input.areaName,
+        latitude: input.latitude,
+        longitude: input.longitude,
+        mapsUrl: input.mapsUrl ?? null,
+      },
+      update: {
+        latitude: input.latitude,
+        longitude: input.longitude,
+        mapsUrl: input.mapsUrl ?? null,
+      },
+    });
+
+    const createdScene = await transaction.scene.create({
+      data: {
+        sceneCode: input.sceneCode,
+        workId: work.id,
+        episode: input.episode ?? null,
+        animeImageDriveFileId: input.animeImageDriveFileId,
+        locationId: location.id,
+        latitude: input.latitude,
+        longitude: input.longitude,
+        mapsUrl: input.mapsUrl ?? null,
+        notes: input.notes ?? null,
+        status: "NOT_SHOT",
+      },
+      include: {
+        work: true,
+        location: true,
+      },
+    });
+
+    return mapSceneCatalogItem(createdScene);
+  });
+}
+
+export async function deleteSceneCatalogItem(sceneId: string): Promise<{
+  sceneCode: string;
+}> {
+  if (sceneId.trim().length === 0) {
+    throw new Error("Scene id is required.");
+  }
+
+  return prisma.$transaction(async (transaction) => {
+    const scene = await transaction.scene.findUnique({
+      where: {
+        id: sceneId,
+      },
+      select: {
+        id: true,
+        sceneCode: true,
+        _count: {
+          select: {
+            photos: true,
+            tripScenes: true,
+          },
+        },
+      },
+    });
+
+    if (!scene) {
+      throw new Error("Scene does not exist.");
+    }
+
+    if (scene._count.tripScenes > 0) {
+      throw new Error("Scene is used in trip planning.");
+    }
+
+    if (scene._count.photos > 0) {
+      throw new Error("Scene has photos.");
+    }
+
+    await transaction.scene.delete({
+      where: {
+        id: scene.id,
+      },
+    });
+
+    return {
+      sceneCode: scene.sceneCode,
+    };
+  });
 }
 
 export async function updateSceneEditableFields(

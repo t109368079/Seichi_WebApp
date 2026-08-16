@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { deleteSceneAction } from "@/app/scenes/actions";
 import { AddToTripDayForm } from "@/components/add-to-trip-day-form";
+import { SceneDeleteSubmitButton } from "@/components/scene-delete-submit-button";
 import { TripDayContextBanner } from "@/components/trip-day-context-banner";
 import {
   formatSceneCoordinates,
@@ -29,6 +31,7 @@ interface SceneCatalogProps {
   filters: SceneCatalogFilters;
   tripDayContext?: TripDaySelectionContext;
   returnTo: string;
+  sceneMessage?: string;
 }
 
 const statusTone = {
@@ -47,6 +50,7 @@ export function SceneCatalog({
   filters,
   tripDayContext,
   returnTo,
+  sceneMessage,
 }: SceneCatalogProps) {
   return (
     <main className="min-h-screen bg-paper text-ink">
@@ -73,8 +77,14 @@ export function SceneCatalog({
               <CatalogStat label="作品" value={works.length.toString()} />
             </div>
             <Link
-              href="/imports/scenes"
+              href="/scenes/new"
               className="flex min-h-10 w-fit items-center rounded bg-field px-4 text-sm font-semibold text-white"
+            >
+              新增場景
+            </Link>
+            <Link
+              href="/imports/scenes"
+              className="flex min-h-10 w-fit items-center rounded border border-rail px-4 text-sm font-semibold"
             >
               匯入場景
             </Link>
@@ -104,6 +114,7 @@ export function SceneCatalog({
 
         <section aria-label="場景結果" className="grid min-w-0 gap-4">
           <TripDayContextBanner context={tripDayContext} />
+          {sceneMessage ? <SceneCatalogMessage message={sceneMessage} /> : null}
           {scenes.length === 0 ? (
             <div className="rounded border border-rail bg-white p-6">
               <h2 className="text-lg font-semibold">沒有符合的場景</h2>
@@ -135,6 +146,22 @@ function CatalogStat({ label, value }: { label: string; value: string }) {
       </p>
       <p className="mt-1 text-xl font-semibold">{value}</p>
     </div>
+  );
+}
+
+function SceneCatalogMessage({ message }: { message: string }) {
+  const isSuccess = message.includes("已刪除") || message.includes("已新增");
+  const tone = isSuccess
+    ? "border-[#c8ded2] bg-[#edf8f1] text-field"
+    : "border-[#f1c6bb] bg-[#fff2ef] text-signal";
+
+  return (
+    <p
+      aria-live="polite"
+      className={["rounded border p-4 text-sm", tone].join(" ")}
+    >
+      {message}
+    </p>
   );
 }
 
@@ -257,11 +284,20 @@ function SceneCard({
             {scene.episode ? ` · 第 ${scene.episode} 集` : ""}
           </p>
         </div>
-        <span
-          className={`w-fit rounded border px-3 py-1 text-xs font-semibold uppercase tracking-wide ${statusTone[scene.status]}`}
-        >
-          {getSceneStatusLabel(scene.status)}
-        </span>
+        <div className="flex flex-col gap-2 sm:items-end">
+          <span
+            className={`w-fit rounded border px-3 py-1 text-xs font-semibold uppercase tracking-wide ${statusTone[scene.status]}`}
+          >
+            {getSceneStatusLabel(scene.status)}
+          </span>
+          {!tripDayContext ? (
+            <form action={deleteSceneAction}>
+              <input type="hidden" name="sceneId" value={scene.id} />
+              <input type="hidden" name="returnTo" value={returnTo} />
+              <SceneDeleteSubmitButton sceneCode={scene.sceneCode} />
+            </form>
+          ) : null}
+        </div>
       </div>
 
       <dl className="mt-4 grid gap-3 text-sm md:grid-cols-3">

@@ -3,6 +3,7 @@ import {
   countDistinctWorksAtLocation,
   filterSceneCatalogItems,
   getSceneStatusLabel,
+  normalizeSceneCreateInput,
   normalizeSceneEditableFields,
   normalizeSceneCatalogFilters,
   type SceneCatalogItem,
@@ -205,5 +206,101 @@ describe("scene catalog editable fields", () => {
         mapsUrl: "",
       }),
     ).toThrow("Scene requires either coordinates or mapsUrl.");
+  });
+});
+
+describe("scene catalog create form", () => {
+  it("normalizes required scene creation fields and optional text", () => {
+    expect(
+      normalizeSceneCreateInput({
+        sceneCode: " manual-001 ",
+        workName: " Manual Work ",
+        workShortCode: " mw ",
+        episode: " 03 ",
+        animeImageDriveFileId: " manual-drive-file ",
+        locationName: " Manual Station ",
+        areaName: " Manual Area ",
+        latitude: "35.1",
+        longitude: "139.2",
+        mapsUrl: "",
+        notes: " Framing note ",
+      }),
+    ).toEqual({
+      sceneCode: "MANUAL-001",
+      workName: "Manual Work",
+      workShortCode: "MW",
+      episode: "03",
+      animeImageDriveFileId: "manual-drive-file",
+      locationName: "Manual Station",
+      areaName: "Manual Area",
+      latitude: 35.1,
+      longitude: 139.2,
+      mapsUrl: undefined,
+      notes: "Framing note",
+    });
+  });
+
+  it("rejects missing required scene creation fields", () => {
+    const validInput = {
+      sceneCode: "MANUAL-001",
+      workName: "Manual Work",
+      workShortCode: "MW",
+      episode: "",
+      animeImageDriveFileId: "manual-drive-file",
+      locationName: "Manual Station",
+      areaName: "Manual Area",
+      latitude: "",
+      longitude: "",
+      mapsUrl: "https://maps.google.com/?q=35.1,139.2",
+      notes: "",
+    };
+
+    expect(() =>
+      normalizeSceneCreateInput({
+        ...validInput,
+        sceneCode: "",
+      }),
+    ).toThrow("Scene sceneCode is required.");
+
+    expect(() =>
+      normalizeSceneCreateInput({
+        ...validInput,
+        workName: "",
+      }),
+    ).toThrow("Scene work name is required.");
+
+    expect(() =>
+      normalizeSceneCreateInput({
+        ...validInput,
+        areaName: "",
+      }),
+    ).toThrow("Scene area name is required.");
+  });
+
+  it("requires either paired coordinates or a map URL for new scenes", () => {
+    const validInput = {
+      sceneCode: "MANUAL-001",
+      workName: "Manual Work",
+      workShortCode: "MW",
+      episode: "",
+      animeImageDriveFileId: "manual-drive-file",
+      locationName: "Manual Station",
+      areaName: "Manual Area",
+      latitude: "",
+      longitude: "",
+      mapsUrl: "",
+      notes: "",
+    };
+
+    expect(() => normalizeSceneCreateInput(validInput)).toThrow(
+      "Scene requires either coordinates or mapsUrl.",
+    );
+
+    expect(() =>
+      normalizeSceneCreateInput({
+        ...validInput,
+        latitude: "35.1",
+      }),
+    ).toThrow("Scene latitude and longitude must be provided together.");
   });
 });

@@ -59,6 +59,51 @@ test("scene catalog filters by work, location, and status through the URL", asyn
   await expect(page.getByRole("link", { name: "BHC-001" })).toHaveCount(0);
 });
 
+test("scene catalog creates and deletes a manually entered scene", async ({
+  page,
+}) => {
+  await page.goto("/scenes");
+  await page.getByRole("link", { name: "新增場景" }).click();
+
+  await expect(page.getByRole("heading", { name: "新增場景" })).toBeVisible();
+  await page.getByLabel(/場景代碼/).fill("manual-e2e-001");
+  await page.getByLabel(/作品名稱/).fill("Manual E2E Work");
+  await page.getByLabel(/作品短代碼/).fill("mew");
+  await page.getByLabel("集數").fill("12");
+  await page.getByLabel(/動畫 Drive 檔案 ID/).fill("manual-e2e-drive-001");
+  await page.getByLabel(/地點名稱/).fill("Manual E2E Station");
+  await page.getByLabel(/區域/).fill("Manual E2E Area");
+  await page
+    .getByLabel("地圖 URL")
+    .fill("https://maps.google.com/?q=35.1,139.2");
+  await page.getByLabel("備註").fill("Created by the scene catalog E2E test.");
+  await page.getByRole("button", { name: "新增場景" }).click();
+
+  await expect(page).toHaveURL(/\/scenes\/.+sceneMessage=/);
+  await expect(
+    page.getByRole("heading", { name: "MANUAL-E2E-001" }),
+  ).toBeVisible();
+  await expect(page.getByText("場景已新增。")).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Manual E2E Work" }),
+  ).toBeVisible();
+
+  await page.getByRole("link", { name: "返回場景目錄" }).click();
+  await expect(
+    page.getByRole("link", { name: "MANUAL-E2E-001" }),
+  ).toBeVisible();
+
+  page.once("dialog", async (dialog) => {
+    await dialog.accept();
+  });
+  await page.getByRole("button", { name: "刪除 MANUAL-E2E-001" }).click();
+
+  await expect(page.getByText("場景 MANUAL-E2E-001 已刪除。")).toBeVisible();
+  await expect(page.getByRole("link", { name: "MANUAL-E2E-001" })).toHaveCount(
+    0,
+  );
+});
+
 test("scene detail edits location, coordinates, and map URL", async ({
   page,
 }) => {

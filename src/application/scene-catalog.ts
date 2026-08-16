@@ -47,12 +47,40 @@ export interface SceneEditableFieldsFormInput {
   mapsUrl: string;
 }
 
+export interface SceneCreateFormInput {
+  sceneCode: string;
+  workName: string;
+  workShortCode: string;
+  episode: string;
+  animeImageDriveFileId: string;
+  locationName: string;
+  areaName: string;
+  latitude: string;
+  longitude: string;
+  mapsUrl: string;
+  notes: string;
+}
+
 export interface SceneEditableFieldsUpdate {
   locationName: string;
   areaName?: string;
   latitude: number | null;
   longitude: number | null;
   mapsUrl?: string;
+}
+
+export interface SceneCreateInput {
+  sceneCode: string;
+  workName: string;
+  workShortCode: string;
+  episode?: string;
+  animeImageDriveFileId: string;
+  locationName: string;
+  areaName: string;
+  latitude: number | null;
+  longitude: number | null;
+  mapsUrl?: string;
+  notes?: string;
 }
 
 export function normalizeSceneEditableFields(
@@ -65,41 +93,59 @@ export function normalizeSceneEditableFields(
   }
 
   const areaName = input.areaName.trim() || undefined;
-  const latitudeText = input.latitude.trim();
-  const longitudeText = input.longitude.trim();
-  const mapsUrl = input.mapsUrl.trim() || undefined;
-  const hasLatitude = latitudeText.length > 0;
-  const hasLongitude = longitudeText.length > 0;
-  let latitude: number | null = null;
-  let longitude: number | null = null;
-
-  if (hasLatitude || hasLongitude) {
-    if (!hasLatitude || !hasLongitude) {
-      throw new Error(
-        "Scene latitude and longitude must be provided together.",
-      );
-    }
-
-    latitude = Number(latitudeText);
-    longitude = Number(longitudeText);
-    assertValidCoordinates({
-      latitude,
-      longitude,
-    });
-  }
-
-  assertSceneNavigationReference({
-    latitude,
-    longitude,
-    mapsUrl,
-  });
+  const navigation = normalizeSceneNavigationFields(input);
 
   return {
     locationName,
     areaName,
-    latitude,
-    longitude,
-    mapsUrl,
+    ...navigation,
+  };
+}
+
+export function normalizeSceneCreateInput(
+  input: SceneCreateFormInput,
+): SceneCreateInput {
+  const sceneCode = normalizeIdentifier(input.sceneCode);
+  const workName = input.workName.trim();
+  const workShortCode = normalizeIdentifier(input.workShortCode);
+  const animeImageDriveFileId = input.animeImageDriveFileId.trim();
+  const locationName = input.locationName.trim();
+  const areaName = input.areaName.trim();
+
+  if (sceneCode.length === 0) {
+    throw new Error("Scene sceneCode is required.");
+  }
+
+  if (workName.length === 0) {
+    throw new Error("Scene work name is required.");
+  }
+
+  if (workShortCode.length === 0) {
+    throw new Error("Scene work short code is required.");
+  }
+
+  if (animeImageDriveFileId.length === 0) {
+    throw new Error("Scene anime image Drive file id is required.");
+  }
+
+  if (locationName.length === 0) {
+    throw new Error("Scene location name is required.");
+  }
+
+  if (areaName.length === 0) {
+    throw new Error("Scene area name is required.");
+  }
+
+  return {
+    sceneCode,
+    workName,
+    workShortCode,
+    episode: input.episode.trim() || undefined,
+    animeImageDriveFileId,
+    locationName,
+    areaName,
+    ...normalizeSceneNavigationFields(input),
+    notes: input.notes.trim() || undefined,
   };
 }
 
@@ -186,4 +232,49 @@ export function formatSceneCoordinates(
   }
 
   return "未設定";
+}
+
+function normalizeSceneNavigationFields(input: {
+  latitude: string;
+  longitude: string;
+  mapsUrl: string;
+}): Pick<SceneCreateInput, "latitude" | "longitude" | "mapsUrl"> {
+  const latitudeText = input.latitude.trim();
+  const longitudeText = input.longitude.trim();
+  const mapsUrl = input.mapsUrl.trim() || undefined;
+  const hasLatitude = latitudeText.length > 0;
+  const hasLongitude = longitudeText.length > 0;
+  let latitude: number | null = null;
+  let longitude: number | null = null;
+
+  if (hasLatitude || hasLongitude) {
+    if (!hasLatitude || !hasLongitude) {
+      throw new Error(
+        "Scene latitude and longitude must be provided together.",
+      );
+    }
+
+    latitude = Number(latitudeText);
+    longitude = Number(longitudeText);
+    assertValidCoordinates({
+      latitude,
+      longitude,
+    });
+  }
+
+  assertSceneNavigationReference({
+    latitude,
+    longitude,
+    mapsUrl,
+  });
+
+  return {
+    latitude,
+    longitude,
+    mapsUrl,
+  };
+}
+
+function normalizeIdentifier(value: string): string {
+  return value.trim().toUpperCase();
 }
