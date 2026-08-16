@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { deleteSceneAction } from "@/app/scenes/actions";
-import { AddToTripDayForm } from "@/components/add-to-trip-day-form";
+import { addScenesToTripDayAction } from "@/app/trips/actions";
 import { SceneDeleteSubmitButton } from "@/components/scene-delete-submit-button";
+import { SceneBulkSelectionControls } from "@/components/scene-bulk-selection-controls";
 import { TripDayContextBanner } from "@/components/trip-day-context-banner";
 import {
   formatSceneCoordinates,
@@ -31,6 +32,7 @@ interface SceneCatalogProps {
   filters: SceneCatalogFilters;
   tripDayContext?: TripDaySelectionContext;
   returnTo: string;
+  tripMessage?: string;
   sceneMessage?: string;
 }
 
@@ -50,6 +52,7 @@ export function SceneCatalog({
   filters,
   tripDayContext,
   returnTo,
+  tripMessage,
   sceneMessage,
 }: SceneCatalogProps) {
   return (
@@ -57,10 +60,7 @@ export function SceneCatalog({
       <header className="border-b border-rail bg-[#fff8ed]">
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-5 py-7 md:flex-row md:items-end md:justify-between">
           <div>
-            <Link
-              href="/"
-              className="text-sm font-semibold text-field"
-            >
+            <Link href="/" className="text-sm font-semibold text-field">
               聖地巡禮
             </Link>
             <h1 className="mt-3 text-3xl font-semibold md:text-4xl">
@@ -117,6 +117,7 @@ export function SceneCatalog({
         <section aria-label="場景結果" className="grid min-w-0 gap-4">
           <TripDayContextBanner context={tripDayContext} />
           {sceneMessage ? <SceneCatalogMessage message={sceneMessage} /> : null}
+          {tripMessage ? <TripSelectionMessage message={tripMessage} /> : null}
           {scenes.length === 0 ? (
             <div className="rounded border border-rail bg-white/95 p-6 shadow-sm">
               <h2 className="text-lg font-semibold">沒有符合的場景</h2>
@@ -124,14 +125,15 @@ export function SceneCatalog({
                 請清除篩選，或改用其他作品、地點與狀態組合。
               </p>
             </div>
+          ) : tripDayContext ? (
+            <SceneBulkAddForm
+              scenes={scenes}
+              tripDayContext={tripDayContext}
+              returnTo={returnTo}
+            />
           ) : (
             scenes.map((scene) => (
-              <SceneCard
-                key={scene.id}
-                scene={scene}
-                tripDayContext={tripDayContext}
-                returnTo={returnTo}
-              />
+              <SceneCard key={scene.id} scene={scene} returnTo={returnTo} />
             ))
           )}
         </section>
@@ -143,27 +145,84 @@ export function SceneCatalog({
 function CatalogStat({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded border border-rail bg-paper px-4 py-3">
-      <p className="text-xs font-semibold text-night">
-        {label}
-      </p>
+      <p className="text-xs font-semibold text-night">{label}</p>
       <p className="mt-1 text-xl font-semibold">{value}</p>
     </div>
   );
 }
 
+function TripSelectionMessage({ message }: { message: string }) {
+  return (
+    <p
+      aria-live="polite"
+      className="rounded border border-[#f1c6bb] bg-[#fff2ef] p-4 text-sm text-signal"
+    >
+      {message}
+    </p>
+  );
+}
+
 function SceneCatalogMessage({ message }: { message: string }) {
   const isSuccess = message.includes("已刪除") || message.includes("已新增");
-  const tone = isSuccess
-    ? "border-[#c8ded2] bg-[#edf8f1] text-field"
-    : "border-[#f1c6bb] bg-[#fff2ef] text-signal";
 
   return (
     <p
       aria-live="polite"
-      className={["rounded border p-4 text-sm", tone].join(" ")}
+      className={`rounded border p-4 text-sm ${
+        isSuccess
+          ? "border-[#c8ded2] bg-[#edf8f1] text-field"
+          : "border-[#f1c6bb] bg-[#fff2ef] text-signal"
+      }`}
     >
       {message}
     </p>
+  );
+}
+
+function SceneBulkAddForm({
+  scenes,
+  tripDayContext,
+  returnTo,
+}: {
+  scenes: readonly SceneCatalogItem[];
+  tripDayContext: TripDaySelectionContext;
+  returnTo: string;
+}) {
+  const selectableSceneCount = scenes.filter(
+    (scene) => !isSceneAddedToTripDay(tripDayContext, scene.id),
+  ).length;
+  const addedSceneCount = scenes.length - selectableSceneCount;
+
+  return (
+    <form action={addScenesToTripDayAction} className="grid gap-4">
+      <input type="hidden" name="tripDayId" value={tripDayContext.tripDayId} />
+      <input type="hidden" name="returnTo" value={returnTo} />
+      <div className="flex flex-col gap-3 rounded border border-rail bg-white/95 p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 className="text-base font-semibold">選擇加入此日的場景</h2>
+          <p className="mt-1 text-sm text-night">
+            可加入 {selectableSceneCount} 個 · 已加入 {addedSceneCount} 個
+          </p>
+        </div>
+        <div className="flex flex-col gap-2 sm:items-end">
+          <SceneBulkSelectionControls disabled={selectableSceneCount === 0} />
+          <button
+            type="submit"
+            disabled={selectableSceneCount === 0}
+            className="min-h-11 w-fit rounded bg-field px-5 text-sm font-semibold text-white disabled:opacity-60"
+          >
+            加入勾選場景
+          </button>
+        </div>
+      </div>
+      {scenes.map((scene) => (
+        <SceneCard
+          key={scene.id}
+          scene={scene}
+          tripDayContext={tripDayContext}
+        />
+      ))}
+    </form>
   );
 }
 
@@ -267,8 +326,10 @@ function SceneCard({
 }: {
   scene: SceneCatalogItem;
   tripDayContext?: TripDaySelectionContext;
-  returnTo: string;
+  returnTo?: string;
 }) {
+  const added = isSceneAddedToTripDay(tripDayContext, scene.id);
+
   return (
     <article className="rounded border border-rail bg-white/95 p-4 shadow-sm">
       <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
@@ -292,7 +353,7 @@ function SceneCard({
           >
             {getSceneStatusLabel(scene.status)}
           </span>
-          {!tripDayContext ? (
+          {!tripDayContext && returnTo ? (
             <form action={deleteSceneAction}>
               <input type="hidden" name="sceneId" value={scene.id} />
               <input type="hidden" name="returnTo" value={returnTo} />
@@ -337,13 +398,24 @@ function SceneCard({
 
       {tripDayContext ? (
         <div className="mt-4 border-t border-rail pt-4">
-          <AddToTripDayForm
-            tripDayId={tripDayContext.tripDayId}
-            sceneId={scene.id}
-            sceneCode={scene.sceneCode}
-            returnTo={returnTo}
-            added={isSceneAddedToTripDay(tripDayContext, scene.id)}
-          />
+          <label
+            className={`flex min-h-11 w-fit items-center gap-3 rounded border px-4 text-sm font-semibold ${
+              added
+                ? "border-rail bg-paper text-night"
+                : "border-field bg-white text-field"
+            }`}
+          >
+            <input
+              type="checkbox"
+              name="sceneId"
+              value={scene.id}
+              defaultChecked={added}
+              disabled={added}
+              aria-label={`選取 ${scene.sceneCode}`}
+              className="h-4 w-4 accent-field"
+            />
+            {added ? "已加入此日" : `選取 ${scene.sceneCode}`}
+          </label>
         </div>
       ) : null}
     </article>

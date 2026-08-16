@@ -102,7 +102,8 @@ async function createReviewTrip(page: Page, name: string): Promise<string> {
 
   await page.getByRole("link", { name: "從目錄加入" }).first().click();
   await expect(page).toHaveURL(/\/scenes\?tripDayId=/);
-  await page.getByRole("button", { name: "將 BHC-001 加入此日" }).click();
+  await page.getByLabel("選取 BHC-001").check();
+  await page.getByRole("button", { name: "加入勾選場景" }).click();
   await expect(page).toHaveURL(/\/trips\/.+/);
 
   return tripId;

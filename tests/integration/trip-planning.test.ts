@@ -1,6 +1,7 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import {
   addSceneToTripDay,
+  addScenesToTripDay,
   createTrip,
   deleteTrip,
   getTripDetail,
@@ -60,6 +61,56 @@ describe("trip planning repository", () => {
     await expect(addSceneToTripDay(tripDayId, "scene-bhc-001")).rejects.toThrow(
       "Scene is already in this trip day.",
     );
+
+    const updated = await getTripDetail(trip.tripId);
+    expect(
+      updated?.days[0]?.scenes.map((item) => item.scene.sceneCode),
+    ).toEqual(["BHC-001"]);
+  });
+
+  it("adds multiple selected scenes to the end of a TripDay in request order", async () => {
+    const trip = await createTrip({
+      name: "Integration Bulk Add",
+      startDate: "2026-10-10",
+      endDate: "2026-10-10",
+    });
+    const detail = await getTripDetail(trip.tripId);
+    const tripDayId = detail?.days[0]?.id ?? "";
+
+    await addSceneToTripDay(tripDayId, "scene-ars-001");
+    await addScenesToTripDay(tripDayId, ["scene-slc-001", "scene-bhc-001"]);
+
+    const updated = await getTripDetail(trip.tripId);
+    expect(
+      updated?.days[0]?.scenes.map((item) => [
+        item.scene.sceneCode,
+        item.sortOrder,
+      ]),
+    ).toEqual([
+      ["ARS-001", 1],
+      ["SLC-001", 2],
+      ["BHC-001", 3],
+    ]);
+  });
+
+  it("rejects empty bulk selections and already added scenes", async () => {
+    const trip = await createTrip({
+      name: "Integration Bulk Guard",
+      startDate: "2026-10-10",
+      endDate: "2026-10-10",
+    });
+    const detail = await getTripDetail(trip.tripId);
+    const tripDayId = detail?.days[0]?.id ?? "";
+
+    await expect(addScenesToTripDay(tripDayId, [])).rejects.toThrow(
+      "At least one scene is required.",
+    );
+
+    await addSceneToTripDay(tripDayId, "scene-bhc-001");
+
+    await expect(
+      addScenesToTripDay(tripDayId, ["scene-bhc-001", "scene-slc-001"]),
+    ).rejects.toThrow("Scene is already in this trip day.");
 
     const updated = await getTripDetail(trip.tripId);
     expect(
@@ -136,6 +187,11 @@ describe("trip planning repository", () => {
     });
     const detail = await getTripDetail(trip.tripId);
     const tripDayId = detail?.days[0]?.id ?? "";
+    const existingTripSceneCount = await prisma.tripScene.count({
+      where: {
+        sceneId: "scene-bhc-001",
+      },
+    });
     await addSceneToTripDay(tripDayId, "scene-bhc-001");
 
     await deleteTrip(trip.tripId);
@@ -154,7 +210,7 @@ describe("trip planning repository", () => {
           sceneId: "scene-bhc-001",
         },
       }),
-    ).resolves.toBe(0);
+    ).resolves.toBe(existingTripSceneCount);
   });
 
   it("summarizes trip progress from seeded scene statuses", async () => {

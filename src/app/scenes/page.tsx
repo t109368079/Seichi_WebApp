@@ -33,6 +33,7 @@ export default async function ScenesPage({ searchParams }: ScenePageProps) {
   const params = await searchParams;
   const filters = readFilters(params);
   const tripDayId = firstSearchParam(params.tripDayId);
+  const tripMessage = firstSearchParam(params.tripMessage);
   const sceneMessage = firstSearchParam(params.sceneMessage);
   const [catalog, tripDayContext] = await Promise.all([
     getSceneCatalogData(filters),
@@ -48,6 +49,7 @@ export default async function ScenesPage({ searchParams }: ScenePageProps) {
       filters={filters}
       tripDayContext={tripDayContext}
       returnTo={buildCurrentHref("/scenes", params)}
+      tripMessage={tripMessage}
       sceneMessage={sceneMessage}
     />
   );

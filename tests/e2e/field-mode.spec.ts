@@ -225,14 +225,15 @@ async function createFieldTrip(
   const tripId = page.url().split("/trips/")[1]?.split(/[?#]/)[0] ?? "";
   expect(tripId).not.toBe("");
 
+  await page.getByRole("link", { name: "從目錄加入" }).first().click();
+  await expect(page).toHaveURL(/\/scenes\?tripDayId=/);
+
   for (const sceneCode of sceneCodes) {
-    await page.getByRole("link", { name: "從目錄加入" }).first().click();
-    await expect(page).toHaveURL(/\/scenes\?tripDayId=/);
-    await page
-      .getByRole("button", { name: `將 ${sceneCode} 加入此日` })
-      .click();
-    await expect(page).toHaveURL(/\/trips\/.+/);
+    await page.getByLabel(`選取 ${sceneCode}`).check();
   }
+
+  await page.getByRole("button", { name: "加入勾選場景" }).click();
+  await expect(page).toHaveURL(/\/trips\/.+/);
 
   return tripId;
 }

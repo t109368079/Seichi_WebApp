@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import {
   addSceneToTripDay,
+  addScenesToTripDay,
   createTrip,
   deleteTrip,
   moveTripSceneInDay,
@@ -67,6 +68,25 @@ export async function addSceneToTripDayAction(
   }
 
   redirect(destination);
+}
+
+export async function addScenesToTripDayAction(
+  formData: FormData,
+): Promise<void> {
+  const tripDayId = readFormValue(formData, "tripDayId");
+  const sceneIds = formData
+    .getAll("sceneId")
+    .filter((value): value is string => typeof value === "string");
+  const destination = readFormValue(formData, "returnTo") || "/trips";
+  let result;
+
+  try {
+    result = await addScenesToTripDay(tripDayId, sceneIds);
+  } catch (error) {
+    redirect(appendMessage(destination, translateTripError(error)));
+  }
+
+  redirectToTripDay(result.tripId, result.tripDayId);
 }
 
 export async function moveTripSceneAction(formData: FormData): Promise<void> {
@@ -143,6 +163,14 @@ function translateTripError(error: unknown): string {
 
   if (message.includes("already in this trip day")) {
     return "此場景已加入這一天。";
+  }
+
+  if (message.includes("At least one scene is required")) {
+    return "請先勾選要加入的場景。";
+  }
+
+  if (message.includes("appears more than once")) {
+    return "同一場景不可重複加入。";
   }
 
   if (message.includes("Trip day does not exist")) {

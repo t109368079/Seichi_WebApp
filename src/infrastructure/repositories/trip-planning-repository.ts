@@ -226,6 +226,15 @@ export async function addSceneToTripDay(
   tripDayId: string,
   sceneId: string,
 ): Promise<TripMutationResult> {
+  return addScenesToTripDay(tripDayId, [sceneId]);
+}
+
+export async function addScenesToTripDay(
+  tripDayId: string,
+  sceneIds: readonly string[],
+): Promise<TripMutationResult> {
+  const requestedSceneIds = normalizeSelectedSceneIds(sceneIds);
+
   return await prisma.$transaction(async (transaction) => {
     const tripDay = await transaction.tripDay.findUnique({
       where: {
@@ -245,35 +254,42 @@ export async function addSceneToTripDay(
       throw new Error("Trip day does not exist.");
     }
 
-    const scene = await transaction.scene.findUnique({
+    for (const sceneId of requestedSceneIds) {
+      assertSceneCanBeAddedToTripDay(
+        tripDay.tripScenes.map((tripScene) => tripScene.sceneId),
+        sceneId,
+      );
+    }
+
+    const scenes = await transaction.scene.findMany({
       where: {
-        id: sceneId,
+        id: {
+          in: requestedSceneIds,
+        },
       },
       select: {
         id: true,
       },
     });
+    const foundSceneIds = new Set(scenes.map((scene) => scene.id));
 
-    if (!scene) {
+    if (requestedSceneIds.some((sceneId) => !foundSceneIds.has(sceneId))) {
       throw new Error("Scene does not exist.");
     }
 
-    assertSceneCanBeAddedToTripDay(
-      tripDay.tripScenes.map((tripScene) => tripScene.sceneId),
-      sceneId,
+    const nextSortOrder = getNextTripSceneSortOrder(
+      tripDay.tripScenes.map((tripScene) => ({
+        id: tripScene.sceneId,
+        sortOrder: tripScene.sortOrder,
+      })),
     );
 
-    await transaction.tripScene.create({
-      data: {
+    await transaction.tripScene.createMany({
+      data: requestedSceneIds.map((sceneId, index) => ({
         tripDayId,
         sceneId,
-        sortOrder: getNextTripSceneSortOrder(
-          tripDay.tripScenes.map((tripScene) => ({
-            id: tripScene.sceneId,
-            sortOrder: tripScene.sortOrder,
-          })),
-        ),
-      },
+        sortOrder: nextSortOrder + index,
+      })),
     });
 
     return {
@@ -503,4 +519,27 @@ async function updateTripSceneOrders(
       }),
     ),
   );
+}
+
+function normalizeSelectedSceneIds(sceneIds: readonly string[]): string[] {
+  if (sceneIds.length === 0) {
+    throw new Error("At least one scene is required.");
+  }
+
+  const normalized = sceneIds.map((sceneId) => sceneId.trim());
+  const seen = new Set<string>();
+
+  for (const sceneId of normalized) {
+    if (sceneId.length === 0) {
+      throw new Error("Scene id is required.");
+    }
+
+    if (seen.has(sceneId)) {
+      throw new Error("Scene appears more than once.");
+    }
+
+    seen.add(sceneId);
+  }
+
+  return normalized;
 }
