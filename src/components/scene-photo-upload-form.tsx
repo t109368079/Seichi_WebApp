@@ -287,6 +287,20 @@ export function ScenePhotoUploadForm({
     }
   }
 
+  async function checkGoogleSelection() {
+    if (!googleSession || googleImporting) {
+      return;
+    }
+
+    setMessage(undefined);
+
+    const session = await loadGooglePickerSession(googleSession.sessionId);
+
+    if (session && !session.mediaItemsSet) {
+      setMessage("尚未取得 Google 相簿選取照片。");
+    }
+  }
+
   function startGooglePolling(
     sessionId: string,
     delayMs: number,
@@ -298,61 +312,72 @@ export function ScenePhotoUploadForm({
 
     pollTimeoutRef.current = window.setTimeout(
       async () => {
-        try {
-          const response = await fetch(
-            getGooglePhotosPickerSessionEndpoint(sessionId),
-          );
+        const session = await loadGooglePickerSession(sessionId);
 
-          if (!response.ok) {
-            const body = (await response.json().catch(() => ({}))) as {
-              message?: string;
-            };
-            setMessage(body.message ?? "無法讀取 Google 相簿選取狀態。");
-            setGooglePolling(false);
-
-            return;
-          }
-
-          const session =
-            (await response.json()) as GooglePickerSessionResponse;
-
-          setGoogleSession((current) =>
-            current?.sessionId === sessionId ? session : current,
-          );
-
-          if (session.mediaItemsSet) {
-            const mediaItems = session.mediaItems ?? [];
-            setGoogleItems(mediaItems);
-            setGooglePolling(false);
-            setMessage(
-              mediaItems.length > 0
-                ? "已取得 Google 相簿選取照片。"
-                : "Google 相簿沒有回傳照片，請重新選取。",
-            );
-
-            return;
-          }
-
-          if (Date.now() - startedAt >= timeoutMs) {
-            setGooglePolling(false);
-            setMessage("Google 相簿選取逾時，請重新開啟選取。");
-
-            return;
-          }
-
-          startGooglePolling(
-            sessionId,
-            session.pollIntervalMs,
-            startedAt,
-            timeoutMs,
-          );
-        } catch {
-          setGooglePolling(false);
-          setMessage("無法讀取 Google 相簿選取狀態，請確認網路後重試。");
+        if (!session || session.mediaItemsSet) {
+          return;
         }
+
+        if (Date.now() - startedAt >= timeoutMs) {
+          setGooglePolling(false);
+          setMessage("Google 相簿選取逾時，請重新開啟選取。");
+
+          return;
+        }
+
+        startGooglePolling(
+          sessionId,
+          session.pollIntervalMs,
+          startedAt,
+          timeoutMs,
+        );
       },
       Math.max(1000, delayMs),
     );
+  }
+
+  async function loadGooglePickerSession(
+    sessionId: string,
+  ): Promise<GooglePickerSessionResponse | undefined> {
+    try {
+      const response = await fetch(
+        getGooglePhotosPickerSessionEndpoint(sessionId),
+      );
+
+      if (!response.ok) {
+        const body = (await response.json().catch(() => ({}))) as {
+          message?: string;
+        };
+        setMessage(body.message ?? "無法讀取 Google 相簿選取狀態。");
+        setGooglePolling(false);
+
+        return undefined;
+      }
+
+      const session = (await response.json()) as GooglePickerSessionResponse;
+
+      setGoogleSession((current) =>
+        current?.sessionId === sessionId ? session : current,
+      );
+
+      if (session.mediaItemsSet) {
+        const mediaItems = session.mediaItems ?? [];
+        setGoogleItems(mediaItems);
+        setGooglePolling(false);
+        setMessage(
+          mediaItems.length > 0
+            ? "已取得 Google 相簿選取照片。"
+            : "Google 相簿沒有回傳照片，請重新選取。",
+        );
+      }
+
+      return session;
+    } catch {
+      setGooglePolling(false);
+      setMessage("無法讀取 Google 相簿選取狀態，請確認網路後重試。");
+
+      return undefined;
+    }
   }
 
   function clearGooglePolling() {
@@ -421,6 +446,38 @@ export function ScenePhotoUploadForm({
           <p className="mt-3 text-sm leading-6 text-night">
             支援 JPEG、PNG、WebP，單張上限 {getMaxPhotoFileSizeLabel()}。
           </p>
+          {file && previewUrl ? (
+            <div className="mt-5 border-t border-rail pt-5">
+              <h2 className="text-lg font-semibold">確認照片</h2>
+              <p className="mt-3 break-all text-sm text-night">
+                {file.name} · {formatPhotoFileSize(file.size)}
+              </p>
+              <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+                <button
+                  type="button"
+                  onClick={upload}
+                  disabled={uploading}
+                  className="min-h-11 w-full rounded bg-field px-5 text-base font-semibold text-white disabled:opacity-50 sm:w-auto"
+                >
+                  {uploading ? "上傳中…" : `確認上傳到 ${sceneCode}`}
+                </button>
+                <button
+                  type="button"
+                  onClick={cancelSelection}
+                  disabled={uploading}
+                  className="min-h-11 w-full rounded border border-rail px-5 text-base font-semibold disabled:opacity-50 sm:w-auto"
+                >
+                  取消選取
+                </button>
+              </div>
+              {/* Plain img: the preview source is a local object URL. */}
+              <img
+                src={previewUrl}
+                alt="待上傳照片預覽"
+                className="mt-5 max-h-96 w-full rounded border border-rail bg-paper object-contain"
+              />
+            </div>
+          ) : null}
         </div>
       ) : (
         <div className="rounded border border-rail bg-white/95 p-5 shadow-sm">
@@ -472,41 +529,19 @@ export function ScenePhotoUploadForm({
               重新開啟 Google 相簿視窗
             </a>
           ) : null}
+
+          {googleSession && !selectedGoogleItem ? (
+            <button
+              type="button"
+              onClick={checkGoogleSelection}
+              disabled={googleImporting}
+              className="mt-3 min-h-11 w-full rounded border border-rail bg-paper px-4 text-sm font-semibold disabled:opacity-50 sm:w-auto"
+            >
+              檢查選取結果
+            </button>
+          ) : null}
         </div>
       )}
-
-      {source === "local" && file && previewUrl ? (
-        <div className="rounded border border-rail bg-white/95 p-5 shadow-sm">
-          <h2 className="text-lg font-semibold">確認照片</h2>
-          {/* Plain img: the preview source is a local object URL. */}
-          <img
-            src={previewUrl}
-            alt="待上傳照片預覽"
-            className="mt-4 max-h-96 w-full rounded border border-rail bg-paper object-contain"
-          />
-          <p className="mt-3 break-all text-sm text-night">
-            {file.name} · {formatPhotoFileSize(file.size)}
-          </p>
-          <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-            <button
-              type="button"
-              onClick={upload}
-              disabled={uploading}
-              className="min-h-11 w-full rounded bg-field px-5 text-base font-semibold text-white disabled:opacity-50 sm:w-auto"
-            >
-              {uploading ? "上傳中…" : `確認上傳到 ${sceneCode}`}
-            </button>
-            <button
-              type="button"
-              onClick={cancelSelection}
-              disabled={uploading}
-              className="min-h-11 w-full rounded border border-rail px-5 text-base font-semibold disabled:opacity-50 sm:w-auto"
-            >
-              取消選取
-            </button>
-          </div>
-        </div>
-      ) : null}
 
       {source === "google" && selectedGoogleItem ? (
         <div className="rounded border border-rail bg-white/95 p-5 shadow-sm">
