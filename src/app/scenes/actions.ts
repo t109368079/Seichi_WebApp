@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { requireAppActionAccess } from "@/app/access-control";
 import {
   normalizeSceneCreateInput,
   normalizeSceneEditableFields,
@@ -22,6 +23,8 @@ export async function handleCreateSceneAction(
   _previousState: SceneCreateActionState,
   formData: FormData,
 ): Promise<SceneCreateActionState> {
+  await requireAppActionAccess();
+
   const values = readSceneCreateFormValues(formData);
   let sceneId = "";
 
@@ -45,6 +48,8 @@ export async function handleCreateSceneAction(
 export async function updateSceneDetailsAction(
   formData: FormData,
 ): Promise<void> {
+  await requireAppActionAccess();
+
   const sceneId = readFormValue(formData, "sceneId");
   const returnTo = readFormValue(formData, "returnTo");
   const destination = getSafeSceneReturnTo(sceneId, returnTo);
@@ -72,6 +77,8 @@ export async function updateSceneDetailsAction(
 }
 
 export async function deleteSceneAction(formData: FormData): Promise<void> {
+  await requireAppActionAccess();
+
   const sceneId = readFormValue(formData, "sceneId");
   const returnTo = readFormValue(formData, "returnTo");
   const destination = getSafeCatalogReturnTo(returnTo);

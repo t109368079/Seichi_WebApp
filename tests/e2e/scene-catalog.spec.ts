@@ -1,4 +1,9 @@
 import { expect, test } from "@playwright/test";
+import { connectAllowedGoogle } from "./helpers/google-auth";
+
+test.beforeEach(async ({ page }) => {
+  await connectAllowedGoogle(page);
+});
 
 test("scene catalog loads demo scenes and opens a scene detail page", async ({
   page,

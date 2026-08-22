@@ -1,5 +1,6 @@
 "use server";
 
+import { requireAppActionAccess } from "@/app/access-control";
 import {
   commitSceneImportCsv,
   commitSceneImportGoogleSheet,
@@ -28,6 +29,8 @@ export async function handleSceneImportAction(
   _previousState: SceneImportActionState,
   formData: FormData,
 ): Promise<SceneImportActionState> {
+  await requireAppActionAccess();
+
   const intent = formData.get("intent");
 
   try {

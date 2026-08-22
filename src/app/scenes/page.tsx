@@ -1,3 +1,4 @@
+import { requireAppPageAccess } from "@/app/access-control";
 import { SceneCatalog } from "@/components/scene-catalog";
 import { isSceneStatus, type SceneStatus } from "@/domain/scene";
 import { getSceneCatalogData } from "@/infrastructure/repositories/scene-catalog-repository";
@@ -30,6 +31,8 @@ function readFilters(params: Record<string, string | string[] | undefined>) {
 }
 
 export default async function ScenesPage({ searchParams }: ScenePageProps) {
+  await requireAppPageAccess();
+
   const params = await searchParams;
   const filters = readFilters(params);
   const tripDayId = firstSearchParam(params.tripDayId);

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { requireAppPageAccess } from "@/app/access-control";
 import { SceneImportForm } from "@/components/scene-import-form";
 import { readGoogleSessionCookie } from "@/infrastructure/google/google-session-cookie";
 import {
@@ -9,6 +10,8 @@ import {
 export const dynamic = "force-dynamic";
 
 export default async function SceneImportPage() {
+  await requireAppPageAccess();
+
   const sessionToken = await readGoogleSessionCookie();
   const [settings, googleStatus] = await Promise.all([
     getGoogleIntegrationSettings(),

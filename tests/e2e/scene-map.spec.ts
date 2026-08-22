@@ -1,4 +1,9 @@
 import { expect, test, type Page, type Route } from "@playwright/test";
+import { connectAllowedGoogle } from "./helpers/google-auth";
+
+test.beforeEach(async ({ page }) => {
+  await connectAllowedGoogle(page);
+});
 
 test("scene map loads demo marker groups and shows grouped scene identities", async ({
   page,

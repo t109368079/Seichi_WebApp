@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { requireAppActionAccess } from "@/app/access-control";
 import { assertFieldStatusAction } from "@/domain/scene-status";
 import { updateSceneStatusFromField } from "@/infrastructure/repositories/field-mode-repository";
 import { deleteScenePhoto } from "@/infrastructure/repositories/scene-photo-repository";
@@ -10,6 +11,8 @@ import { readGoogleSessionCookie } from "@/infrastructure/google/google-session-
 export async function applyFieldStatusAction(
   formData: FormData,
 ): Promise<void> {
+  await requireAppActionAccess();
+
   const sceneId = readFormValue(formData, "sceneId");
   const tripDayId = readFormValue(formData, "tripDayId");
   const tripSceneId = readFormValue(formData, "tripSceneId");
@@ -40,6 +43,8 @@ export async function applyFieldStatusAction(
 export async function deleteScenePhotoAction(
   formData: FormData,
 ): Promise<void> {
+  await requireAppActionAccess();
+
   const photoId = readFormValue(formData, "photoId");
   const tripDayId = readFormValue(formData, "tripDayId");
   const tripSceneId = readFormValue(formData, "tripSceneId");

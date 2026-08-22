@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { AppAccessError } from "@/application/app-access";
+import { assertAppAccessForSession } from "@/infrastructure/app-access-control";
 import {
   createGoogleLanPairingToken,
   isGoogleLanPairingEnabled,
@@ -18,6 +20,17 @@ export async function GET(request: Request): Promise<NextResponse> {
   }
 
   const sessionToken = await readGoogleSessionCookie();
+
+  try {
+    await assertAppAccessForSession(sessionToken);
+  } catch (error) {
+    if (error instanceof AppAccessError) {
+      return redirectToIntegration(request, `app_access_${error.reason}`);
+    }
+
+    throw error;
+  }
+
   const account = sessionToken
     ? await getGoogleAccountForSession(sessionToken).catch(() => null)
     : null;

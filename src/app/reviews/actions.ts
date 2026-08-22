@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { requireAppActionAccess } from "@/app/access-control";
 import { assertReviewStatusAction } from "@/domain/review";
 import {
   selectBestScenePhoto,
@@ -9,6 +10,8 @@ import {
 } from "@/infrastructure/repositories/review-repository";
 
 export async function selectBestPhotoAction(formData: FormData): Promise<void> {
+  await requireAppActionAccess();
+
   const photoId = readFormValue(formData, "photoId");
   const sceneId = readFormValue(formData, "sceneId");
   let destination = `/reviews/${sceneId}?photoId=${photoId}`;
@@ -28,6 +31,8 @@ export async function selectBestPhotoAction(formData: FormData): Promise<void> {
 export async function applyReviewStatusAction(
   formData: FormData,
 ): Promise<void> {
+  await requireAppActionAccess();
+
   const sceneId = readFormValue(formData, "sceneId");
   const rawAction = readFormValue(formData, "action");
   let destination = `/reviews/${sceneId}`;

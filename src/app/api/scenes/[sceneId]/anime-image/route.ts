@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { requireAppRouteAccess } from "@/app/access-control";
 import {
   AnimeImageError,
   readAnimeImageForScene,
@@ -17,6 +18,12 @@ export async function GET(
   _request: Request,
   context: AnimeImageRouteContext,
 ): Promise<NextResponse> {
+  const accessDenied = await requireAppRouteAccess();
+
+  if (accessDenied) {
+    return accessDenied;
+  }
+
   const { sceneId } = await context.params;
 
   try {

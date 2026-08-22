@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { requireAppPageAccess } from "@/app/access-control";
 import mainVisual from "../../docs/images/動畫主視覺.png";
 
 const quickLinks = [
@@ -86,7 +87,9 @@ const sceneNotes = [
   "照片回來再比對",
 ] as const;
 
-export default function Home() {
+export default async function Home() {
+  await requireAppPageAccess();
+
   return (
     <main className="min-h-screen bg-paper text-ink">
       <section className="overflow-hidden border-b border-[#e5d9c8] bg-[#fff8ed]">

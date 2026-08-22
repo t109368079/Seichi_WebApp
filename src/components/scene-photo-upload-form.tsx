@@ -46,6 +46,8 @@ export function ScenePhotoUploadForm({
   googleConnected,
   googlePhotosScopeGranted,
   googleIntegrationHref,
+  preferredPhotoSource = "local-upload",
+  localUploadRole = "primary",
 }: {
   sceneId: string;
   sceneCode: string;
@@ -56,11 +58,15 @@ export function ScenePhotoUploadForm({
   googleConnected: boolean;
   googlePhotosScopeGranted: boolean;
   googleIntegrationHref: string;
+  preferredPhotoSource?: "google-photos" | "local-upload";
+  localUploadRole?: "small-file-backup" | "primary";
 }) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const pollTimeoutRef = useRef<number | undefined>(undefined);
-  const [source, setSource] = useState<PhotoSource>("local");
+  const [source, setSource] = useState<PhotoSource>(
+    preferredPhotoSource === "google-photos" ? "google" : "local",
+  );
   const [file, setFile] = useState<File | undefined>();
   const [previewUrl, setPreviewUrl] = useState<string | undefined>();
   const [message, setMessage] = useState<string | undefined>();
@@ -446,6 +452,12 @@ export function ScenePhotoUploadForm({
           <p className="mt-3 text-sm leading-6 text-night">
             支援 JPEG、PNG、WebP，單張上限 {getMaxPhotoFileSizeLabel()}。
           </p>
+          {localUploadRole === "small-file-backup" && !file ? (
+            <p className="mt-3 rounded border border-rail bg-paper p-3 text-sm leading-6 text-night">
+              Vercel 現地使用時請優先使用 Google
+              相簿；本地照片上傳僅適合小檔備援。
+            </p>
+          ) : null}
           {file && previewUrl ? (
             <div className="mt-5 border-t border-rail pt-5">
               <h2 className="text-lg font-semibold">確認照片</h2>

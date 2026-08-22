@@ -1,5 +1,6 @@
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
+import { requireAppRouteAccess } from "@/app/access-control";
 import { GoogleApiError } from "@/infrastructure/google/google-http";
 import { readGoogleSessionCookie } from "@/infrastructure/google/google-session-cookie";
 import {
@@ -18,6 +19,12 @@ interface GooglePhotosImportRequestBody {
 }
 
 export async function POST(request: Request): Promise<NextResponse> {
+  const accessDenied = await requireAppRouteAccess();
+
+  if (accessDenied) {
+    return accessDenied;
+  }
+
   let body: GooglePhotosImportRequestBody;
 
   try {

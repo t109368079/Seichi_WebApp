@@ -4,11 +4,13 @@ import {
   getGoogleAuthStartHref,
   getGoogleIntegrationLabel,
 } from "@/application/google-integration";
+import { getAppAccessDeniedMessage } from "@/application/app-access";
 import {
   logoutGoogleAction,
   revokeGoogleAction,
   saveGoogleSettingsAction,
 } from "@/app/integrations/google/actions";
+import { getAppAccessState } from "@/infrastructure/app-access-control";
 import { readGoogleSessionCookie } from "@/infrastructure/google/google-session-cookie";
 import {
   getGoogleIntegrationSettings,
@@ -32,11 +34,15 @@ export default async function GoogleIntegrationPage({
   const sessionToken = await readGoogleSessionCookie();
   const testMode = process.env.GOOGLE_INTEGRATION_TEST_MODE === "1";
   const lanPairingEnabled = isGoogleLanPairingEnabled();
-  const [status, settings, params] = await Promise.all([
+  const [status, accessState, params] = await Promise.all([
     getGoogleIntegrationStatus(sessionToken),
-    getGoogleIntegrationSettings(),
+    getAppAccessState(sessionToken),
     searchParams,
   ]);
+  const canManageGoogleSettings = accessState.access.allowed;
+  const settings = canManageGoogleSettings
+    ? await getGoogleIntegrationSettings()
+    : undefined;
   const lanPairingHref = params.lanPairingToken
     ? buildLanPairingHref(params.lanPairingToken, await headers())
     : undefined;
@@ -92,7 +98,9 @@ export default async function GoogleIntegrationPage({
                     建立測試連線
                   </a>
                 ) : null}
-                {status.connected && lanPairingEnabled ? (
+                {status.connected &&
+                canManageGoogleSettings &&
+                lanPairingEnabled ? (
                   <a
                     href="/auth/google/lan-pairing/start"
                     className="flex min-h-11 w-fit items-center rounded border border-rail px-5 text-sm font-semibold"
@@ -156,32 +164,43 @@ export default async function GoogleIntegrationPage({
           ) : null}
         </section>
 
-        <section className="rounded border border-rail bg-white/95 p-5 shadow-sm">
-          <h2 className="text-lg font-semibold">整合設定</h2>
-          <form action={saveGoogleSettingsAction} className="mt-4 grid gap-4">
-            <TextInput
-              label="Sheet ID"
-              name="sheetId"
-              defaultValue={settings.sheetId}
-            />
-            <TextInput
-              label="Sheet Range"
-              name="sheetRange"
-              defaultValue={settings.sheetRange}
-            />
-            <TextInput
-              label="Drive 照片資料夾 ID"
-              name="drivePhotoFolderId"
-              defaultValue={settings.drivePhotoFolderId}
-            />
-            <button
-              type="submit"
-              className="min-h-11 w-fit rounded bg-field px-5 text-sm font-semibold text-white"
-            >
-              儲存設定
-            </button>
-          </form>
-        </section>
+        {canManageGoogleSettings && settings ? (
+          <section className="rounded border border-rail bg-white/95 p-5 shadow-sm">
+            <h2 className="text-lg font-semibold">整合設定</h2>
+            <form action={saveGoogleSettingsAction} className="mt-4 grid gap-4">
+              <TextInput
+                label="Sheet ID"
+                name="sheetId"
+                defaultValue={settings.sheetId}
+              />
+              <TextInput
+                label="Sheet Range"
+                name="sheetRange"
+                defaultValue={settings.sheetRange}
+              />
+              <TextInput
+                label="Drive 照片資料夾 ID"
+                name="drivePhotoFolderId"
+                defaultValue={settings.drivePhotoFolderId}
+              />
+              <button
+                type="submit"
+                className="min-h-11 w-fit rounded bg-field px-5 text-sm font-semibold text-white"
+              >
+                儲存設定
+              </button>
+            </form>
+          </section>
+        ) : (
+          <section className="rounded border border-rail bg-white/95 p-5 shadow-sm">
+            <h2 className="text-lg font-semibold">整合設定</h2>
+            <p className="mt-3 text-sm leading-6 text-night">
+              {accessState.access.allowed
+                ? "Google 整合設定目前不可用。"
+                : getAppAccessDeniedMessage(accessState.access.reason)}
+            </p>
+          </section>
+        )}
       </div>
     </main>
   );
@@ -258,6 +277,10 @@ function getMessageLabel(message?: string): string | undefined {
     denied: "Google 授權已取消。",
     failed: "Google 連接失敗。",
     invalid_state: "Google 授權狀態不一致，請重試。",
+    app_access_forbidden: "這個 Google 帳號不在允許清單中。",
+    app_access_missing_allowlist:
+      "Production 需要設定 APP_ALLOWED_GOOGLE_EMAILS 才能進入 app。",
+    app_access_unauthenticated: "請先使用允許的 Google 帳號登入。",
     lan_connected: "平板已連接 Google session。",
     lan_pairing_created: "平板連線 URL 已建立。",
     lan_pairing_disabled: "平板連線只允許在開發環境使用。",

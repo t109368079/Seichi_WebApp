@@ -1,8 +1,10 @@
 import { expect, test } from "@playwright/test";
+import { connectAllowedGoogle } from "./helpers/google-auth";
 
 test("homepage links to scene import, map, and the catalog", async ({
   page,
 }) => {
+  await connectAllowedGoogle(page);
   await page.goto("/");
 
   await expect(

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { requireAppPageAccess } from "@/app/access-control";
 import { FieldSceneView } from "@/components/field-scene-view";
 import { getFieldDayHref } from "@/application/field-mode";
 import { getFieldModeScene } from "@/infrastructure/repositories/field-mode-repository";
@@ -19,6 +20,8 @@ export default async function FieldScenePage({
   params,
   searchParams,
 }: FieldScenePageProps) {
+  await requireAppPageAccess();
+
   const { tripDayId, tripSceneId } = await params;
   const message = firstSearchParam((await searchParams).fieldMessage);
   const view = await getFieldModeScene(tripDayId, tripSceneId);

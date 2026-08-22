@@ -608,7 +608,8 @@ seichi-pilgrimage-app/
 │       ├── PHASE_5_FIELD_MODE.md
 │       ├── PHASE_6_PHOTO_BINDING.md
 │       ├── PHASE_7_REVIEW.md
-│       └── PHASE_8_GOOGLE_INTEGRATION.md
+│       ├── PHASE_8_GOOGLE_INTEGRATION.md
+│       └── PHASE_9_VERCEL_DEPLOY.md
 │
 ├── infra/
 │   └── docker/
@@ -1524,6 +1525,31 @@ Phase 3 採 no-external-API local projected map，不使用 Google Maps JavaScri
 
 ---
 
+## Phase 9：Vercel + Neon Deployment
+
+### 目標
+
+讓系統可以從國外現地的平板與手機透過 LTE 或 Wi-Fi 連上，不再依賴本機電腦作為 server。
+
+### 範圍
+
+- Vercel Hobby 部署與免費 `*.vercel.app` 網域。
+- Neon Free PostgreSQL 作為 production database。
+- Prisma migration deployment script 與 Neon direct connection。
+- Production app access gate，以 Google email allowlist 限制單一使用者。
+- Google Photos Picker 作為 Vercel 上的正式現地照片來源。
+- Google Drive 作為 production 實景照片儲存。
+- 部署 runbook 與現地手動驗收清單。
+
+### 不包含
+
+- Custom domain、Cloudflare Access、public sharing 或多使用者協作。
+- Google Photos 全相簿掃描。
+- 大檔案 direct-to-storage upload。
+- Railway 或其他 hosting provider 實作；Railway 只保留為 fallback。
+
+---
+
 # 13. 單元測試策略
 
 ## 13.1 單元測試範圍
@@ -1947,6 +1973,9 @@ Review Workflow
     ↓
 Phase 8
 Google Integration
+    ↓
+Phase 9
+Vercel + Neon Deployment
 ```
 
 重要原則：

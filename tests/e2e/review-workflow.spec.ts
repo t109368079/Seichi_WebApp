@@ -1,11 +1,16 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
+import { connectAllowedGoogle } from "./helpers/google-auth";
 
 const tinyPng = Buffer.from(
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
   "base64",
 );
+
+test.beforeEach(async ({ page }) => {
+  await connectAllowedGoogle(page);
+});
 
 test("review queue compares uploaded takes, selects best, and updates trip progress", async ({
   page,
@@ -72,6 +77,7 @@ async function uploadTake(
   const filePath = await writeTinyPng(testInfo, fileName);
 
   await page.getByRole("link", { name: "上傳實景照片" }).click();
+  await page.getByRole("tab", { name: "本地照片" }).click();
   await page.getByLabel("從本機相簿選取照片").setInputFiles(filePath);
   await expect(page.getByAltText("待上傳照片預覽")).toBeVisible();
   await page.getByRole("button", { name: /確認上傳到 BHC-001/ }).click();

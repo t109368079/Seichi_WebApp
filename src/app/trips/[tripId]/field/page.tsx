@@ -1,4 +1,5 @@
 import { notFound, redirect } from "next/navigation";
+import { requireAppPageAccess } from "@/app/access-control";
 import { getFieldDayHref } from "@/application/field-mode";
 import { getLocalTripDateString } from "@/domain/trip";
 import { resolveTodayFieldTripDayId } from "@/infrastructure/repositories/field-mode-repository";
@@ -18,6 +19,8 @@ interface TripFieldShortcutPageProps {
 export default async function TripFieldShortcutPage({
   params,
 }: TripFieldShortcutPageProps) {
+  await requireAppPageAccess();
+
   const { tripId } = await params;
   const tripDayId = await resolveTodayFieldTripDayId(
     tripId,

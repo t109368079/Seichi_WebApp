@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { requireAppPageAccess } from "@/app/access-control";
 import { updateSceneDetailsAction } from "@/app/scenes/actions";
 import { AddToTripDayForm } from "@/components/add-to-trip-day-form";
 import { AnimeReferencePanel } from "@/components/anime-reference-panel";
@@ -26,6 +27,8 @@ export default async function SceneDetailPage({
   params,
   searchParams,
 }: SceneDetailPageProps) {
+  await requireAppPageAccess();
+
   const { sceneId } = await params;
   const resolvedSearchParams = await searchParams;
   const tripDayId = firstSearchParam(resolvedSearchParams.tripDayId);

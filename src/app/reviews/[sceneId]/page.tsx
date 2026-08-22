@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { requireAppPageAccess } from "@/app/access-control";
 import { ReviewSceneView } from "@/components/review-scene-view";
 import { getReviewSceneDetail } from "@/infrastructure/repositories/review-repository";
 
@@ -15,6 +16,8 @@ export default async function ReviewScenePage({
   params,
   searchParams,
 }: ReviewScenePageProps) {
+  await requireAppPageAccess();
+
   const { sceneId } = await params;
   const search = await searchParams;
   const detail = await getReviewSceneDetail(sceneId, first(search.photoId));

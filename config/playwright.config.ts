@@ -1,8 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
 
-const testDatabaseUrl =
-  process.env.TEST_DATABASE_URL ??
-  "postgresql://seichi:seichi_dev_password@localhost:5432/seichi_test?schema=public";
 const e2ePort = process.env.E2E_PORT ?? "3100";
 const e2eBaseUrl = `http://127.0.0.1:${e2ePort}`;
 
@@ -14,23 +11,6 @@ export default defineConfig({
   use: {
     baseURL: e2eBaseUrl,
     trace: "on-first-retry",
-  },
-  webServer: {
-    command: `npm run dev -- --port ${e2ePort}`,
-    env: {
-      DATABASE_URL: testDatabaseUrl,
-      PHOTO_STORAGE_DIR:
-        process.env.PHOTO_STORAGE_DIR ?? "storage/e2e-scene-photos",
-      PHOTO_STORAGE_BACKEND: "local",
-      GOOGLE_INTEGRATION_TEST_MODE: "1",
-      GOOGLE_CLIENT_ID: "mock-google-client-id",
-      GOOGLE_CLIENT_SECRET: "mock-google-client-secret",
-      GOOGLE_REDIRECT_URI: `${e2eBaseUrl}/auth/google/callback`,
-      GOOGLE_TOKEN_ENCRYPTION_KEY: "playwright-google-token-encryption-key",
-    },
-    url: e2eBaseUrl,
-    reuseExistingServer: false,
-    timeout: 120000,
   },
   projects: [
     {

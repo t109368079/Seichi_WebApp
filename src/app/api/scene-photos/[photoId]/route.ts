@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { requireAppRouteAccess } from "@/app/access-control";
 import { readScenePhotoBytes } from "@/infrastructure/repositories/scene-photo-repository";
 import { readGoogleSessionCookie } from "@/infrastructure/google/google-session-cookie";
 import { PhotoNotFoundError } from "@/infrastructure/storage/photo-storage";
@@ -19,6 +20,12 @@ export async function GET(
   _request: Request,
   context: ScenePhotoRouteContext,
 ): Promise<NextResponse> {
+  const accessDenied = await requireAppRouteAccess();
+
+  if (accessDenied) {
+    return accessDenied;
+  }
+
   const { photoId } = await context.params;
 
   try {

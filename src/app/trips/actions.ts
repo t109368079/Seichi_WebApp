@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { requireAppActionAccess } from "@/app/access-control";
 import {
   addSceneToTripDay,
   addScenesToTripDay,
@@ -21,6 +22,8 @@ export async function handleCreateTripAction(
   _previousState: TripCreateActionState,
   formData: FormData,
 ): Promise<TripCreateActionState> {
+  await requireAppActionAccess();
+
   const name = readFormValue(formData, "name");
   const startDate = readFormValue(formData, "startDate");
   const endDate = readFormValue(formData, "endDate");
@@ -45,6 +48,8 @@ export async function handleCreateTripAction(
 }
 
 export async function deleteTripAction(formData: FormData): Promise<void> {
+  await requireAppActionAccess();
+
   const tripId = readFormValue(formData, "tripId");
 
   await deleteTrip(tripId);
@@ -55,6 +60,8 @@ export async function deleteTripAction(formData: FormData): Promise<void> {
 export async function addSceneToTripDayAction(
   formData: FormData,
 ): Promise<void> {
+  await requireAppActionAccess();
+
   const tripDayId = readFormValue(formData, "tripDayId");
   const sceneId = readFormValue(formData, "sceneId");
   let destination = readFormValue(formData, "returnTo") || "/trips";
@@ -73,6 +80,8 @@ export async function addSceneToTripDayAction(
 export async function addScenesToTripDayAction(
   formData: FormData,
 ): Promise<void> {
+  await requireAppActionAccess();
+
   const tripDayId = readFormValue(formData, "tripDayId");
   const sceneIds = formData
     .getAll("sceneId")
@@ -90,6 +99,8 @@ export async function addScenesToTripDayAction(
 }
 
 export async function moveTripSceneAction(formData: FormData): Promise<void> {
+  await requireAppActionAccess();
+
   const tripSceneId = readFormValue(formData, "tripSceneId");
   const rawDirection = readFormValue(formData, "direction");
   const direction: TripSceneMoveDirection =
@@ -102,6 +113,8 @@ export async function moveTripSceneAction(formData: FormData): Promise<void> {
 export async function reorderTripDayScenesAction(
   formData: FormData,
 ): Promise<void> {
+  await requireAppActionAccess();
+
   const tripDayId = readFormValue(formData, "tripDayId");
   const orderedTripSceneIds = formData
     .getAll("tripSceneId")
@@ -112,6 +125,8 @@ export async function reorderTripDayScenesAction(
 }
 
 export async function removeTripSceneAction(formData: FormData): Promise<void> {
+  await requireAppActionAccess();
+
   const tripSceneId = readFormValue(formData, "tripSceneId");
   const result = await removeTripScene(tripSceneId);
 

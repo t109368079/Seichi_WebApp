@@ -6,6 +6,7 @@ const databaseUrl = getDatabaseUrl(target);
 const env = {
   ...process.env,
   DATABASE_URL: databaseUrl,
+  DIRECT_DATABASE_URL: process.env.DIRECT_DATABASE_URL ?? databaseUrl,
 };
 
 await ensureDatabaseExists(databaseUrl);

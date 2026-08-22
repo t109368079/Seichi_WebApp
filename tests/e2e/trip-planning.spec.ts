@@ -1,4 +1,9 @@
 import { expect, test } from "@playwright/test";
+import { connectAllowedGoogle } from "./helpers/google-auth";
+
+test.beforeEach(async ({ page }) => {
+  await connectAllowedGoogle(page);
+});
 
 test("trip planning creates a trip, adds scenes, reorders, and removes", async ({
   page,

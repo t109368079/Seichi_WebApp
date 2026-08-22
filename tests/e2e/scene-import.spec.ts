@@ -1,8 +1,13 @@
 import { expect, test } from "@playwright/test";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { connectAllowedGoogle } from "./helpers/google-auth";
 
 const fixturesPath = fileURLToPath(new URL("../fixtures", import.meta.url));
+
+test.beforeEach(async ({ page }) => {
+  await connectAllowedGoogle(page);
+});
 
 test("scene import previews, commits, and shows imported scenes in the catalog", async ({
   page,

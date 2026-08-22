@@ -12,6 +12,8 @@ import {
   googleOAuthScopes,
   joinGoogleScopes,
 } from "@/application/google-integration";
+import { AppAccessError } from "@/application/app-access";
+import { assertAppAccessForSession } from "@/infrastructure/app-access-control";
 import {
   setGoogleFetch,
   type GoogleFetch,
@@ -53,6 +55,8 @@ const originalEnv = {
   GOOGLE_REDIRECT_URI: process.env.GOOGLE_REDIRECT_URI,
   GOOGLE_TOKEN_ENCRYPTION_KEY: process.env.GOOGLE_TOKEN_ENCRYPTION_KEY,
   PHOTO_STORAGE_BACKEND: process.env.PHOTO_STORAGE_BACKEND,
+  APP_ACCESS_CONTROL_MODE: process.env.APP_ACCESS_CONTROL_MODE,
+  APP_ALLOWED_GOOGLE_EMAILS: process.env.APP_ALLOWED_GOOGLE_EMAILS,
 };
 
 beforeAll(async () => {
@@ -67,6 +71,8 @@ beforeEach(() => {
   process.env.GOOGLE_TOKEN_ENCRYPTION_KEY =
     "integration-google-token-encryption-key";
   process.env.PHOTO_STORAGE_BACKEND = "local";
+  process.env.APP_ACCESS_CONTROL_MODE = "disabled";
+  delete process.env.APP_ALLOWED_GOOGLE_EMAILS;
   setPhotoStorage(undefined);
   setGoogleFetch(createGoogleFetchMock());
 });
@@ -157,6 +163,36 @@ describe("google oauth session repository", () => {
     await expect(
       getGoogleAccessTokenForSession(paired.sessionToken),
     ).resolves.toBe("access-token");
+  });
+
+  it("creates a session for an allowed Google OAuth user", async () => {
+    process.env.APP_ACCESS_CONTROL_MODE = "required";
+    process.env.APP_ALLOWED_GOOGLE_EMAILS = "GOOGLE-USER@example.test";
+
+    const result = await createGoogleSession();
+
+    expect(result.account.email).toBe("google-user@example.test");
+    await expect(
+      assertAppAccessForSession(result.sessionToken),
+    ).resolves.toBeUndefined();
+  });
+
+  it("rejects disallowed Google OAuth users before storing tokens", async () => {
+    process.env.APP_ACCESS_CONTROL_MODE = "required";
+    process.env.APP_ALLOWED_GOOGLE_EMAILS = "allowed@example.test";
+
+    await expect(createGoogleSession()).rejects.toBeInstanceOf(AppAccessError);
+    await expect(prisma.googleAccount.count()).resolves.toBe(0);
+    await expect(prisma.googleSession.count()).resolves.toBe(0);
+  });
+
+  it("denies protected app access without an allowed session", async () => {
+    process.env.APP_ACCESS_CONTROL_MODE = "required";
+    process.env.APP_ALLOWED_GOOGLE_EMAILS = "google-user@example.test";
+
+    await expect(assertAppAccessForSession()).rejects.toMatchObject({
+      reason: "unauthenticated",
+    });
   });
 });
 

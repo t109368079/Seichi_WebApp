@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
+import { requireAppRouteAccess } from "@/app/access-control";
 import { uploadScenePhoto } from "@/infrastructure/repositories/scene-photo-repository";
 import { readGoogleSessionCookie } from "@/infrastructure/google/google-session-cookie";
 
@@ -10,6 +11,12 @@ export const dynamic = "force-dynamic";
  * server action body limit is 1MB and phone photos are several megabytes.
  */
 export async function POST(request: Request): Promise<NextResponse> {
+  const accessDenied = await requireAppRouteAccess();
+
+  if (accessDenied) {
+    return accessDenied;
+  }
+
   let formData: FormData;
 
   try {

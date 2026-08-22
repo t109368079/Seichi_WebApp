@@ -9,6 +9,7 @@ import {
   type GoogleIntegrationSettingsInput,
   type GoogleIntegrationStatus,
 } from "@/application/google-integration";
+import { assertGoogleEmailAllowedForApp } from "@/application/app-access";
 import {
   exchangeGoogleAuthorizationCode,
   fetchGoogleUserInfo,
@@ -70,6 +71,8 @@ export async function createGoogleSessionFromTokens(
   tokenSet: GoogleTokenSet,
   userInfo: GoogleUserInfo,
 ): Promise<GoogleConnectionResult> {
+  assertGoogleEmailAllowedForApp(userInfo.email);
+
   const existing = await prisma.googleAccount.findUnique({
     where: { googleSubject: userInfo.sub },
   });
@@ -123,6 +126,8 @@ export async function createGoogleSessionForAccount(
   if (!account) {
     throw new GoogleSessionError("Google account is missing or revoked.");
   }
+
+  assertGoogleEmailAllowedForApp(account.email);
 
   return createGoogleSessionForStoredAccount(account);
 }

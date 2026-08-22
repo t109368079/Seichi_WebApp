@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { requireAppActionAccess } from "@/app/access-control";
 import {
   clearGoogleSessionCookie,
   readGoogleSessionCookie,
@@ -15,6 +16,8 @@ import {
 export async function saveGoogleSettingsAction(
   formData: FormData,
 ): Promise<void> {
+  await requireAppActionAccess();
+
   await saveGoogleIntegrationSettings({
     sheetId: readFormValue(formData, "sheetId"),
     sheetRange: readFormValue(formData, "sheetRange"),

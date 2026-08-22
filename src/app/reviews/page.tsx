@@ -1,3 +1,4 @@
+import { requireAppPageAccess } from "@/app/access-control";
 import { ReviewQueue } from "@/components/review-queue";
 import { readReviewQueueFilters } from "@/application/review";
 import { getReviewQueueData } from "@/infrastructure/repositories/review-repository";
@@ -9,6 +10,8 @@ interface ReviewsPageProps {
 }
 
 export default async function ReviewsPage({ searchParams }: ReviewsPageProps) {
+  await requireAppPageAccess();
+
   const params = await searchParams;
   const filters = readReviewQueueFilters(params);
   const reviewData = await getReviewQueueData(filters);

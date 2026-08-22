@@ -1,11 +1,16 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
+import { connectAllowedGoogle } from "./helpers/google-auth";
 
 const tinyPng = Buffer.from(
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
   "base64",
 );
+
+test.beforeEach(async ({ page }) => {
+  await connectAllowedGoogle(page);
+});
 
 test("tablet upload keeps the local photo confirmation action visible", async ({
   page,
@@ -20,6 +25,7 @@ test("tablet upload keeps the local photo confirmation action visible", async ({
     .getByRole("link", { name: "BHC-001" })
     .click();
   await page.getByRole("link", { name: "上傳實景照片" }).click();
+  await page.getByRole("tab", { name: "本地照片" }).click();
 
   await page
     .getByLabel("從本機相簿選取照片")

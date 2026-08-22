@@ -2,7 +2,7 @@
 
 Responsive web app for managing anime pilgrimage scenes, trips, field photo binding, review workflows, and Google-backed import/storage.
 
-Phase 8 currently provides CSV and Google Sheet scene import, Drive-backed anime reference images, an embedded Google Maps scene map, a scene catalog, trip planning, tablet field mode, mobile photo binding, optional Google Drive photo storage, Google Photos Picker import for field photos, and the post-trip review workflow, all backed by Prisma and PostgreSQL.
+Phase 9 currently provides CSV and Google Sheet scene import, Drive-backed anime reference images, an embedded Google Maps scene map, a scene catalog, trip planning, tablet field mode, mobile photo binding, Google Drive photo storage, Google Photos Picker import for field photos, the post-trip review workflow, and a Vercel + Neon deployment path protected by a Google email allowlist.
 
 ## Requirements
 
@@ -138,6 +138,55 @@ GOOGLE_MAPS_EMBED_API_KEY=<restricted-maps-embed-api-key>
 `GOOGLE_PHOTO_FOLDER_ID` is a fallback for the app settings page's Drive photo folder id. `GOOGLE_MAPS_EMBED_API_KEY` is optional for local testing but recommended for a restricted, official Google Maps Embed API iframe. Automated tests use mocks and never connect to production Google data.
 
 Google Photos import requires the Google Photos Picker API to be enabled in the same Google Cloud project. Existing Google connections created before the Photos Picker scope was added must be reconnected once so Google grants the new scope.
+
+## Deployment: Vercel + Neon
+
+Phase 9 targets a low-cost production-like deployment that can be opened from tablet or phone over LTE/Wi-Fi without a local computer.
+
+Chosen defaults:
+
+- Hosting: Vercel Hobby with the free `*.vercel.app` domain.
+- Database: Neon Free PostgreSQL.
+- Photo source in the field: Google Photos Picker.
+- Photo storage in production: Google Drive.
+- Access control: one-user Google email allowlist.
+
+Use this Vercel build command:
+
+```bash
+npm run db:deploy && npm run build
+```
+
+Production Vercel environment variables:
+
+```text
+DATABASE_URL=<neon-pooled-runtime-url>
+DIRECT_DATABASE_URL=<neon-direct-migration-url>
+APP_ALLOWED_GOOGLE_EMAILS=<your-google-email>
+APP_ACCESS_CONTROL_MODE=production
+PHOTO_STORAGE_BACKEND=google-drive
+GOOGLE_CLIENT_ID=<google-oauth-client-id>
+GOOGLE_CLIENT_SECRET=<google-oauth-client-secret>
+GOOGLE_REDIRECT_URI=https://<vercel-domain>/auth/google/callback
+GOOGLE_TOKEN_ENCRYPTION_KEY=<strong-random-secret>
+GOOGLE_PHOTO_FOLDER_ID=<drive-folder-id>
+GOOGLE_MAPS_EMBED_API_KEY=<restricted-maps-embed-api-key>
+```
+
+Deployment runbook:
+
+1. Create a Neon project and copy both the pooled connection URL and direct connection URL.
+2. Create a Vercel project from GitHub repository `t109368079/Seichi_WebApp`.
+3. Add the environment variables above in Vercel.
+4. Confirm `vercel.json` uses `npm run db:deploy && npm run build`.
+5. Add `https://<vercel-domain>/auth/google/callback` to the Google OAuth authorized redirect URIs.
+6. Enable Google Sheets API, Google Drive API, Google Photos Picker API, and Google Maps Embed API.
+7. Move the OAuth consent screen out of Testing before travel, or accept Google's Testing-mode refresh-token expiry risk.
+8. Open the Vercel URL from the tablet over LTE or external Wi-Fi and log in directly on the tablet.
+9. Confirm a non-allowlisted Google account cannot enter the app.
+10. Import or verify scene data, open Field Mode, choose a Google Photos item, store it in Drive, and review the Scene.
+
+On Vercel, local original-photo upload is only a small-file backup path. The official field-photo path is Google Photos Picker because Vercel Functions have small request payload limits.
 
 ## Verification
 

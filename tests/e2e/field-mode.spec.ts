@@ -1,4 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
+import { connectAllowedGoogle } from "./helpers/google-auth";
+
+test.beforeEach(async ({ page }) => {
+  await connectAllowedGoogle(page);
+});
 
 /**
  * This suite mutates Scene.status in the shared test database, and Playwright

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { AppAccessError } from "@/application/app-access";
 import { completeGoogleOAuthConnection } from "@/infrastructure/repositories/google-integration-repository";
 import {
   googleOAuthStateCookieName,
@@ -38,7 +39,11 @@ export async function GET(request: Request): Promise<NextResponse> {
     response.cookies.delete(googleOAuthStateCookieName);
 
     return response;
-  } catch {
+  } catch (error) {
+    if (error instanceof AppAccessError) {
+      return redirectToIntegration(request, `app_access_${error.reason}`);
+    }
+
     return redirectToIntegration(request, "failed");
   }
 }

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { requireAppPageAccess } from "@/app/access-control";
 import { FieldDayItinerary } from "@/components/field-day-view";
 import { getFieldModeDay } from "@/infrastructure/repositories/field-mode-repository";
 
@@ -12,6 +13,8 @@ interface FieldDayPageProps {
 }
 
 export default async function FieldDayPage({ params }: FieldDayPageProps) {
+  await requireAppPageAccess();
+
   const { tripDayId } = await params;
   const day = await getFieldModeDay(tripDayId);
 

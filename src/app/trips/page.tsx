@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { requireAppPageAccess } from "@/app/access-control";
 import { TripCreateForm } from "@/components/trip-create-form";
 import { deleteTripAction } from "@/app/trips/actions";
 import { getTripProgressPercent } from "@/application/trip-planning";
@@ -7,6 +8,8 @@ import { listTrips } from "@/infrastructure/repositories/trip-planning-repositor
 export const dynamic = "force-dynamic";
 
 export default async function TripsPage() {
+  await requireAppPageAccess();
+
   const trips = await listTrips();
 
   return (

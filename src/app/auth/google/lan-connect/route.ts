@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { AppAccessError } from "@/application/app-access";
 import { googleSessionCookieName } from "@/application/google-integration";
 import {
   consumeGoogleLanPairingToken,
@@ -34,7 +35,11 @@ export async function GET(request: Request): Promise<NextResponse> {
     );
 
     return response;
-  } catch {
+  } catch (error) {
+    if (error instanceof AppAccessError) {
+      return redirectToIntegration(request, `app_access_${error.reason}`);
+    }
+
     return redirectToIntegration(request, "lan_pairing_invalid");
   }
 }

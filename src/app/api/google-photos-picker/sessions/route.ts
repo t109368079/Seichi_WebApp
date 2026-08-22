@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { requireAppRouteAccess } from "@/app/access-control";
 import { GoogleApiError } from "@/infrastructure/google/google-http";
 import { readGoogleSessionCookie } from "@/infrastructure/google/google-session-cookie";
 import {
@@ -9,6 +10,12 @@ import {
 export const dynamic = "force-dynamic";
 
 export async function POST(): Promise<NextResponse> {
+  const accessDenied = await requireAppRouteAccess();
+
+  if (accessDenied) {
+    return accessDenied;
+  }
+
   try {
     const session = await createGooglePhotosPickerSessionForAccount(
       await readGoogleSessionCookie(),

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { requireAppPageAccess } from "@/app/access-control";
 import { TripDetailView } from "@/components/trip-detail-view";
 import { getTripDetail } from "@/infrastructure/repositories/trip-planning-repository";
 
@@ -12,6 +13,8 @@ interface TripDetailPageProps {
 }
 
 export default async function TripDetailPage({ params }: TripDetailPageProps) {
+  await requireAppPageAccess();
+
   const { tripId } = await params;
   const trip = await getTripDetail(tripId);
 

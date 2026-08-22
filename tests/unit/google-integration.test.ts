@@ -1,5 +1,11 @@
 import { afterEach, describe, expect, it } from "vitest";
 import {
+  evaluateGoogleEmailAppAccess,
+  getVercelPhotoSourceGuidance,
+  isGoogleEmailAllowed,
+  parseAllowedGoogleEmails,
+} from "@/application/app-access";
+import {
   getGoogleIntegrationLabel,
   googlePhotosPickerScope,
   googleOAuthScopes,
@@ -68,6 +74,48 @@ describe("google integration application helpers", () => {
     expect(
       getGoogleIntegrationLabel({ configured: true, connected: true }),
     ).toBe("已連接");
+  });
+});
+
+describe("app access allowlist helpers", () => {
+  it("parses, trims, lowercases, and deduplicates allowed Google emails", () => {
+    expect(
+      parseAllowedGoogleEmails(
+        " User@Example.Test,second@example.test, user@example.test, ",
+      ),
+    ).toEqual(["user@example.test", "second@example.test"]);
+  });
+
+  it("allows exact Google email matches case-insensitively", () => {
+    const allowedEmails = parseAllowedGoogleEmails("Allowed@Example.Test");
+
+    expect(isGoogleEmailAllowed("allowed@example.test", allowedEmails)).toBe(
+      true,
+    );
+    expect(isGoogleEmailAllowed("ALLOWED@example.test", allowedEmails)).toBe(
+      true,
+    );
+    expect(
+      isGoogleEmailAllowed("not-allowed@example.test", allowedEmails),
+    ).toBe(false);
+  });
+
+  it("denies production access when the allowlist is missing", () => {
+    expect(
+      evaluateGoogleEmailAppAccess("allowed@example.test", {
+        nodeEnv: "production",
+        allowedGoogleEmails: "",
+      }),
+    ).toEqual({ allowed: false, reason: "missing_allowlist" });
+  });
+
+  it("marks Vercel local uploads as a small-file backup path", () => {
+    expect(
+      getVercelPhotoSourceGuidance({ NODE_ENV: "test", VERCEL: "1" }),
+    ).toEqual({
+      primarySource: "google-photos",
+      localUploadRole: "small-file-backup",
+    });
   });
 });
 

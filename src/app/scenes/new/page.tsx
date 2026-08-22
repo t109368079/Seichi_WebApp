@@ -1,9 +1,12 @@
 import Link from "next/link";
+import { requireAppPageAccess } from "@/app/access-control";
 import { SceneCreateForm } from "@/components/scene-create-form";
 
 export const dynamic = "force-dynamic";
 
-export default function NewScenePage() {
+export default async function NewScenePage() {
+  await requireAppPageAccess();
+
   return (
     <main className="min-h-screen bg-paper text-ink">
       <header className="border-b border-rail bg-[#fff8ed]">

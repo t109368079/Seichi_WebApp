@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { requireAppRouteAccess } from "@/app/access-control";
 import { GoogleApiError } from "@/infrastructure/google/google-http";
 import { readGoogleSessionCookie } from "@/infrastructure/google/google-session-cookie";
 import {
@@ -19,6 +20,12 @@ export async function GET(
   _request: Request,
   context: GooglePhotosPickerSessionRouteContext,
 ): Promise<NextResponse> {
+  const accessDenied = await requireAppRouteAccess();
+
+  if (accessDenied) {
+    return accessDenied;
+  }
+
   const { sessionId } = await context.params;
 
   try {
@@ -40,6 +47,12 @@ export async function DELETE(
   _request: Request,
   context: GooglePhotosPickerSessionRouteContext,
 ): Promise<NextResponse> {
+  const accessDenied = await requireAppRouteAccess();
+
+  if (accessDenied) {
+    return accessDenied;
+  }
+
   const { sessionId } = await context.params;
 
   try {

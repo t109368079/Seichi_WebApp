@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { requireAppPageAccess } from "@/app/access-control";
 import { AddToTripDayForm } from "@/components/add-to-trip-day-form";
 import { TripDayContextBanner } from "@/components/trip-day-context-banner";
 import {
@@ -22,6 +23,8 @@ export default async function LocationPage({
   params,
   searchParams,
 }: LocationPageProps) {
+  await requireAppPageAccess();
+
   const { locationId } = await params;
   const tripDayId = firstSearchParam((await searchParams).tripDayId);
   const data = await getLocationTripPlanningData(locationId, tripDayId);

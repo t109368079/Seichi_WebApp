@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { requireAppPageAccess } from "@/app/access-control";
 import { ScenePhotoUploadForm } from "@/components/scene-photo-upload-form";
 import {
   getGoogleIntegrationHref,
   hasGooglePhotosPickerScope,
 } from "@/application/google-integration";
+import { getVercelPhotoSourceGuidance } from "@/application/app-access";
 import { getFieldSceneHref } from "@/application/field-mode";
 import { readGoogleSessionCookie } from "@/infrastructure/google/google-session-cookie";
 import { getFieldModeScene } from "@/infrastructure/repositories/field-mode-repository";
@@ -23,6 +25,8 @@ interface ScenePhotoUploadPageProps {
 export default async function ScenePhotoUploadPage({
   params,
 }: ScenePhotoUploadPageProps) {
+  await requireAppPageAccess();
+
   const { tripDayId, tripSceneId } = await params;
   const view = await getFieldModeScene(tripDayId, tripSceneId);
 
@@ -33,6 +37,7 @@ export default async function ScenePhotoUploadPage({
   const scene = view.cursor.current.scene;
   const googleSessionToken = await readGoogleSessionCookie();
   const googleStatus = await getGoogleIntegrationStatus(googleSessionToken);
+  const photoSourceGuidance = getVercelPhotoSourceGuidance();
 
   return (
     <main className="min-h-screen bg-paper text-ink">
@@ -66,6 +71,8 @@ export default async function ScenePhotoUploadPage({
             googleStatus.scopes,
           )}
           googleIntegrationHref={getGoogleIntegrationHref()}
+          preferredPhotoSource={photoSourceGuidance.primarySource}
+          localUploadRole={photoSourceGuidance.localUploadRole}
         />
       </div>
     </main>
