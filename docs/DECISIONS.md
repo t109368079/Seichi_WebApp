@@ -252,7 +252,7 @@ The browser receives an opaque httpOnly app session token. The database stores o
 
 Status: Accepted
 
-Google Sheets rows from `spreadsheets.values.get` are converted into the same table contract as CSV v1 before validation. Preview and commit therefore share required columns, duplicate Scene code checks, coordinate-or-URL navigation rules, and all-or-nothing transaction behavior with CSV import.
+Google Sheets rows are converted into the same table contract as CSV v1 before validation. The adapter reads cell data rather than only rendered values so `anime_drive_file_id` and `maps_url` can use hidden Drive/Maps hyperlinks while the Sheet displays friendlier labels. Preview and commit therefore share required columns, duplicate Scene code checks, coordinate-or-URL navigation rules, and all-or-nothing transaction behavior with CSV import.
 
 ## D-0043: Drive Anime Images Are Served Through An App Route
 
@@ -282,7 +282,7 @@ Uploaded photo bytes remain personal data and are ignored under `/storage/`. The
 
 Status: Accepted
 
-Google Sheet maintenance is easier when `anime_drive_file_id` can contain the copied Drive share link. CSV and Google Sheet imports therefore accept either a raw Drive file id or common Drive URL forms such as `/file/d/<id>/view` and `open?id=<id>`. The import parser normalizes those values before persistence so `Scene.animeImageDriveFileId` remains a stable Drive file id, not a URL.
+Google Sheet maintenance is easier when `anime_drive_file_id` can contain the copied Drive share link or display a filename with a hidden Drive hyperlink/smart chip. CSV and Google Sheet imports therefore accept either a raw Drive file id or common Drive URL forms such as `/file/d/<id>/view` and `open?id=<id>`. The Sheet adapter resolves hidden links for the anime image and map URL columns, and the import parser normalizes Drive values before persistence so `Scene.animeImageDriveFileId` remains a stable Drive file id, not a URL.
 
 Downloaded OAuth client JSON files and local dev logs are ignored because they are local operational artifacts and may contain secrets.
 

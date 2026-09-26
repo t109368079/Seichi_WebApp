@@ -101,7 +101,7 @@ Phase 6 reuses the Phase 5 transition table without modifying it: upload and del
 
 Phase 7 extends the shared status transition table for review completion while keeping Field Mode on a capture-scoped action list. Review rules live in `src/domain/review.ts`; repository writes load the Scene and its photos inside one transaction before choosing a best photo or changing review status. No UI calls a storage implementation directly: review image URLs still go through the Phase 6 photo route handler and adapter.
 
-Phase 8 keeps Google API calls in infrastructure only. Presentation components call server actions or app route handlers; repositories resolve sessions, fetch access tokens, and delegate to Sheets, Drive, or storage adapters. Google Sheet import converts `spreadsheets.values.get` rows into the same normalized import model as CSV before validation or commit. Drive anime references are rendered through the app image route, and Drive-backed real photos still cross the existing `PhotoStorageAdapter` boundary.
+Phase 8 keeps Google API calls in infrastructure only. Presentation components call server actions or app route handlers; repositories resolve sessions, fetch access tokens, and delegate to Sheets, Drive, or storage adapters. Google Sheet import reads sheet cell data, resolves Drive/Maps hyperlinks for import-specific columns, and converts rows into the same normalized import model as CSV before validation or commit. Drive anime references are rendered through the app image route, and Drive-backed real photos still cross the existing `PhotoStorageAdapter` boundary.
 
 ## Adapter Rules
 

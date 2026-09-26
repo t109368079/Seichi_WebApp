@@ -21,7 +21,7 @@ Phase 8 已將核心閉環接上 Google OAuth、Google Sheets 與 Google Drive�
   - Google connection status
   - default Sheet ID/range
   - Drive photo folder ID
-- 新增 Google Sheets adapter，讀取 `spreadsheets.values.get`，並重用 Phase 2 Scene Import validation 與 all-or-nothing commit。
+- 新增 Google Sheets adapter，讀取 Sheet cell data，解析 `anime_drive_file_id` / `maps_url` 欄位的隱藏 Drive/Maps hyperlinks，並重用 Phase 2 Scene Import validation 與 all-or-nothing commit。
 - 新增 Google Drive adapter：
   - file metadata
   - file media download
@@ -47,7 +47,7 @@ UI components 只呼叫 server actions 或 app routes。OAuth、Sheets、Drive i
 
 ### Google Sheet 與 CSV 共用 Validation
 
-Google Sheets rows 先轉成 Phase 2 的 table/import contract，再走同一組 required columns、duplicate scene codes、optional coordinates / maps_url、preview summary 與 transaction commit 規則。
+Google Sheets rows 先轉成 Phase 2 的 table/import contract，再走同一組 required columns、duplicate scene codes、optional coordinates / maps_url、preview summary 與 transaction commit 規則。對 `anime_drive_file_id` 與 `maps_url`，Sheet adapter 會優先使用儲存格背後的 Drive/Maps hyperlink 或 Drive smart chip URI；沒有 link 時才使用顯示值。
 
 ### Token 與 Session 儲存
 
@@ -181,7 +181,7 @@ docs/TEST_STRATEGY.md
 
 ## Follow-Up Cleanup
 
-實測 Google Sheet 維護流程後，`anime_drive_file_id` 已放寬為可填 raw Drive file id 或常見 Drive share URL。Import parser 會在寫入資料庫前正規化成 Drive file id，因此 Sheet 端可以保留較好複製整理的連結格式，app 內仍維持穩定 file id。
+實測 Google Sheet 維護流程後，`anime_drive_file_id` 已放寬為可填 raw Drive file id、常見 Drive share URL，或顯示檔名但背後掛 Drive hyperlink / smart chip。Import parser 會在寫入資料庫前正規化成 Drive file id，因此 Sheet 端可以保留較好閱讀的檔名與連結格式，app 內仍維持穩定 file id。
 
 ## Commit
 

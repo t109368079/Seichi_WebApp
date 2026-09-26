@@ -197,7 +197,7 @@ describe("google oauth session repository", () => {
 });
 
 describe("google sheets scene import", () => {
-  it("previews and commits a mocked Sheet through the shared import path", async () => {
+  it("previews and commits a mocked Sheet with hidden Drive hyperlinks", async () => {
     const session = await createGoogleSession();
 
     const preview = await previewSceneImportGoogleSheet({
@@ -436,8 +436,8 @@ function createGoogleFetchMock(
     }
 
     if (url.hostname === "sheets.googleapis.com") {
-      return jsonResponse({
-        values: [
+      return jsonResponse(
+        googleSheetGridResponse([
           [
             "scene_code",
             "work_name",
@@ -456,7 +456,11 @@ function createGoogleFetchMock(
             "Google Sheet Story",
             "GGL",
             "01",
-            "https://drive.google.com/file/d/mock-anime-drive-file/view?usp=drive_link",
+            {
+              formattedValue: "mock-anime.png",
+              hyperlink:
+                "https://drive.google.com/file/d/mock-anime-drive-file/view?usp=drive_link",
+            },
             "Google Sheet Station",
             "Mock Area",
             "",
@@ -464,8 +468,8 @@ function createGoogleFetchMock(
             "https://maps.app.goo.gl/mock-sheet",
             "Mock Sheet import",
           ],
-        ],
-      });
+        ]),
+      );
     }
 
     if (
@@ -616,6 +620,36 @@ function jsonResponse(body: unknown, status = 200): Response {
     status,
     headers: { "Content-Type": "application/json" },
   });
+}
+
+type GoogleSheetMockValue =
+  | string
+  | {
+      formattedValue: string;
+      hyperlink?: string;
+    };
+
+function googleSheetGridResponse(values: GoogleSheetMockValue[][]) {
+  return {
+    sheets: [
+      {
+        data: [
+          {
+            rowData: values.map((row) => ({
+              values: row.map((value) =>
+                typeof value === "string"
+                  ? { formattedValue: value }
+                  : {
+                      formattedValue: value.formattedValue,
+                      hyperlink: value.hyperlink,
+                    },
+              ),
+            })),
+          },
+        ],
+      },
+    ],
+  };
 }
 
 function restoreEnv(): void {

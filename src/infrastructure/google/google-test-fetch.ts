@@ -47,8 +47,8 @@ export const googleIntegrationTestFetch: GoogleFetch = async (input, init) => {
   }
 
   if (url.hostname === "sheets.googleapis.com") {
-    return jsonResponse({
-      values: [
+    return jsonResponse(
+      googleSheetGridResponse([
         [
           "scene_code",
           "work_name",
@@ -75,8 +75,8 @@ export const googleIntegrationTestFetch: GoogleFetch = async (input, init) => {
           "https://maps.app.goo.gl/mock",
           "Imported from mocked Google Sheet",
         ],
-      ],
-    });
+      ]),
+    );
   }
 
   if (
@@ -213,6 +213,24 @@ function jsonResponse(body: unknown, status = 200): Response {
       "Content-Type": "application/json",
     },
   });
+}
+
+function googleSheetGridResponse(values: string[][]) {
+  return {
+    sheets: [
+      {
+        data: [
+          {
+            rowData: values.map((row) => ({
+              values: row.map((value) => ({
+                formattedValue: value,
+              })),
+            })),
+          },
+        ],
+      },
+    ],
+  };
 }
 
 function parseFormBody(body: BodyInit | null | undefined): URLSearchParams {
