@@ -60,6 +60,21 @@ test("field mode walks a day in manual order and records reversible status", asy
     page.getByText("Morning establishing cut facing the station sign."),
   ).toBeVisible();
 
+  await expect(
+    page.getByRole("navigation", { name: "顯示模式" }),
+  ).toBeVisible();
+  await page.getByRole("link", { name: "預覽模式" }).click();
+  await expect(page).toHaveURL(/view=preview/);
+  await expect(
+    page.getByRole("region", { name: "動畫與實景預覽" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("figure", { name: "BHC-001 動畫參考圖" }),
+  ).toBeVisible();
+  await expect(page.getByText("尚無實景照片")).toBeVisible();
+  await page.getByRole("link", { name: "動畫模式" }).click();
+  await expect(page).toHaveURL(/view=anime/);
+
   await expect(page.getByRole("link", { name: "開啟導航" })).toHaveAttribute(
     "href",
     "https://maps.google.com/?q=35.73028,139.71145",

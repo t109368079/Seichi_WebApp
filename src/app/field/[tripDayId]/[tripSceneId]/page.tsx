@@ -23,7 +23,9 @@ export default async function FieldScenePage({
   await requireAppPageAccess();
 
   const { tripDayId, tripSceneId } = await params;
-  const message = firstSearchParam((await searchParams).fieldMessage);
+  const resolvedSearchParams = await searchParams;
+  const message = firstSearchParam(resolvedSearchParams.fieldMessage);
+  const displayMode = firstSearchParam(resolvedSearchParams.view);
   const view = await getFieldModeScene(tripDayId, tripSceneId);
 
   if (!view) {
@@ -56,6 +58,7 @@ export default async function FieldScenePage({
         cursor={view.cursor}
         photos={photos}
         message={message}
+        displayMode={displayMode}
       />
     </main>
   );

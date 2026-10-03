@@ -27,11 +27,12 @@ test("review queue compares uploaded takes, selects best, and updates trip progr
 
   await uploadTake(page, testInfo, "take-1.png");
   const fieldSceneUrl = page.url();
-  await expect(page.getByText("Take 1")).toBeVisible();
+  const takeList = page.getByLabel("Take 列表");
+  await expect(takeList.getByText("Take 1")).toBeVisible();
   await expect(page.getByLabel("目前狀態")).toHaveText("待確認");
 
   await uploadTake(page, testInfo, "take-2.png");
-  await expect(page.getByText("Take 2")).toBeVisible();
+  await expect(takeList.getByText("Take 2")).toBeVisible();
 
   await page.goto("/reviews?bucket=PENDING_REVIEW");
   await expect(page.getByRole("heading", { name: "審核佇列" })).toBeVisible();

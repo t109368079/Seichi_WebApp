@@ -2,7 +2,7 @@
 
 ## 驗收成果
 
-Phase 5 已完成平板現地模式。系統現在可以從 Trip Detail 或 `/trips/[tripId]/field` 今日捷徑進入現地模式，依出發前排定的人工順序瀏覽當日場景，查看動畫參考面板、開啟 Google Maps 導航、以前後切換走訪場景，並記錄可逆的拍攝狀態。動畫參考面板在任何狀態變更後都不會被移除。
+Phase 5 已完成平板現地模式。系統現在可以從 Trip Detail 或 `/trips/[tripId]/field` 今日捷徑進入現地模式，依出發前排定的人工順序瀏覽當日場景，查看動畫參考面板、開啟 Google Maps 導航、以前後切換走訪場景，並記錄可逆的拍攝狀態。後續現地頁已加入動畫、實景與預覽模式切換；預覽模式會並排顯示動畫參考與最新實景 Take。動畫參考面板在任何狀態變更後都不會被移除。
 
 Phase 5 未新增任何資料表或 migration，只寫入既有的 `Scene.status` 欄位。
 
@@ -27,6 +27,7 @@ Phase 5 未新增任何資料表或 migration，只寫入既有的 `Scene.status
 - 新增 `/field/[tripDayId]` 今日行程頁與 `/field/[tripDayId]/[tripSceneId]` 場景執行頁。
 - 新增 `/trips/[tripId]/field` 今日捷徑，解析後 redirect。
 - 新增動畫參考面板、現地狀態操作、今日行程與場景執行元件。
+- 場景執行頁後續加入顯示模式切換：動畫模式、實景模式、預覽模式。
 - Trip 列表加入「今日行程」、Trip Detail 每日卡片加入「進入現地模式」、首頁更新為 Phase 5 範圍。
 - 所有 Field Mode 控制項使用最小 44px 觸控目標。
 

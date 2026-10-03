@@ -89,7 +89,7 @@ The map page renders a Google Maps iframe centered on the selected marker group,
 
 Phase 4 trip planning lets you create a trip, auto-generate daily itineraries from a date range, add scenes from catalog/map/location/detail pages, and save manual scene order. It does not optimize or auto-sort routes.
 
-Phase 5 field mode shows a day's scenes in the manually planned order, displays an anime reference panel for the current scene, generates the Google Maps navigation URL, moves between scenes with previous/next, and records reversible status. Field status actions are 待確認, 需要補拍, 跳過 and 返回未拍攝. `REVIEWED` scenes are read-only in Field Mode; review changes happen in the Phase 7 review workflow. The anime reference is served through the app's Phase 8 Drive image route, with a stable fallback image when Google access or file metadata is unavailable, and it is never removed by a status change.
+Phase 5 field mode shows a day's scenes in the manually planned order, displays the current scene media, generates the Google Maps navigation URL, moves between scenes with previous/next, and records reversible status. Field status actions are 待確認, 需要補拍, 跳過 and 返回未拍攝. The scene execution page can switch between animation, real-photo, and preview modes; preview mode shows the anime reference and latest real-world take side by side. `REVIEWED` scenes are read-only in Field Mode; review changes happen in the Phase 7 review workflow. The anime reference is served through the app's Phase 8 Drive image route, with a stable fallback image when Google access or file metadata is unavailable, and it is never removed by a status change.
 
 Phase 6 photo binding lets the phone upload a real photo from the local library and bind it permanently to one Scene:
 
