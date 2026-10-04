@@ -164,20 +164,25 @@ NRI-101,Night Rail Ikebukuro,NRI,03,demo-drive-nri-101,East Gate,Ikebukuro,,,"ht
     ]);
   });
 
-  it("requires either a maps URL or a complete coordinate pair", () => {
+  it("skips rows missing location identity or any navigation reference", () => {
     const result = parseSceneImportCsv(`${csvHeader}
-NRI-101,Night Rail,NRI,03,demo-drive,East Gate,Ikebukuro,,,,Missing navigation
-NRI-102,Night Rail,NRI,03,demo-drive,East Gate,Ikebukuro,35.73028,,,Partial coordinate`);
+NRI-101,Night Rail,NRI,03,demo-drive-1,,Ikebukuro,35.73028,139.71145,,Missing location
+NRI-102,Night Rail,NRI,03,demo-drive-2,East Gate,,35.73028,139.71145,,Missing area
+NRI-103,Night Rail,NRI,03,demo-drive-3,East Gate,Ikebukuro,,,,Missing navigation
+NRI-104,Night Rail,NRI,03,demo-drive-4,West Gate,Ikebukuro,,,"https://maps.app.goo.gl/example",Valid row`);
+
+    expect(result.errors).toEqual([]);
+    expect(result.rows.map((row) => row.sceneCode)).toEqual(["NRI-104"]);
+  });
+
+  it("reports partial coordinate rows instead of skipping them", () => {
+    const result = parseSceneImportCsv(`${csvHeader}
+NRI-101,Night Rail,NRI,03,demo-drive,East Gate,Ikebukuro,35.73028,,,Partial coordinate`);
 
     expect(result.rows).toEqual([]);
     expect(result.errors).toEqual([
       {
         rowNumber: 2,
-        field: "maps_url",
-        message: "latitude/longitude 或 maps_url 至少需填一組。",
-      },
-      {
-        rowNumber: 3,
         field: "longitude",
         message: "latitude 與 longitude 需同時填寫，或只填 maps_url。",
       },

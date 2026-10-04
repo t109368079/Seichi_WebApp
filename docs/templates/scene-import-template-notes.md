@@ -12,12 +12,12 @@
 - `anime_drive_file_id`
 - `location_name`
 - `area_name`
-- `latitude`
-- `longitude`
 
 ## 可空欄位
 
 - `episode`
+- `latitude`
+- `longitude`
 - `maps_url`
 - `notes`
 
@@ -33,5 +33,7 @@ NRI-101,Night Rail Ikebukuro,NRI,03,demo-drive-file-id,Ikebukuro Station East Ga
 - `scene_code` 在同一份 CSV 內不能重複。
 - 如果 `scene_code` 已存在，匯入會更新既有 Scene，但保留原本的 `id` 與 `status`。
 - 新的 Scene 會預設為 `未拍攝`。
+- 單列若缺少 `location_name`、`area_name`，或同時沒有座標與 `maps_url`，會被略過，不會阻擋其他列匯入。
+- `latitude` 與 `longitude` 可留空，但若填其中一個就必須兩個都填；沒有座標時需填 `maps_url`。
 - `latitude` 必須介於 `-90` 到 `90`；`longitude` 必須介於 `-180` 到 `180`。
 - 如果某個欄位內容包含逗號，請用雙引號包起來，例如 `"East Gate, Main"`。

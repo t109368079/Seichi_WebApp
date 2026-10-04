@@ -102,6 +102,7 @@ Import matching and write rules:
 - `anime_drive_file_id` accepts either a raw Drive file id, a Google Drive file URL, or a Google Sheet cell whose hidden hyperlink/smart chip points at a Drive file; imports normalize URLs to `Scene.animeImageDriveFileId` before saving.
 - `latitude + longitude` values are optional when `maps_url` is present. If one coordinate is provided, both must be provided and valid.
 - `maps_url` is optional only when both coordinates are present, and it is the preferred navigation target when present.
+- Rows with a blank `location_name`, blank `area_name`, or no navigation reference at all are skipped instead of blocking the whole import. Other validation errors still prevent any write.
 - Existing Scene rows keep their existing `id` and `status`.
 - New Scene rows default to `NOT_SHOT`.
 - Import does not accept or overwrite status.

@@ -152,6 +152,30 @@ describe("scene import repository", () => {
     expect(scene.location.mapsUrl).toBe("https://maps.app.goo.gl/example");
   });
 
+  it("commits valid rows while skipping rows with incomplete location references", async () => {
+    const result = await commitSceneImportCsv(
+      csv([
+        "NRI-301,Night Rail Ikebukuro,NRI,03,demo-drive-nri-301,Rollback Gate,Ikebukuro,35.73028,139.71145,,Valid row",
+        "NRI-302,Night Rail Ikebukuro,NRI,03,demo-drive-nri-302,,Ikebukuro,35.73029,139.71146,,Missing location",
+      ]),
+    );
+    const scenes = await prisma.scene.findMany({
+      where: {
+        sceneCode: {
+          in: ["NRI-301", "NRI-302"],
+        },
+      },
+      orderBy: {
+        sceneCode: "asc",
+      },
+    });
+
+    expect(result.ok).toBe(true);
+    expect(result.createdCount).toBe(1);
+    expect(result.sceneCodes).toEqual(["NRI-301"]);
+    expect(scenes.map((scene) => scene.sceneCode)).toEqual(["NRI-301"]);
+  });
+
   it("updates an existing Scene without changing its status", async () => {
     const result = await commitSceneImportCsv(
       csv([

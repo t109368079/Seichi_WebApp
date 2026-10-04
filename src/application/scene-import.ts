@@ -370,6 +370,26 @@ function normalizeDataRecord(
     rawRow.set(header as SceneImportCsvColumn, record.values[index] ?? "");
   });
 
+  const locationName = readRequiredValue(rawRow, "location_name");
+  const areaName = readRequiredValue(rawRow, "area_name");
+  const latitudeText = readOptionalValue(rawRow, "latitude") ?? "";
+  const longitudeText = readOptionalValue(rawRow, "longitude") ?? "";
+  const mapsUrl = readOptionalValue(rawRow, "maps_url");
+  const hasLatitude = latitudeText.length > 0;
+  const hasLongitude = longitudeText.length > 0;
+
+  if (
+    shouldSkipIncompleteLocationRow({
+      locationName,
+      areaName,
+      hasLatitude,
+      hasLongitude,
+      mapsUrl,
+    })
+  ) {
+    return null;
+  }
+
   let hasRowError = false;
   const requiredValues = new Map<SceneImportCsvColumn, string>();
 
@@ -388,11 +408,6 @@ function normalizeDataRecord(
     requiredValues.set(column, value);
   }
 
-  const latitudeText = readOptionalValue(rawRow, "latitude") ?? "";
-  const longitudeText = readOptionalValue(rawRow, "longitude") ?? "";
-  const mapsUrl = readOptionalValue(rawRow, "maps_url");
-  const hasLatitude = latitudeText.length > 0;
-  const hasLongitude = longitudeText.length > 0;
   let latitude: number | null = null;
   let longitude: number | null = null;
 
@@ -471,6 +486,26 @@ function normalizeDataRecord(
     mapsUrl,
     notes: readOptionalValue(rawRow, "notes"),
   };
+}
+
+function shouldSkipIncompleteLocationRow({
+  locationName,
+  areaName,
+  hasLatitude,
+  hasLongitude,
+  mapsUrl,
+}: {
+  locationName: string;
+  areaName: string;
+  hasLatitude: boolean;
+  hasLongitude: boolean;
+  mapsUrl?: string;
+}): boolean {
+  const hasCompleteLocation = locationName.length > 0 && areaName.length > 0;
+  const hasAnyNavigationReference =
+    mapsUrl !== undefined || hasLatitude || hasLongitude;
+
+  return !hasCompleteLocation || !hasAnyNavigationReference;
 }
 
 function readRequiredValue(
