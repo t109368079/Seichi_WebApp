@@ -28,10 +28,16 @@ export interface SceneCatalogItem {
   };
 }
 
+export const unselectedSceneCatalogFilterValue = "UNSELECTED";
+
+export type SceneCatalogSelectionFilter =
+  typeof unselectedSceneCatalogFilterValue;
+
 export interface SceneCatalogFilters {
   workId?: string;
   locationId?: string;
   status?: SceneStatus;
+  selection?: SceneCatalogSelectionFilter;
 }
 
 export interface SceneCatalogFilterOptions {
@@ -170,8 +176,12 @@ export function normalizeSceneCatalogFilters(
     filters.locationId = rawFilters.locationId;
   }
 
-  if (rawFilters.status && isSceneStatus(rawFilters.status)) {
-    filters.status = rawFilters.status;
+  if (rawFilters.status) {
+    if (isSceneStatus(rawFilters.status)) {
+      filters.status = rawFilters.status;
+    } else if (isSceneCatalogSelectionFilter(rawFilters.status)) {
+      filters.selection = rawFilters.status;
+    }
   }
 
   return filters;
@@ -196,6 +206,26 @@ export function filterSceneCatalogItems(
 
     return true;
   });
+}
+
+export function filterSceneCatalogItemsBySelection(
+  scenes: readonly SceneCatalogItem[],
+  filters: SceneCatalogFilters,
+  selectedSceneIds: Iterable<string>,
+): SceneCatalogItem[] {
+  if (filters.selection !== unselectedSceneCatalogFilterValue) {
+    return [...scenes];
+  }
+
+  const selectedSceneIdSet = new Set(selectedSceneIds);
+
+  return scenes.filter((scene) => !selectedSceneIdSet.has(scene.id));
+}
+
+export function isSceneCatalogSelectionFilter(
+  value: string,
+): value is SceneCatalogSelectionFilter {
+  return value === unselectedSceneCatalogFilterValue;
 }
 
 export function countDistinctWorksAtLocation(

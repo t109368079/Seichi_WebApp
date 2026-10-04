@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  assertSceneCanBeAddedToTripDay,
+  assertSceneCanBeScheduledInTrip,
   assertValidTripDate,
   assertValidTripDateRange,
   buildTripDayDates,
@@ -83,10 +83,10 @@ describe("trip scene order rules", () => {
     );
   });
 
-  it("prevents duplicate scenes in the same trip day", () => {
+  it("prevents duplicate scenes in the same trip", () => {
     expect(() =>
-      assertSceneCanBeAddedToTripDay(["scene-bhc-001"], "scene-bhc-001"),
-    ).toThrow("Scene is already in this trip day.");
+      assertSceneCanBeScheduledInTrip(["scene-bhc-001"], "scene-bhc-001"),
+    ).toThrow("Scene is already in this trip.");
   });
 });
 

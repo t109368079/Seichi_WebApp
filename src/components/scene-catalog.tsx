@@ -5,14 +5,16 @@ import { SceneDeleteSubmitButton } from "@/components/scene-delete-submit-button
 import { SceneBulkSelectionControls } from "@/components/scene-bulk-selection-controls";
 import { TripDayContextBanner } from "@/components/trip-day-context-banner";
 import {
+  filterSceneCatalogItemsBySelection,
   formatSceneCoordinates,
   getSceneStatusLabel,
   getSceneStatusOptions,
+  unselectedSceneCatalogFilterValue,
   type SceneCatalogFilters,
   type SceneCatalogItem,
 } from "@/application/scene-catalog";
 import {
-  isSceneAddedToTripDay,
+  isSceneScheduledInTrip,
   type TripDaySelectionContext,
 } from "@/application/trip-planning";
 
@@ -55,6 +57,12 @@ export function SceneCatalog({
   tripMessage,
   sceneMessage,
 }: SceneCatalogProps) {
+  const visibleScenes = filterSceneCatalogItemsBySelection(
+    scenes,
+    filters,
+    tripDayContext?.scheduledSceneIds ?? [],
+  );
+
   return (
     <main className="min-h-screen bg-paper text-ink">
       <header className="border-b border-rail bg-[#fff8ed]">
@@ -72,7 +80,10 @@ export function SceneCatalog({
           </div>
           <div className="grid gap-3">
             <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-3">
-              <CatalogStat label="顯示中" value={scenes.length.toString()} />
+              <CatalogStat
+                label="顯示中"
+                value={visibleScenes.length.toString()}
+              />
               <CatalogStat label="總數" value={totalSceneCount.toString()} />
               <CatalogStat label="作品" value={works.length.toString()} />
             </div>
@@ -118,7 +129,7 @@ export function SceneCatalog({
           <TripDayContextBanner context={tripDayContext} />
           {sceneMessage ? <SceneCatalogMessage message={sceneMessage} /> : null}
           {tripMessage ? <TripSelectionMessage message={tripMessage} /> : null}
-          {scenes.length === 0 ? (
+          {visibleScenes.length === 0 ? (
             <div className="rounded border border-rail bg-white/95 p-6 shadow-sm">
               <h2 className="text-lg font-semibold">沒有符合的場景</h2>
               <p className="mt-2 text-sm leading-6 text-night">
@@ -127,12 +138,12 @@ export function SceneCatalog({
             </div>
           ) : tripDayContext ? (
             <SceneBulkAddForm
-              scenes={scenes}
+              scenes={visibleScenes}
               tripDayContext={tripDayContext}
               returnTo={returnTo}
             />
           ) : (
-            scenes.map((scene) => (
+            visibleScenes.map((scene) => (
               <SceneCard key={scene.id} scene={scene} returnTo={returnTo} />
             ))
           )}
@@ -189,7 +200,7 @@ function SceneBulkAddForm({
   returnTo: string;
 }) {
   const selectableSceneCount = scenes.filter(
-    (scene) => !isSceneAddedToTripDay(tripDayContext, scene.id),
+    (scene) => !isSceneScheduledInTrip(tripDayContext, scene.id),
   ).length;
   const addedSceneCount = scenes.length - selectableSceneCount;
 
@@ -201,7 +212,7 @@ function SceneBulkAddForm({
         <div>
           <h2 className="text-base font-semibold">選擇加入此日的場景</h2>
           <p className="mt-1 text-sm text-night">
-            可加入 {selectableSceneCount} 個 · 已加入 {addedSceneCount} 個
+            可加入 {selectableSceneCount} 個 · 已排入行程 {addedSceneCount} 個
           </p>
         </div>
         <div className="flex flex-col gap-2 sm:items-end">
@@ -288,10 +299,15 @@ function SceneFilterForm({
           <select
             name="status"
             aria-label="依狀態篩選"
-            defaultValue={filters.status ?? ""}
+            defaultValue={filters.selection ?? filters.status ?? ""}
             className="min-h-10 w-full min-w-0 rounded border border-rail bg-white px-3 text-sm"
           >
             <option value="">全部狀態</option>
+            {tripDayId ? (
+              <option value={unselectedSceneCatalogFilterValue}>
+                未被選取
+              </option>
+            ) : null}
             {getSceneStatusOptions().map((status) => (
               <option key={status} value={status}>
                 {getSceneStatusLabel(status)}
@@ -328,7 +344,7 @@ function SceneCard({
   tripDayContext?: TripDaySelectionContext;
   returnTo?: string;
 }) {
-  const added = isSceneAddedToTripDay(tripDayContext, scene.id);
+  const added = isSceneScheduledInTrip(tripDayContext, scene.id);
 
   return (
     <article className="rounded border border-rail bg-white/95 p-4 shadow-sm">
@@ -414,7 +430,7 @@ function SceneCard({
               aria-label={`選取 ${scene.sceneCode}`}
               className="h-4 w-4 accent-field"
             />
-            {added ? "已加入此日" : `選取 ${scene.sceneCode}`}
+            {added ? "已排入此行程" : `選取 ${scene.sceneCode}`}
           </label>
         </div>
       ) : null}

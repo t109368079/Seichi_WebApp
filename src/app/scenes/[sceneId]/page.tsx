@@ -10,7 +10,7 @@ import {
   getSceneStatusLabel,
 } from "@/application/scene-catalog";
 import { getNavigationTarget } from "@/application/scene-map";
-import { isSceneAddedToTripDay } from "@/application/trip-planning";
+import { isSceneScheduledInTrip } from "@/application/trip-planning";
 import { getSceneDetail } from "@/infrastructure/repositories/scene-catalog-repository";
 import { getTripDaySelectionContext } from "@/infrastructure/repositories/trip-planning-repository";
 
@@ -121,7 +121,7 @@ export default async function SceneDetailPage({
                 sceneId={scene.id}
                 sceneCode={scene.sceneCode}
                 returnTo={returnTo}
-                added={isSceneAddedToTripDay(tripDayContext, scene.id)}
+                added={isSceneScheduledInTrip(tripDayContext, scene.id)}
               />
             ) : null}
           </div>

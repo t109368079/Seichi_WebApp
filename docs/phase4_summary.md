@@ -10,7 +10,7 @@ Phase 4 已完成旅行規劃 workflow。系統現在可以透過 `/trips` 建�
 - 新增 domain-layer Trip 規則：
   - `yyyy-mm-dd` 日期 validation。
   - inclusive TripDay date generation。
-  - duplicate Scene prevention。
+  - same-Trip duplicate Scene prevention。
   - append/move/reorder/remove order normalization。
   - Trip progress aggregation。
 - 新增 Prisma-backed Trip Planning repository：
@@ -21,7 +21,7 @@ Phase 4 已完成旅行規劃 workflow。系統現在可以透過 `/trips` 建�
   - location-scoped planning data。
 - 新增 `/trips` 與 `/trips/[tripId]`。
 - 新增 `/locations/[locationId]`。
-- Scene Catalog、Scene Detail、Map、Location page 支援 `tripDayId` context 與「加入此日 / 已加入此日」狀態。
+- Scene Catalog、Scene Detail、Map、Location page 支援 `tripDayId` context 與「加入此日 / 已排入此行程」狀態。
 - Trip Detail 支援 native drag reorder 與上移/下移 fallback。
 - 首頁加入旅行規劃入口。
 

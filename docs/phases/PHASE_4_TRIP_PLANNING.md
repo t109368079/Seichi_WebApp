@@ -46,13 +46,13 @@ Tasks:
 
 - Add TripScene model and repository use cases.
 - Add selected TripDay context to catalog, map, detail, and location pages.
-- Show add or already-added state for each Scene.
+- Show add or already-scheduled state for each Scene in the current Trip.
 - Allow removal from Trip Detail.
 
 Acceptance Criteria:
 
 - A Scene can be added to the selected day from catalog, map, detail, or location view.
-- Duplicate Scene entries in the same TripDay are prevented.
+- Duplicate Scene entries in the same Trip are prevented, even across different TripDays.
 - A Scene can be removed from a day without deleting the Scene itself.
 
 ### Block 4.3: Manual Ordering

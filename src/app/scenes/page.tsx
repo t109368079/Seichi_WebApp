@@ -1,6 +1,10 @@
 import { requireAppPageAccess } from "@/app/access-control";
 import { SceneCatalog } from "@/components/scene-catalog";
 import { isSceneStatus, type SceneStatus } from "@/domain/scene";
+import {
+  isSceneCatalogSelectionFilter,
+  type SceneCatalogFilters,
+} from "@/application/scene-catalog";
 import { getSceneCatalogData } from "@/infrastructure/repositories/scene-catalog-repository";
 import { getTripDaySelectionContext } from "@/infrastructure/repositories/trip-planning-repository";
 
@@ -16,7 +20,9 @@ function firstSearchParam(
   return Array.isArray(value) ? value[0] : value;
 }
 
-function readFilters(params: Record<string, string | string[] | undefined>) {
+function readFilters(
+  params: Record<string, string | string[] | undefined>,
+): SceneCatalogFilters {
   const workId = firstSearchParam(params.workId);
   const locationId = firstSearchParam(params.locationId);
   const rawStatus = firstSearchParam(params.status);
@@ -34,14 +40,22 @@ export default async function ScenesPage({ searchParams }: ScenePageProps) {
   await requireAppPageAccess();
 
   const params = await searchParams;
-  const filters = readFilters(params);
+  const rawStatus = firstSearchParam(params.status);
+  const catalogFilters = readFilters(params);
   const tripDayId = firstSearchParam(params.tripDayId);
   const tripMessage = firstSearchParam(params.tripMessage);
   const sceneMessage = firstSearchParam(params.sceneMessage);
   const [catalog, tripDayContext] = await Promise.all([
-    getSceneCatalogData(filters),
+    getSceneCatalogData(catalogFilters),
     getTripDaySelectionContext(tripDayId),
   ]);
+  const filters =
+    tripDayContext && rawStatus && isSceneCatalogSelectionFilter(rawStatus)
+      ? {
+          ...catalogFilters,
+          selection: rawStatus,
+        }
+      : catalogFilters;
 
   return (
     <SceneCatalog

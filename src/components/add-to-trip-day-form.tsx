@@ -20,7 +20,7 @@ export function AddToTripDayForm({
   if (added) {
     return (
       <span className="flex min-h-10 w-fit items-center rounded border border-rail bg-paper px-4 text-sm font-semibold text-night">
-        已加入此日
+        已排入此行程
       </span>
     );
   }

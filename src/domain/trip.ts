@@ -144,12 +144,12 @@ export function reorderTripSceneIds(
   }));
 }
 
-export function assertSceneCanBeAddedToTripDay(
+export function assertSceneCanBeScheduledInTrip(
   existingSceneIds: readonly string[],
   sceneId: string,
 ): void {
   if (existingSceneIds.includes(sceneId)) {
-    throw new Error("Scene is already in this trip day.");
+    throw new Error("Scene is already in this trip.");
   }
 }
 

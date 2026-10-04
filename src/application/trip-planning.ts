@@ -39,7 +39,7 @@ export interface TripDaySelectionContext {
   tripId: string;
   tripName: string;
   date: string;
-  addedSceneIds: string[];
+  scheduledSceneIds: string[];
 }
 
 export function buildTripDetailSummary(
@@ -68,9 +68,9 @@ export function getTripProgressPercent(summary: TripProgressSummary): number {
   return Math.round((summary.reviewed / summary.totalScenes) * 100);
 }
 
-export function isSceneAddedToTripDay(
+export function isSceneScheduledInTrip(
   context: TripDaySelectionContext | undefined,
   sceneId: string,
 ): boolean {
-  return context?.addedSceneIds.includes(sceneId) ?? false;
+  return context?.scheduledSceneIds.includes(sceneId) ?? false;
 }

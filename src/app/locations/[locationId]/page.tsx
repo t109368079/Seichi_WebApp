@@ -7,7 +7,7 @@ import {
   formatSceneCoordinates,
   getSceneStatusLabel,
 } from "@/application/scene-catalog";
-import { isSceneAddedToTripDay } from "@/application/trip-planning";
+import { isSceneScheduledInTrip } from "@/application/trip-planning";
 import { getLocationTripPlanningData } from "@/infrastructure/repositories/trip-planning-repository";
 
 export const dynamic = "force-dynamic";
@@ -106,7 +106,7 @@ export default async function LocationPage({
                       sceneId={scene.id}
                       sceneCode={scene.sceneCode}
                       returnTo={returnTo}
-                      added={isSceneAddedToTripDay(
+                      added={isSceneScheduledInTrip(
                         data.tripDayContext,
                         scene.id,
                       )}

@@ -176,8 +176,8 @@ function translateTripError(error: unknown): string {
     return "開始日期不可晚於結束日期。";
   }
 
-  if (message.includes("already in this trip day")) {
-    return "此場景已加入這一天。";
+  if (message.includes("already in this trip")) {
+    return "此場景已排入這趟行程。";
   }
 
   if (message.includes("At least one scene is required")) {

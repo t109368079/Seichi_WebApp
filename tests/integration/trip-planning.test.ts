@@ -47,7 +47,7 @@ describe("trip planning repository", () => {
     expect(detail?.summary.totalScenes).toBe(0);
   });
 
-  it("adds scenes to a TripDay and rejects duplicates", async () => {
+  it("adds scenes to a TripDay and rejects duplicates in the same trip", async () => {
     const trip = await createTrip({
       name: "Integration Duplicate Guard",
       startDate: "2026-10-10",
@@ -59,13 +59,37 @@ describe("trip planning repository", () => {
     await addSceneToTripDay(tripDayId, "scene-bhc-001");
 
     await expect(addSceneToTripDay(tripDayId, "scene-bhc-001")).rejects.toThrow(
-      "Scene is already in this trip day.",
+      "Scene is already in this trip.",
     );
 
     const updated = await getTripDetail(trip.tripId);
     expect(
       updated?.days[0]?.scenes.map((item) => item.scene.sceneCode),
     ).toEqual(["BHC-001"]);
+  });
+
+  it("rejects a scene already scheduled on another day of the same trip", async () => {
+    const trip = await createTrip({
+      name: "Integration Cross Day Duplicate Guard",
+      startDate: "2026-10-10",
+      endDate: "2026-10-11",
+    });
+    const detail = await getTripDetail(trip.tripId);
+    const firstTripDayId = detail?.days[0]?.id ?? "";
+    const secondTripDayId = detail?.days[1]?.id ?? "";
+
+    await addSceneToTripDay(firstTripDayId, "scene-bhc-001");
+
+    await expect(
+      addSceneToTripDay(secondTripDayId, "scene-bhc-001"),
+    ).rejects.toThrow("Scene is already in this trip.");
+
+    const updated = await getTripDetail(trip.tripId);
+    expect(
+      updated?.days.map((day) =>
+        day.scenes.map((item) => item.scene.sceneCode),
+      ),
+    ).toEqual([["BHC-001"], []]);
   });
 
   it("adds multiple selected scenes to the end of a TripDay in request order", async () => {
@@ -110,7 +134,7 @@ describe("trip planning repository", () => {
 
     await expect(
       addScenesToTripDay(tripDayId, ["scene-bhc-001", "scene-slc-001"]),
-    ).rejects.toThrow("Scene is already in this trip day.");
+    ).rejects.toThrow("Scene is already in this trip.");
 
     const updated = await getTripDetail(trip.tripId);
     expect(

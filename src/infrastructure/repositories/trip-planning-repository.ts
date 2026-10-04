@@ -10,7 +10,7 @@ import {
 import type { SceneCatalogItem } from "@/application/scene-catalog";
 import { assertSceneStatus } from "@/domain/scene";
 import {
-  assertSceneCanBeAddedToTripDay,
+  assertSceneCanBeScheduledInTrip,
   buildTripDayDates,
   getNextTripSceneSortOrder,
   moveTripSceneOrder,
@@ -200,10 +200,17 @@ export async function getTripDaySelectionContext(
       id: tripDayId,
     },
     include: {
-      trip: true,
-      tripScenes: {
-        select: {
-          sceneId: true,
+      trip: {
+        include: {
+          days: {
+            include: {
+              tripScenes: {
+                select: {
+                  sceneId: true,
+                },
+              },
+            },
+          },
         },
       },
     },
@@ -218,7 +225,9 @@ export async function getTripDaySelectionContext(
     tripId: tripDay.tripId,
     tripName: tripDay.trip.name,
     date: tripDateToString(tripDay.date),
-    addedSceneIds: tripDay.tripScenes.map((tripScene) => tripScene.sceneId),
+    scheduledSceneIds: tripDay.trip.days.flatMap((day) =>
+      day.tripScenes.map((tripScene) => tripScene.sceneId),
+    ),
   };
 }
 
@@ -254,11 +263,22 @@ export async function addScenesToTripDay(
       throw new Error("Trip day does not exist.");
     }
 
+    const scheduledTripScenes = await transaction.tripScene.findMany({
+      where: {
+        tripDay: {
+          tripId: tripDay.tripId,
+        },
+      },
+      select: {
+        sceneId: true,
+      },
+    });
+    const scheduledSceneIds = scheduledTripScenes.map(
+      (tripScene) => tripScene.sceneId,
+    );
+
     for (const sceneId of requestedSceneIds) {
-      assertSceneCanBeAddedToTripDay(
-        tripDay.tripScenes.map((tripScene) => tripScene.sceneId),
-        sceneId,
-      );
+      assertSceneCanBeScheduledInTrip(scheduledSceneIds, sceneId);
     }
 
     const scenes = await transaction.scene.findMany({

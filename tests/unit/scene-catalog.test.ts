@@ -2,10 +2,12 @@ import { describe, expect, it } from "vitest";
 import {
   countDistinctWorksAtLocation,
   filterSceneCatalogItems,
+  filterSceneCatalogItemsBySelection,
   getSceneStatusLabel,
   normalizeSceneCreateInput,
   normalizeSceneEditableFields,
   normalizeSceneCatalogFilters,
+  unselectedSceneCatalogFilterValue,
   type SceneCatalogItem,
 } from "@/application/scene-catalog";
 
@@ -119,6 +121,32 @@ describe("scene catalog filtering", () => {
         },
       ),
     ).toEqual({});
+
+    expect(
+      normalizeSceneCatalogFilters(
+        {
+          status: unselectedSceneCatalogFilterValue,
+        },
+        {
+          workIds: ["work-blue-hour-crossing"],
+          locationIds: ["location-ikebukuro-east-gate"],
+        },
+      ),
+    ).toEqual({
+      selection: unselectedSceneCatalogFilterValue,
+    });
+  });
+
+  it("filters out scenes already selected for the current trip", () => {
+    expect(
+      filterSceneCatalogItemsBySelection(
+        scenes,
+        {
+          selection: unselectedSceneCatalogFilterValue,
+        },
+        ["scene-bhc-001"],
+      ).map((scene) => scene.sceneCode),
+    ).toEqual(["SLC-001", "BHC-002"]);
   });
 
   it("keeps cross-work same-location scenes visible as separate scene identities", () => {

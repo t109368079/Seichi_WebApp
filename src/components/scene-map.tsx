@@ -16,7 +16,7 @@ import {
   type SceneMapMarkerGroup,
 } from "@/application/scene-map";
 import {
-  isSceneAddedToTripDay,
+  isSceneScheduledInTrip,
   type TripDaySelectionContext,
 } from "@/application/trip-planning";
 
@@ -434,7 +434,7 @@ function SceneMapCard({
             sceneId={scene.id}
             sceneCode={scene.sceneCode}
             returnTo={returnTo}
-            added={isSceneAddedToTripDay(tripDayContext, scene.id)}
+            added={isSceneScheduledInTrip(tripDayContext, scene.id)}
           />
         ) : null}
       </div>
