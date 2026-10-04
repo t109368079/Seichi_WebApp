@@ -12,6 +12,9 @@ import {
 import { readSceneImportFromGoogleSheet } from "@/infrastructure/google/google-sheets";
 import { prisma } from "@/infrastructure/database/prisma";
 
+const sceneImportTransactionMaxWaitMs = 10_000;
+const sceneImportTransactionTimeoutMs = 120_000;
+
 export interface SceneImportCommitResult {
   ok: boolean;
   preview: SceneImportPreview;
@@ -122,77 +125,107 @@ export async function commitSceneImportGoogleSheet(input: {
 }
 
 async function commitSceneImportPreview(preview: SceneImportPreview) {
-  return prisma.$transaction(async (transaction) => {
-    for (const row of preview.rows) {
-      const work = await transaction.work.upsert({
-        where: {
-          shortCode: row.workShortCode,
-        },
-        create: {
-          name: row.workName,
-          shortCode: row.workShortCode,
-        },
-        update: {
-          name: row.workName,
-        },
-      });
+  return prisma.$transaction(
+    async (transaction) => {
+      const workIdByShortCode = new Map<string, string>();
+      const locationIdByKey = new Map<string, string>();
+      const finalWorkNameByShortCode = new Map<string, string>();
+      const finalLocationByKey = new Map<string, SceneImportRow>();
 
-      const location = await transaction.location.upsert({
-        where: {
-          name_areaName: {
-            name: row.locationName,
-            areaName: row.areaName,
+      for (const row of preview.rows) {
+        finalWorkNameByShortCode.set(row.workShortCode, row.workName);
+        finalLocationByKey.set(getLocationImportKey(row), row);
+      }
+
+      for (const row of preview.rows) {
+        const workName = finalWorkNameByShortCode.get(row.workShortCode);
+
+        const workId =
+          workIdByShortCode.get(row.workShortCode) ??
+          (
+            await transaction.work.upsert({
+              where: {
+                shortCode: row.workShortCode,
+              },
+              create: {
+                name: workName ?? row.workName,
+                shortCode: row.workShortCode,
+              },
+              update: {
+                name: workName ?? row.workName,
+              },
+            })
+          ).id;
+        workIdByShortCode.set(row.workShortCode, workId);
+
+        const locationKey = getLocationImportKey(row);
+        const locationSource = finalLocationByKey.get(locationKey) ?? row;
+        const locationId =
+          locationIdByKey.get(locationKey) ??
+          (
+            await transaction.location.upsert({
+              where: {
+                name_areaName: {
+                  name: row.locationName,
+                  areaName: row.areaName,
+                },
+              },
+              create: {
+                name: row.locationName,
+                areaName: row.areaName,
+                latitude: locationSource.latitude,
+                longitude: locationSource.longitude,
+                mapsUrl: locationSource.mapsUrl ?? null,
+              },
+              update: {
+                latitude: locationSource.latitude,
+                longitude: locationSource.longitude,
+                mapsUrl: locationSource.mapsUrl ?? null,
+              },
+            })
+          ).id;
+        locationIdByKey.set(locationKey, locationId);
+
+        await transaction.scene.upsert({
+          where: {
+            sceneCode: row.sceneCode,
           },
-        },
-        create: {
-          name: row.locationName,
-          areaName: row.areaName,
-          latitude: row.latitude,
-          longitude: row.longitude,
-          mapsUrl: row.mapsUrl ?? null,
-        },
-        update: {
-          latitude: row.latitude,
-          longitude: row.longitude,
-          mapsUrl: row.mapsUrl ?? null,
-        },
-      });
+          create: {
+            sceneCode: row.sceneCode,
+            workId,
+            episode: row.episode ?? null,
+            animeImageDriveFileId: row.animeImageDriveFileId,
+            locationId,
+            latitude: row.latitude,
+            longitude: row.longitude,
+            mapsUrl: row.mapsUrl ?? null,
+            notes: row.notes ?? null,
+            status: "NOT_SHOT",
+          },
+          update: {
+            workId,
+            episode: row.episode ?? null,
+            animeImageDriveFileId: row.animeImageDriveFileId,
+            locationId,
+            latitude: row.latitude,
+            longitude: row.longitude,
+            mapsUrl: row.mapsUrl ?? null,
+            notes: row.notes ?? null,
+          },
+        });
+      }
 
-      await transaction.scene.upsert({
-        where: {
-          sceneCode: row.sceneCode,
-        },
-        create: {
-          sceneCode: row.sceneCode,
-          workId: work.id,
-          episode: row.episode ?? null,
-          animeImageDriveFileId: row.animeImageDriveFileId,
-          locationId: location.id,
-          latitude: row.latitude,
-          longitude: row.longitude,
-          mapsUrl: row.mapsUrl ?? null,
-          notes: row.notes ?? null,
-          status: "NOT_SHOT",
-        },
-        update: {
-          workId: work.id,
-          episode: row.episode ?? null,
-          animeImageDriveFileId: row.animeImageDriveFileId,
-          locationId: location.id,
-          latitude: row.latitude,
-          longitude: row.longitude,
-          mapsUrl: row.mapsUrl ?? null,
-          notes: row.notes ?? null,
-        },
-      });
-    }
-
-    return {
-      createdCount: preview.summary.createCount,
-      updatedCount: preview.summary.updateCount,
-      sceneCodes: preview.rows.map((row) => row.sceneCode),
-    };
-  });
+      return {
+        createdCount: preview.summary.createCount,
+        updatedCount: preview.summary.updateCount,
+        sceneCodes: preview.rows.map((row) => row.sceneCode),
+      };
+    },
+    {
+      maxWait: sceneImportTransactionMaxWaitMs,
+      timeout: sceneImportTransactionTimeoutMs,
+    },
+  );
 }
 
 async function resolveSheetInput(sheetId?: string, sheetRange?: string) {
@@ -202,4 +235,10 @@ async function resolveSheetInput(sheetId?: string, sheetRange?: string) {
     sheetId: sheetId?.trim() || settings.sheetId,
     sheetRange: sheetRange?.trim() || settings.sheetRange,
   };
+}
+
+function getLocationImportKey(
+  row: Pick<SceneImportRow, "locationName" | "areaName">,
+) {
+  return `${row.locationName}\u0000${row.areaName}`;
 }

@@ -5,7 +5,17 @@ import { prisma } from "@/infrastructure/database/prisma";
 const csvHeader =
   "scene_code,work_name,work_short_code,episode,anime_drive_file_id,location_name,area_name,latitude,longitude,maps_url,notes";
 
-const importedSceneCodes = ["NRI-201", "NRI-202", "NRI-301", "NRI-302"];
+const bulkSceneCodes = Array.from(
+  { length: 180 },
+  (_, index) => `NRI-BULK-${String(index + 1).padStart(3, "0")}`,
+);
+const importedSceneCodes = [
+  "NRI-201",
+  "NRI-202",
+  "NRI-301",
+  "NRI-302",
+  ...bulkSceneCodes,
+];
 
 let originalBhc002: {
   workId: string;
@@ -63,6 +73,10 @@ afterEach(async () => {
         },
         {
           name: "Rollback Gate",
+          areaName: "Ikebukuro",
+        },
+        {
+          name: "Bulk Gate",
           areaName: "Ikebukuro",
         },
       ],
@@ -174,6 +188,39 @@ describe("scene import repository", () => {
     expect(result.createdCount).toBe(1);
     expect(result.sceneCodes).toEqual(["NRI-301"]);
     expect(scenes.map((scene) => scene.sceneCode)).toEqual(["NRI-301"]);
+  });
+
+  it("imports a large CSV without closing the transaction early", async () => {
+    const result = await commitSceneImportCsv(
+      csv(
+        bulkSceneCodes.map(
+          (sceneCode, index) =>
+            `${sceneCode},Night Rail Ikebukuro,NRI,03,demo-drive-${sceneCode},Bulk Gate,Ikebukuro,35.73028,139.71145,,Bulk import ${index + 1}`,
+        ),
+      ),
+    );
+    const [sceneCount, location] = await Promise.all([
+      prisma.scene.count({
+        where: {
+          sceneCode: {
+            in: bulkSceneCodes,
+          },
+        },
+      }),
+      prisma.location.findUnique({
+        where: {
+          name_areaName: {
+            name: "Bulk Gate",
+            areaName: "Ikebukuro",
+          },
+        },
+      }),
+    ]);
+
+    expect(result.ok).toBe(true);
+    expect(result.createdCount).toBe(bulkSceneCodes.length);
+    expect(sceneCount).toBe(bulkSceneCodes.length);
+    expect(location?.latitude).toBe(35.73028);
   });
 
   it("updates an existing Scene without changing its status", async () => {
