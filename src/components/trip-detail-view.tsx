@@ -16,6 +16,55 @@ import {
 } from "@/app/trips/actions";
 
 export function TripDetailView({ trip }: { trip: TripDetailItem }) {
+  const [expandedDayIds, setExpandedDayIds] = useState(
+    () => new Set(getInitialExpandedDayIds(trip.days)),
+  );
+
+  useEffect(() => {
+    setExpandedDayIds((currentIds) =>
+      reconcileExpandedDayIds(currentIds, trip.days),
+    );
+  }, [trip.days]);
+
+  useEffect(() => {
+    const expandHashDay = () => {
+      const dayId = getHashTripDayId();
+
+      if (!dayId || !trip.days.some((day) => day.id === dayId)) {
+        return;
+      }
+
+      setExpandedDayIds(new Set([dayId]));
+    };
+
+    expandHashDay();
+    window.addEventListener("hashchange", expandHashDay);
+
+    return () => window.removeEventListener("hashchange", expandHashDay);
+  }, [trip.days]);
+
+  const expandedCount = expandedDayIds.size;
+  const canCollapseDays = expandedCount > 0;
+  const canExpandDays = expandedCount < trip.days.length;
+
+  const toggleDay = (dayId: string) => {
+    setExpandedDayIds((currentIds) => {
+      const nextIds = new Set(currentIds);
+
+      if (nextIds.has(dayId)) {
+        nextIds.delete(dayId);
+      } else {
+        nextIds.add(dayId);
+      }
+
+      return nextIds;
+    });
+  };
+
+  const focusDay = (dayId: string) => {
+    setExpandedDayIds(new Set([dayId]));
+  };
+
   return (
     <div className="mx-auto grid w-full max-w-6xl gap-5 px-5 py-6">
       <section className="rounded border border-rail bg-white/95 p-5 shadow-sm">
@@ -34,9 +83,44 @@ export function TripDetailView({ trip }: { trip: TripDetailItem }) {
         </dl>
       </section>
 
+      <section
+        aria-label="每日行程顯示控制"
+        className="flex flex-col gap-3 rounded border border-rail bg-white/95 p-4 shadow-sm md:flex-row md:items-center md:justify-between"
+      >
+        <p className="text-sm font-semibold text-night">
+          已展開 {expandedCount} / {trip.days.length} 天
+        </p>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            disabled={!canExpandDays}
+            onClick={() =>
+              setExpandedDayIds(new Set(trip.days.map((day) => day.id)))
+            }
+            className="min-h-10 rounded border border-rail px-4 text-sm font-semibold disabled:opacity-40"
+          >
+            全部展開
+          </button>
+          <button
+            type="button"
+            disabled={!canCollapseDays}
+            onClick={() => setExpandedDayIds(new Set())}
+            className="min-h-10 rounded border border-rail px-4 text-sm font-semibold disabled:opacity-40"
+          >
+            全部收合
+          </button>
+        </div>
+      </section>
+
       <section aria-label="每日行程" className="grid gap-5">
         {trip.days.map((day) => (
-          <TripDayPlanner key={day.id} day={day} />
+          <TripDayPlanner
+            key={day.id}
+            day={day}
+            expanded={expandedDayIds.has(day.id)}
+            onToggle={() => toggleDay(day.id)}
+            onFocus={() => focusDay(day.id)}
+          />
         ))}
       </section>
     </div>
@@ -52,10 +136,21 @@ function TripStat({ label, value }: { label: string; value: string | number }) {
   );
 }
 
-function TripDayPlanner({ day }: { day: TripDayPlanningItem }) {
+function TripDayPlanner({
+  day,
+  expanded,
+  onToggle,
+  onFocus,
+}: {
+  day: TripDayPlanningItem;
+  expanded: boolean;
+  onToggle: () => void;
+  onFocus: () => void;
+}) {
   const [items, setItems] = useState(day.scenes);
   const [draggingId, setDraggingId] = useState("");
   const hasScenes = items.length > 0;
+  const sceneListId = `trip-day-scenes-${day.id}`;
 
   useEffect(() => {
     setItems(day.scenes);
@@ -79,7 +174,24 @@ function TripDayPlanner({ day }: { day: TripDayPlanningItem }) {
             {day.summary.retakeRequired}
           </p>
         </div>
-        <div className="flex flex-col gap-2 sm:flex-row">
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
+          <button
+            type="button"
+            aria-expanded={expanded}
+            aria-controls={sceneListId}
+            aria-label={`${expanded ? "收合" : "展開"} ${day.date}`}
+            onClick={onToggle}
+            className="flex min-h-10 w-fit items-center rounded border border-rail bg-white px-4 text-sm font-semibold"
+          >
+            {expanded ? "收合" : "展開"}
+          </button>
+          <button
+            type="button"
+            onClick={onFocus}
+            className="flex min-h-10 w-fit items-center rounded border border-rail bg-white px-4 text-sm font-semibold"
+          >
+            只看此日
+          </button>
           <Link
             href={`/scenes?tripDayId=${day.id}`}
             className="flex min-h-10 w-fit items-center rounded bg-field px-4 text-sm font-semibold text-white"
@@ -102,8 +214,8 @@ function TripDayPlanner({ day }: { day: TripDayPlanningItem }) {
         </div>
       </div>
 
-      {hasScenes ? (
-        <div className="mt-4 grid gap-3">
+      {expanded && hasScenes ? (
+        <div id={sceneListId} className="mt-4 grid gap-3">
           <ol className="grid gap-3" aria-label={`${day.date} 場景順序`}>
             {items.map((item, index) => (
               <TripSceneRow
@@ -142,10 +254,15 @@ function TripDayPlanner({ day }: { day: TripDayPlanningItem }) {
             </button>
           </form>
         </div>
-      ) : (
-        <div className="mt-4 rounded border border-rail bg-paper p-4 text-sm text-night">
+      ) : expanded ? (
+        <div
+          id={sceneListId}
+          className="mt-4 rounded border border-rail bg-paper p-4 text-sm text-night"
+        >
           這一天還沒有場景。請從目錄或地圖加入。
         </div>
+      ) : (
+        <div id={sceneListId} hidden />
       )}
     </article>
   );
@@ -293,4 +410,39 @@ function moveItemBeforeTarget(
   reordered.splice(targetIndex, 0, draggedItem);
 
   return reordered;
+}
+
+function getInitialExpandedDayIds(days: readonly TripDayPlanningItem[]) {
+  const firstDayWithScenes = days.find((day) => day.scenes.length > 0);
+  const initialDay = firstDayWithScenes ?? days[0];
+
+  return initialDay ? [initialDay.id] : [];
+}
+
+function reconcileExpandedDayIds(
+  currentIds: ReadonlySet<string>,
+  days: readonly TripDayPlanningItem[],
+): Set<string> {
+  const availableDayIds = new Set(days.map((day) => day.id));
+  const nextIds = new Set(
+    [...currentIds].filter((dayId) => availableDayIds.has(dayId)),
+  );
+
+  if (nextIds.size === 0 && days.length > 0) {
+    for (const dayId of getInitialExpandedDayIds(days)) {
+      nextIds.add(dayId);
+    }
+  }
+
+  return nextIds;
+}
+
+function getHashTripDayId(): string | undefined {
+  if (typeof window === "undefined") {
+    return undefined;
+  }
+
+  const match = window.location.hash.match(/^#day-(.+)$/);
+
+  return match?.[1] ? decodeURIComponent(match[1]) : undefined;
 }

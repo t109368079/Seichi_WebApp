@@ -116,6 +116,7 @@ Completed Blocks:
 - Block 4.2: Add Scene To TripDay
 - Block 4.3: Manual Ordering
 - Block 4.4: Trip Summary
+- Post-completion UX: Trip Detail daily itinerary collapse, expand, and focus-one-day controls.
 
 Verification Results:
 

@@ -22,6 +22,21 @@ test("trip planning creates a trip, adds scenes, reorders, and removes", async (
   ).toBeVisible();
   await expect(page.getByRole("heading", { name: "2026-10-10" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "2026-10-11" })).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "收合 2026-10-10" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "展開 2026-10-11" }),
+  ).toBeVisible();
+
+  await page.getByRole("button", { name: "全部展開" }).click();
+  await expect(
+    page.getByRole("button", { name: "收合 2026-10-11" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "只看此日" }).first().click();
+  await expect(
+    page.getByRole("button", { name: "展開 2026-10-11" }),
+  ).toBeVisible();
 
   await page.getByRole("link", { name: "從目錄加入" }).first().click();
   await expect(page).toHaveURL(/\/scenes\?tripDayId=/);
@@ -58,6 +73,15 @@ test("trip planning creates a trip, adds scenes, reorders, and removes", async (
   await expect(page.getByRole("link", { name: "ARS-001" })).toBeVisible();
 
   const firstDayOrder = page.locator('ol[aria-label="2026-10-10 場景順序"] li');
+  await page.getByRole("button", { name: "收合 2026-10-10" }).click();
+  await expect(
+    page.locator('ol[aria-label="2026-10-10 場景順序"]'),
+  ).toHaveCount(0);
+  await page.getByRole("button", { name: "展開 2026-10-10" }).click();
+  await expect(
+    firstDayOrder.nth(0).getByRole("link", { name: "BHC-001" }),
+  ).toBeVisible();
+
   await page.getByRole("button", { name: "上移 BHC-004" }).click();
   await expect(
     firstDayOrder.nth(0).getByRole("link", { name: "BHC-004" }),

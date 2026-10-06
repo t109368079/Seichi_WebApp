@@ -22,7 +22,7 @@ Phase 4 已完成旅行規劃 workflow。系統現在可以透過 `/trips` 建�
 - 新增 `/trips` 與 `/trips/[tripId]`。
 - 新增 `/locations/[locationId]`。
 - Scene Catalog、Scene Detail、Map、Location page 支援 `tripDayId` context 與「加入此日 / 已排入此行程」狀態。
-- Trip Detail 支援 native drag reorder 與上移/下移 fallback。
+- Trip Detail 支援 native drag reorder、上移/下移 fallback，以及每日行程收合、展開與只看此日。
 - 首頁加入旅行規劃入口。
 
 ## 測試與驗證
